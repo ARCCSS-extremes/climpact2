@@ -1,0 +1,55 @@
+**********************************
+  INSTALLING CLIMPACT2
+**********************************
+
+Software you will need:
+-R
+-NCO (for the time being),
+
+In R you will need the following packages:
+-climdex.pcic
+-ncdf4
+-PCICt
+
+**********************************
+
+To download the code to the storm servers by the following steps:
+
+1) Create a new directory
+2) CD to above directory and run "git clone https://github.com/heroldn/climpact2"
+
+To run the code:
+
+1) Load the R module if you don't already have it "module load R/3.0.3 nco/4.3.2" -> I added nco here for a meta-data hack I've got in place.
+2) In R install the following packages;
+    - install.packages("climdex.pcic")
+    - install.packages("ncdf4")
+    - install.packages("PCICt")
+3) Edit and run test.climpact2.r. More information can be gleaned from the climpact.loader function header in climpact2_0.1.r.
+
+This should be all you need to run the software, but apologies if I've missed something (let me know).
+
+**********************************
+
+MORE DETAILS:
+
+There are numerous parameters that can be specified in climpact.loader. However, the only necessary data needed is at least one filename for either the min temperature, max temperature or precipitation, and a list of one or more indices to calculate.
+
+Some sample NarClim data are already specified along with the bare minimum parameters.
+
+The indices can be specified by their abbreviation in lower case (you can see the valid indices in index.master.list). E.g. TX95t should be called with tx95t. 
+
+The following indices are new and should work (in addition to any of the original climdex indices):
+fd2	Annual count when TN < 2ºC
+fdm2	Annual count when TN < -2ºC
+fdm20	Annual count when TN < -20ºC
+tm5a	Annual count when TM >= 5ºC
+tm5b	Annual count when TM < 5ºC
+tm10a	Annual count when TM >= 10ºC
+tm10b	Annual count when TM < 10ºC
+su30	Annual count when TX >= 30ºC
+su35 	Annual count when TX >= 35ºC
+
+Where TN = minimum daily temperature, TX = maximum daily temperature and TM = average daily temperature.
+
+Feel free to load in any other gridded data that has daily values. A big assumption here is that all files sent to climpact.loader are from the same source and have the same time and space dimensions.
