@@ -16,7 +16,7 @@ In R you will need the following packages:
 To download the code to the storm servers by the following steps:
 
 1) Create a new directory
-2) CD to above directory and run "git clone https://github.com/heroldn/climpact2"
+2) CD to above directory and run "git clone git@github.com:heroldn/climpact2.git"
 
 To run the code:
 
