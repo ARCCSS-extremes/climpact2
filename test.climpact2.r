@@ -12,4 +12,5 @@ tsmaxfile=maxfilename,
 precname="pracc_fl",
 tsminname="tasmin",
 tsmaxname="tasmax",
-indices=indices)
+indices=indices,
+identifier="climpact_test")
