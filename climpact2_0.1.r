@@ -60,11 +60,16 @@ freq=NULL,quantiles=NULL,tempqtiles=c(0.1,0.9),precqtiles=c(0.1,0.9),max.missing
 # Set constants
 	cal <- "gregorian"
 	tsmin <- tsmax <- prec <- NULL
+	tsmintime <- tsmaxtime <- prectime <- NULL
 
 # Load files and variables. Assumedly this is a memory intensive step for large variables. Way to improve this? Read incrementally?
         if(!is.null(tsminfile)) { nc_tsmin=nc_open(tsminfile); tsmin <- ncvar_get(nc_tsmin,tsminname) ; refnc=nc_tsmin}
         if(!is.null(tsmaxfile)) { nc_tsmax=nc_open(tsmaxfile); tsmax <- ncvar_get(nc_tsmax,tsmaxname) ; refnc=nc_tsmax}
         if(!is.null(precfile)) { nc_prec=nc_open(precfile); prec <- ncvar_get(nc_prec,precname) ; refnc=nc_prec}
+
+# Convert to Celcius
+	if(ncatt_get(nc_tsmin,tsminname,"units")[2] == "K") tsmin = tsmin-273.15
+        if(ncatt_get(nc_tsmax,tsmaxname,"units")[2] == "K") tsmax = tsmax-273.15
 
 # Set up coordinate variables for writing to netCDF. If irregular grid then create x/y indices, if regular grid read in lat/lon coordinates.
 	if(length(dim(ncvar_get(refnc,latname))) > 1) {irregular = TRUE} else {irregular = FALSE}	# determine if irregular
@@ -87,6 +92,10 @@ freq=NULL,quantiles=NULL,tempqtiles=c(0.1,0.9),precqtiles=c(0.1,0.9),max.missing
         nmonths = length(yeardate)*12
         nyears = length(yeardate)
 
+        if(!is.null(tsminfile)) { tsmintime = time }
+        if(!is.null(tsmaxfile)) { tsmaxtime = time }
+        if(!is.null(precfile)) { prectime = time }
+
 # Compile climdexinput function for performance. Then create a 2D array of climdex input objects.
 # This is memory intensive (uses ~70% of memory on a storm server - sometimes bombs) but should be quicker than calculating input objects repeatedly for each index... needs testing
 	cicompile <- cmpfun(climdexInput.raw)
@@ -94,7 +103,7 @@ freq=NULL,quantiles=NULL,tempqtiles=c(0.1,0.9),precqtiles=c(0.1,0.9),max.missing
 #
 #	for(j in 1:length(lat)){
 #		for(i in 1:length(lon)){
-#			ciarray[[i,j]] = cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=prec[i,j,],tmin.dates=time,tmax.dates=time,prec.dates=time,prec.qtiles=precqtiles,temp.qtiles=tempqtiles,quantiles=quantiles,base.range=baserange)
+#			ciarray[[i,j]] = cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=prec[i,j,],tmin.dates=tsmintime,tmax.dates=tsmaxtime,prec.dates=prectime,prec.qtiles=precqtiles,temp.qtiles=tempqtiles,quantiles=quantiles,base.range=baserange)
 #		}
 #	}
 
@@ -117,7 +126,7 @@ freq=NULL,quantiles=NULL,tempqtiles=c(0.1,0.9),precqtiles=c(0.1,0.9),max.missing
 
 		for(j in 1:length(lat)){
 			for(i in 1:length(lon)){
-			cio = cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=prec[i,j,],tmin.dates=time,tmax.dates=time,prec.dates=time,prec.qtiles=precqtiles,temp.qtiles=tempqtiles,quantiles=quantiles,base.range=baserange)
+			cio = cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=prec[i,j,],tmin.dates=tsmintime,tmax.dates=tsmaxtime,prec.dates=prectime,prec.qtiles=precqtiles,temp.qtiles=tempqtiles,quantiles=quantiles,base.range=baserange)
 			index[i,j,] = array(indexcompile(cio))
 
 #                        index[i,j,] = array(indexcompile(ciarray[[i,j]]))
