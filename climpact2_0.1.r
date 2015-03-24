@@ -41,7 +41,7 @@ library(compiler)
 #  A single netCDF file for each index specified in indices.
 #
 climpact.loader <- function(tsminfile=NULL,tsmaxfile=NULL,precfile=NULL,tsminname="tsmin",tsmaxname="tsmax",precname="prec",timename="time",indices=NULL,identifier=NULL,lonname="lon",latname="lat",baserange=c(1961,1990),
-freq=NULL,quantiles=NULL,tempqtiles=c(0.1,0.9),precqtiles=c(0.1,0.9),max.missing.days=c(annual=15, monthly=3),min.base.data.fraction.present=0.1,n=5,northern.hemisphere=TRUE,usern_csdin=NULL,usern_wsdin=NULL)
+freq=NULL,quantiles=NULL,tempqtiles=c(0.1,0.9),precqtiles=c(0.1,0.9),max.missing.days=c(annual=15, monthly=3),min.base.data.fraction.present=0.1,northern.hemisphere=TRUE,usern_csdin=NULL,usern_wsdin=NULL)
 {
 # Initial checks
 # 1) at least one file is provided,
@@ -88,14 +88,15 @@ freq=NULL,quantiles=NULL,tempqtiles=c(0.1,0.9),precqtiles=c(0.1,0.9),max.missing
         nyears = length(yeardate)
 
 # Compile climdexinput function for performance. Then create a 2D array of climdex input objects.
+# This is memory intensive (uses ~70% of memory on a storm server - sometimes bombs) but should be quicker than calculating input objects repeatedly for each index... needs testing
 	cicompile <- cmpfun(climdexInput.raw)
-	ciarray = array(list(),c(length(lon),length(lat)))
-
-	for(j in 1:length(lat)){
-		for(i in 1:length(lon)){
-			ciarray[[i,j]] = cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=prec[i,j,],tmin.dates=time,tmax.dates=time,prec.dates=time,prec.qtiles=precqtiles,temp.qtiles=tempqtiles,quantiles=quantiles,base.range=baserange)
-		}
-	}
+#	ciarray = array(list(),c(length(lon),length(lat)))
+#
+#	for(j in 1:length(lat)){
+#		for(i in 1:length(lon)){
+#			ciarray[[i,j]] = cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=prec[i,j,],tmin.dates=time,tmax.dates=time,prec.dates=time,prec.qtiles=precqtiles,temp.qtiles=tempqtiles,quantiles=quantiles,base.range=baserange)
+#		}
+#	}
 
 # Loop through index list; get index, read variable, calculate index on grid, write out index on gridded netcdf
         print("********* CALCULATING INDICES")
@@ -111,21 +112,15 @@ freq=NULL,quantiles=NULL,tempqtiles=c(0.1,0.9),precqtiles=c(0.1,0.9),max.missing
 			} else {monthly = TRUE}
 		} else {monthly = FALSE}
 
-#		time = get.time(refnc,timename) #ncvar_get(refnc,"time") ; print(time)
-#		yeardate = unique(format(time,format="%Y"))
-#		nmonths = length(yeardate)*12
-#		nyears = length(yeardate)
-#		print(nmonths)
-
 	# Create empty array depending on whether index is monthly or annual
 		if(monthly==TRUE) {index = array(NA,c(length(lon),length(lat),nmonths))} else{ index = array(NA,c(length(lon),length(lat),nyears))}
 
 		for(j in 1:length(lat)){
 			for(i in 1:length(lon)){
-#			cio = cicompile(tmin=tsmin[j,i,],tmax=tsmax[j,i,],prec=prec[j,i,],tmin.dates=time,tmax.dates=time,prec.dates=time,prec.qtiles=precqtiles,temp.qtiles=tempqtiles,quantiles=quantiles,base.range=baserange)
-#			index[i,j,] = array(indexcompile(cio,freq=freq))
+			cio = cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=prec[i,j,],tmin.dates=time,tmax.dates=time,prec.dates=time,prec.qtiles=precqtiles,temp.qtiles=tempqtiles,quantiles=quantiles,base.range=baserange)
+			index[i,j,] = array(indexcompile(cio))
 
-                        index[i,j,] = array(indexcompile(ciarray[[i,j]]))
+#                        index[i,j,] = array(indexcompile(ciarray[[i,j]]))
 			}
 		}
 
