@@ -17,6 +17,7 @@ To download the code to the storm servers by the following steps:
 
 1) Create a new directory
 2) CD to above directory and run "git clone git@github.com:heroldn/climpact2.git"
+	NOTE: if the above address doesn't work try https://github.com/heroldn/climpact2.git.
 
 To run the code:
 
