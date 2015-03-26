@@ -10,6 +10,8 @@ library("climdex.pcic")
 library("ncdf4")
 library("PCICt")
 library(compiler)
+library(SPEI)
+
 options(warn=1)
 
 # climpact.loader
@@ -42,22 +44,20 @@ options(warn=1)
 #  A single netCDF file for each index specified in indices.
 #
 climpact.loader <- function(tsminfile=NULL,tsmaxfile=NULL,precfile=NULL,tsminname="tsmin",tsmaxname="tsmax",precname="prec",timename="time",indices=NULL,identifier=NULL,lonname="lon",latname="lat",baserange=c(1961,1990),
-freq=c("monthly","annual"),quantiles=NULL,tempqtiles=c(0.1,0.9),precqtiles=c(0.1,0.9),max.missing.days=c(annual=15, monthly=3),min.base.data.fraction.present=0.1,northern.hemisphere=TRUE,usern_csdin=NULL,usern_wsdin=NULL,
-canspanyears=FALSE,gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,usern_ntxntn=6,usern_hddheat=18,time_format)
+freq=c("monthly","annual"),quantiles=NULL,tempqtiles=c(0.1,0.9),precqtiles=c(0.1,0.9),max.missing.days=c(annual=15, monthly=3),min.base.data.fraction.present=0.1,northern.hemisphere=TRUE,csdin_n=5,wsdin_n=5,
+cdd_spells.can.span.years=TRUE,cwd_spells.can.span.years=TRUE,csdin_spells.can.span.years=FALSE,wsdin_spells.can.span.years=FALSE,csdi_spells.can.span.years=FALSE,wsdi_spells.can.span.years=FALSE,ntxntn_spells.can.span.years=FALSE,
+gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,ntxntn_consecdays=5,hddheat_n=18,time_format=NULL,rxnday_n=5,rxnday_center.mean.on.last.day=FALSE,spei_n=1,hwn_min.base.data.fraction.present=0.1,hwn_n=5)
 {
 # Initial checks
 # 1) at least one file is provided,
 # 2) at least one index is provided, 
 # 3) that all indices are valid,
-# 4) that if csdin/wsdin are specified then the corresponding n values are too,
 # TO ADD: if a tsmax index is specified but tsmax file is not. BOMB.
 # TO ADD: FILES EXIST!! This should be first thing!
 	indexlist <- readLines("./index.master.list")
 	if(all(is.null(tsminfile),is.null(tsmaxfile),is.null(precfile))) stop("Must provide at least one filename for tsmin, tsmax and/or prec.")
 	if(is.null(indices)) stop("Must provide a list of indices to calculate. See XX for list.")
         if(any(!indices %in% indexlist)) stop(paste("One or more indices"," are unknown. See XX for list.",sep=""))
-        if("csdin" %in% indices && is.null(usern_csdin)) stop("csdin requested but usern_csdin variable not passed to climpact.loader")
-        if("wsdin" %in% indices && is.null(usern_wsdin)) stop("wsdin requested but usern_wsdin variable not passed to climpact.loader")
 
 # Set constants
 	cal <- "gregorian"
@@ -81,6 +81,8 @@ canspanyears=FALSE,gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_ce
         	lon = 1:dim(ncvar_get(refnc,lonname))[1]
                 londim <- ncdim_def("x", "degrees_east", as.double(lon))	# creates object of class ncdim4!
                 latdim <- ncdim_def("y", "degrees_north", as.double(lat))
+                lon2d = ncvar_get(refnc,lonname)
+                lat2d = ncvar_get(refnc,latname)
 	} else{						# else regular grid
                 lat = ncvar_get(refnc,latname)
                 lon = ncvar_get(refnc,lonname)
@@ -118,9 +120,9 @@ canspanyears=FALSE,gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_ce
 		options(useFancyQuotes=FALSE)
 		indexparam = "cio"
 		switch(indices[a],
-			cdd={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",canspanyears,"))",sep="")},
-			csdin={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",canspanyears,"))",sep="")},
-			cwd={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",canspanyears,"))",sep="")},
+			cdd={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",cdd_spells.can.span.years,"))",sep="")},
+			csdi={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",csdi_spells.can.span.years,"))",sep="")},
+			cwd={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",cwd_spells.can.span.years,"))",sep="")},
 	                dtr={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="")},
 			gsl.mode={indexparam = paste("array(indexcompile(",indexparam,",gsl.mode=",dQuote(gslmode),"))",sep="")},
 			rnnmm={indexparam = paste("array(indexcompile(",indexparam,",threshold=",rnnm_threshold,"))",sep="")},
@@ -134,15 +136,24 @@ canspanyears=FALSE,gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_ce
 			tx90p={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="")},
 			txn={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="")},
 			txx={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="")},
-			wsdi={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",canspanyears,"))",sep="")},
-                        ntxntn={indexparam = paste("array(indexcompile(",indexparam,",usern_ntxntn=",usern_ntxntn,"))",sep="")},
+			wsdi={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",wsdi_spells.can.span.years,"))",sep="")},
+                        csdin={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",csdin_spells.can.span.years,",n=",csdin_n,"))",sep="")},
+                        wsdin={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",wsdin_spells.can.span.years,",n=",wsdin_n,"))",sep="")},
+                        ntxntn={indexparam = paste("array(indexcompile(",indexparam,",consecdays=",ntxntn_consecdays,",spells.can.span.years=",ntxntn_spells.can.span.years,"))",sep="")},
 			tx95t={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="")},
+
+                        rxnday={indexparam = paste("array(indexcompile(",indexparam,",center.mean.on.last.day=",rxnday_center.mean.on.last.day,",n=",rxnday_n,"))",sep="")},spei={indexparam = paste("array(indexcompile(",indexparam,",n=",spei_n,"))",sep="")},
+			hwn={
+				# find corrected call for retrieving lat
+				if (irregular) { latstr="lat2d[j,i]" } else { latstr="lat[j]" }
+				indexparam = paste("array(indexcompile(",indexparam,",base.range=c(",baserange[1],",",baserange[2],"),n=",hwn_n,",min.base.data.fraction.present=",
+				hwn_min.base.data.fraction.present,",lat=",latstr,"))",sep="")},
 
 		{ indexparam = paste("array(indexcompile(",indexparam,"))",sep="")} )
 		print(eval(indexparam))
 
 	# Determine whether index to be calculated will be daily (currently only for tx95t), monthly or annual
-		if(indices[a] == "tx95t") {period = "365days"} else {
+		if(indices[a] == "tx95t") {period = "365days"} else if (indices[a] == "rxnday") { period = "monthly" } else {
 	                if(!is.null(formals(indexfun)$freq)) {
 				if(!is.null(freq)){
 					if(freq[1] == "monthly") {period = "monthly"} else {period = "annual"}
@@ -153,19 +164,19 @@ canspanyears=FALSE,gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_ce
 	# Create empty array depending on whether index is monthly or annual
 		if(period == "monthly") {index = array(NA,c(length(lon),length(lat),nmonths))} else if(period == "annual") { index = array(NA,c(length(lon),length(lat),nyears))} else {index = array(NA,c(length(lon),length(lat),365))}
 
+	# Calculate the index
 		for(j in 1:length(lat)){
 			for(i in 1:length(lon)){
-			cio = cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=prec[i,j,],tmin.dates=tsmintime,tmax.dates=tsmaxtime,prec.dates=prectime,prec.qtiles=precqtiles,temp.qtiles=tempqtiles,quantiles=quantiles,base.range=baserange)
-			index[i,j,] = eval(parse(text=indexparam)) #array(indexcompile(eval(parse(text=paste("cio",indexparam,sep=""))))) #(parse(text=indexparam))))
+				cio = cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=prec[i,j,],tmin.dates=tsmintime,tmax.dates=tsmaxtime,prec.dates=prectime,prec.qtiles=precqtiles,
+					temp.qtiles=tempqtiles,quantiles=quantiles,base.range=baserange)
+				index[i,j,] = eval(parse(text=indexparam))
 
-#                        index[i,j,] = array(indexcompile(ciarray[[i,j]]))
+#	                        index[i,j,] = array(indexcompile(ciarray[[i,j]]))
 			}
 		}
-
-		index3d = index
-
+print(length(index[1,1,]))
 	# Transpose dimensions to time,lat,lon
-	        index3d_trans = aperm(index3d,c(2,3,1))
+	        index3d_trans = aperm(index,c(1,2,3))#(2,3,1))
 
 	# Write out
 	# NOTE: ncdf4 seems to only support numeric types for dimensions.
@@ -186,9 +197,7 @@ canspanyears=FALSE,gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_ce
                         loncdf <- ncvar_def(lonname,"degrees_east",list(londim,latdim),-1,prec="float")
                         latcdf <- ncvar_def(latname,"degrees_north",list(londim,latdim),-1,prec="float")
 	                tmpout = nc_create(outfile,list(indexcdf,loncdf,latcdf),force_v4=TRUE)
-			lon2d = ncvar_get(refnc,lonname)
-			lat2d = ncvar_get(refnc,latname)
-                        ncvar_put(tmpout,indexcdf,index3d)
+                        ncvar_put(tmpout,indexcdf,index)
 			ncvar_put(tmpout,loncdf,lon2d);ncvar_put(tmpout,latcdf,lat2d)
 			ncatt_put(tmpout,indexcdf,"coordinates","lon lat")
 			rm(loncdf,latcdf,lon2d,lat2d)
@@ -202,7 +211,7 @@ canspanyears=FALSE,gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_ce
                 if(irregular) {system(paste("module load nco; ncks -C -O -x -v x,y",outfile,outfile,sep=" "))}
 
 	# Clean up for next iteration
-		rm(timedim,indexcdf,tmpout,outfile,index3d,index3d_trans)
+		rm(timedim,indexcdf,tmpout,outfile,index3d_trans)
 
 	# Report back
 		print(paste(paste("climdex",indices[a],sep=".")," completed.",sep=""))
@@ -228,11 +237,21 @@ get.time <- function(nc=NULL,timename=NULL,time_format=NULL)
 	ftime = ncvar_get(nc,timename)
 	time_att = ncatt_get(nc,timename,"units")[2]
 
-        if(grepl("hours",time_att)) {print("Time coordinate in hours, converting to seconds...") ;ftime = ftime*60*60}
-        if(grepl("days",time_att)) {print("Time coordinate in days, converting to seconds...") ;ftime = ftime*24*60*60}
+	# Bit of a hack for non-model datasets. Requires user to specify "time_format" in climpact.loader
+	if(!is.null(time_format)) {
+		string = (apply(ftime,1,toString))
+		dates = (as.Date(string,time_format))
+		rm(ftime) ; ftime = array(1,length(dates)) ; ftime = (as.character(dates))
 
-#        return(as.PCICt(ftime,cal="365_day",origin,format="%Y%m%d"))
-	return(as.PCICt(ftime,cal="gregorian",origin=get.origin(time_att=time_att[[1]]),format=time_format))
+		split = substring(time_format, seq(1,nchar(time_format),2), seq(2,nchar(time_format),2))
+		time_format = paste(split[1],split[2],split[3],sep="-")
+	        return(as.PCICt(ftime,cal="gregorian",format=time_format))
+	} else {
+	        if(grepl("hours",time_att)) {print("Time coordinate in hours, converting to seconds...") ; ftime = ftime*60*60}
+        	if(grepl("days",time_att)) {print("Time coordinate in days, converting to seconds...") ; ftime = ftime*24*60*60}
+
+		return(as.PCICt(ftime,cal="gregorian",origin=get.origin(time_att=time_att[[1]]),format=time_format))
+	}
 }
 
 # A universal wrapper function for the climdex (and climpact?) functions. This is needed simply to pass a ci object to the index functions, instead of a list object.
@@ -243,67 +262,124 @@ get.time <- function(nc=NULL,timename=NULL,time_format=NULL)
 #}
 
 ##############
-# NEW CLIMPACT FUNCTIONS THAT SHOULD WORK
+# NEW CLIMPACT INDICES THAT SHOULD WORK
+##############
 
+# fd2
+# Annual count when TN < 2ºC
+# same as climdex.fd except < 2
 climdex.fd2 <- function(ci) { stopifnot(!is.null(ci@data$tmin)); return(number.days.op.threshold(ci@data$tmin, ci@date.factors$annual, 2, "<") * ci@namasks$annual$tmin) }
 
+# fdm2
+# Annual count when TN < -2ºC
+# same as climdex.fd except < -2
 climdex.fdm2 <- function(ci) { stopifnot(!is.null(ci@data$tmin)); return(number.days.op.threshold(ci@data$tmin, ci@date.factors$annual, -2, "<") * ci@namasks$annual$tmin) }
 
+# fdm20
+# Annual count when TN < -20ºC
+# same as climdex.fd except < -20
 climdex.fdm20 <- function(ci) { stopifnot(!is.null(ci@data$tmin)); return(number.days.op.threshold(ci@data$tmin, ci@date.factors$annual, -20, "<") * ci@namasks$annual$tmin) }
 
-# same as climdex.wsdi except user specifies min.length (which is passed as an additional parameter 'usern_wsdin').
-climdex.wsdin <- function(ci, spells.can.span.years=FALSE,usern_wsdin) { stopifnot(!is.null(ci@data$tmax) && !is.null(ci@quantiles$tmax)); return(threshold.exceedance.duration.index(ci@data$tmax, ci@date.factors$annual, ci@jdays, ci@quantiles$tmax$outbase$q90, ">", spells.can.span.years=spells.can.span.years, max.missing.days=ci@max.missing.days['annual'], min.length=usern_wsdin) * ci@namasks$annual$tmax) }
+# wsdin
+# Annual count of days with at least n consecutive days when TX>90th percentile where n>= 2 (and max 10)
+# same as climdex.wsdi except user specifies number of consecutive days
+climdex.wsdin <- function(ci, spells.can.span.years=FALSE,n=5) { stopifnot(!is.null(ci@data$tmax) && !is.null(ci@quantiles$tmax)); return(threshold.exceedance.duration.index(ci@data$tmax, ci@date.factors$annual, ci@jdays, ci@quantiles$tmax$outbase$q90, ">", spells.can.span.years=spells.can.span.years, max.missing.days=ci@max.missing.days['annual'], min.length=n) * ci@namasks$annual$tmax) }
 
-# same as climdex.csdi except user specifies min.length (which is passed as an additional parameter 'usern_csdin').
-climdex.csdin <- function(ci, spells.can.span.years=FALSE,usern_csdin) { stopifnot(!is.null(ci@data$tmin) && !is.null(ci@quantiles$tmin)); return(threshold.exceedance.duration.index(ci@data$tmin, ci@date.factors$annual, ci@jdays, ci@quantiles$tmin$outbase$q10, "<", spells.can.span.years=spells.can.span.years, max.missing.days=ci@max.missing.days['annual'], min.length=usern_csdin) * ci@namasks$annual$tmin) }
+# csdin
+# Annual count of days with at least n consecutive days when TN<10th percentile where n>= 2 (and max 10)
+# same as climdex.csdi except user specifies number of consecutive days
+climdex.csdin <- function(ci, spells.can.span.years=FALSE,n=5) { stopifnot(!is.null(ci@data$tmin) && !is.null(ci@quantiles$tmin)); return(threshold.exceedance.duration.index(ci@data$tmin, ci@date.factors$annual, ci@jdays, ci@quantiles$tmin$outbase$q10, "<", spells.can.span.years=spells.can.span.years, max.missing.days=ci@max.missing.days['annual'], min.length=n) * ci@namasks$annual$tmin) }
 
+# tm5a
+# Annual count when TM >= 5ºC
 # same as climdex.tr except >= 5C
 climdex.tm5a <- function(ci) { stopifnot(!is.null(ci@data$tmin)); return(number.days.op.threshold(ci@data$tmin, ci@date.factors$annual, 5, ">=") * ci@namasks$annual$tmin) }
 
+# tm5b
+# Annual count when TM < 5ºC
 # same as climdex.tr except < 5C
 climdex.tm5b <- function(ci) { stopifnot(!is.null(ci@data$tmin)); return(number.days.op.threshold(ci@data$tmin, ci@date.factors$annual, 5, "<") * ci@namasks$annual$tmin) }
 
+# tm10a
+# Annual count when TM >= 10ºC
 # same as climdex.tr except >=10C
 climdex.tm10a <- function(ci) { stopifnot(!is.null(ci@data$tmin)); return(number.days.op.threshold(ci@data$tmin, ci@date.factors$annual, 10, ">=") * ci@namasks$annual$tmin) }
 
+# tm10b
+# Annual count when TM < 10ºC
 # same as climdex.tr except <10C
 climdex.tm10b <- function(ci) { stopifnot(!is.null(ci@data$tmin)); return(number.days.op.threshold(ci@data$tmin, ci@date.factors$annual, 10, "<") * ci@namasks$annual$tmin) }
 
+# su30
+# Annual count when TX >= 30ºC
 # same as climdex.tr except >=30C
 climdex.su30 <- function(ci) { stopifnot(!is.null(ci@data$tmax)); return(number.days.op.threshold(ci@data$tmax, ci@date.factors$annual, 30, ">=") * ci@namasks$annual$tmax) }
 
+# su35
+# Annual count when TX > = 35ºC
 # same as climdex.tr except >=35C
 climdex.su35 <- function(ci) { stopifnot(!is.null(ci@data$tmin)); return(number.days.op.threshold(ci@data$tmin, ci@date.factors$annual, 35, ">=") * ci@namasks$annual$tmin) }
 
-##############
-# NEW CLIMPACT FUNCTIONS THAT HOPEFULLY WORK
+# HDDheat
+# Annual sum of Tb-TM (where Tb is a user-defined location-specific base temperature and TM < Tb)
+climdex.hddheat <- function(ci,Tb=18) { Tbarr = array(Tb,length(ci@data$tavg)); stopifnot(is.numeric(ci@data$tavg),is.numeric(Tb),any(ci@data$tavg < Tbarr)) ;return(tapply.fast(Tbarr - ci@data$tavg,ci@date.factors$annual,sum))*ci@namasks$annual }
 
-# same as climdex.tx90p, except for 50th percentile. 
-# NOT SURE ABOUT IMPLEMENTATION. HOW ARE QUANTILES HANDLED? Should be able to submit 'temp.qtiles=c(0.5)' to climdexInput.raw?
-# UPDATE::: changed "qtiles=c(0.10,0.90)" to "qtiles" in get.temp.var.quantiles. This should allow the code to handle any specified percentiles.
-#       ::: contd. Not sure why this was hard coded.
-#       ::: contd. Contacted James Hiebert who maintains climdex and he agrees it's a bug, will be fixed in a future CRAN release.
+# CDDcold
+# Annual sum of TM-Tb (where Tb is a user-defined location-specific base temperature and TM > Tb)
+climdex.cddcold <- function(ci,Tb=18) { Tbarr = array(Tb,length(ci@data$tavg)); stopifnot(is.numeric(ci@data$tavg),is.numeric(Tb),any(ci@data$tavg > Tbarr)) ;return(tapply.fast(ci@data$tavg - Tbarr,ci@date.factors$annual,sum))*ci@namasks$annual }
+
+# GDDgrow
+# Annual sum of TM-Tb (where Tb is a user-defined location-specific base temperature and TM >Tb)
+climdex.gddgrow <- function(ci,Tb=10) { Tbarr = array(Tb,length(ci@data$tavg)); stopifnot(is.numeric(ci@data$tavg),is.numeric(Tb),any(ci@data$tavg > Tbarr)) ;return(tapply.fast(ci@data$tavg - Tbarr,ci@date.factors$annual,sum))*ci@namasks$annual }
+
+# Rxnday
+# Monthly maximum consecutive n-day precipitation (up to a maximum of 10)
+# Same as rx5day except specifying a monthly frequency and accepting user specified number of consecutive days
+climdex.rxnday <- function(ci, center.mean.on.last.day=FALSE,n=5) { stopifnot(!is.null(ci@data$prec)); return(nday.consec.prec.max(ci@data$prec, ci@date.factors$monthly, n, center.mean.on.last.day) * ci@namasks$monthly$prec) }
+
+##############
+# NEW CLIMPACT INDICES THAT HOPEFULLY WORK
+##############
+
+# tx50p
+# Percentage of days of days where TX>50th percentile
+# same as climdex.tx90p, except for 50th percentile
+#    NOT SURE ABOUT IMPLEMENTATION. HOW ARE QUANTILES HANDLED? Should be able to submit 'temp.qtiles=c(0.5)' to climdexInput.raw?
+#    UPDATE::: changed "qtiles=c(0.10,0.90)" to "qtiles" in get.temp.var.quantiles. This should allow the code to handle any specified percentiles.
+#          ::: contd. Not sure why this was hard coded.
+#          ::: contd. Contacted James Hiebert who maintains climdex and he agrees it's a bug, will be fixed in a future CRAN release.
 climdex.tx50p <- function(ci, freq=c("monthly", "annual")) {
 stopifnot(!is.null(ci@data$tmax) && !is.null(ci@quantiles$tmax)); return(percent.days.op.threshold(ci@data$tmax, ci@dates, ci@jdays, ci@date.factors[[match.arg(freq)]], ci@quantiles$tmax$outbase$q50, ci@quantiles$tmax$inbase$q50, ci@base.range, ">", ci@max.missing.days[match.arg(freq)]) * ci@namasks[[match.arg(freq)]]$tmax)
 }
 
+# tx95t
+# Value of 95th percentile of TX
 ##### TO CHECK/FIX ##### Need to understand how percentiles are calculated inside the base range. Currently this function reports the out of base 95th percentile (which I interpret to be what the index defines anyway). 
 ######################## In climdex.pcic this has dimensions (365,nyears,nyears-1), not sure why.
 climdex.tx95t <- function(ci, freq=c("monthly", "annual")) { stopifnot(!is.null(ci@data$tmax) && !is.null(ci@quantiles$tmax)); return(ci@quantiles$tmax$outbase$q95) }
 
-# A bastardised form of wsdi.
+# ntxntn
+# Annual count of n consecutive days where both TX > 95th percentile and TN > 95th percentile, where n >= 2 (and max of 10)
 # This function needs the new function dual.threshold.exceedance.duration.index, which was based on threshold.exceedance.duration.index
-climdex.ntxntn <- function(ci, spells.can.span.years=FALSE,usern_ntxntn) { stopifnot(!is.null(ci@data$tmax) && !is.null(ci@quantiles$tmax) || (!is.null(ci@data$tmin) && !is.null(ci@quantiles$tmin))); 
-return(dual.threshold.exceedance.duration.index(ci@data$tmax, ci@data$tmin, ci@date.factors$annual, ci@jdays, ci@quantiles$tmax$outbase$q95,ci@quantiles$tmin$outbase$q95, ">",">", min.length1=usern_ntxntn,min.length2=usern_ntxntn,spells.can.span.years=spells.can.span.years, max.missing.days=ci@max.missing.days['annual']) * ci@namasks$annual$tmax) }
+climdex.ntxntn <- function(ci, spells.can.span.years=FALSE,consecdays=5) { 
+	stopifnot(!is.null(ci@data$tmax) && !is.null(ci@quantiles$tmax) || (!is.null(ci@data$tmin) && !is.null(ci@quantiles$tmin)))
+	return(dual.threshold.exceedance.duration.index(ci@data$tmax, ci@data$tmin, ci@date.factors$annual, ci@jdays, ci@quantiles$tmax$outbase$q95,ci@quantiles$tmin$outbase$q95, 
+		">",">", consecdays=consecdays,spells.can.span.years=spells.can.span.years, max.missing.days=ci@max.missing.days['annual']) * ci@namasks$annual$tmax) }
 
-# Needed by climdex.ntxntn
-# This was modified from the climdex function threshold.exceedance.duration.index to calculate the number of min.lengthn consecutive days where 
-# daily.temp1 is op1 thresholds1 and daily.temp2 is op2 thresholds2.
-# NOTE: Currently this may be calculated incorrectly - there should only be one min.length parameter...
-dual.threshold.exceedance.duration.index <- function(daily.temp1, daily.temp2, date.factor, jdays, thresholds1, thresholds2, op1=">", op2=">", min.length1=6, min.length2=6, spells.can.span.years=TRUE, max.missing.days) {
-  stopifnot(is.numeric(c(daily.temp1,daily.temp2, thresholds1,thresholds2, min.length1,min.length2)), is.factor(date.factor),
+# ntxbntnb
+# Annual count of n consecutive days where both TX < 5th percentile and TN < 5th percentile, where n >= 2 (and max of 10)
+# This function needs the new function dual.threshold.exceedance.duration.index, which was based on threshold.exceedance.duration.index
+climdex.ntxbntnb <- function(ci, spells.can.span.years=FALSE,consecdays=5) {
+        stopifnot(!is.null(ci@data$tmax) && !is.null(ci@quantiles$tmax) || (!is.null(ci@data$tmin) && !is.null(ci@quantiles$tmin)))
+        return(dual.threshold.exceedance.duration.index(ci@data$tmax, ci@data$tmin, ci@date.factors$annual, ci@jdays, ci@quantiles$tmax$outbase$q5,ci@quantiles$tmin$outbase$q5,
+                "<","<", consecdays=consecdays,spells.can.span.years=spells.can.span.years, max.missing.days=ci@max.missing.days['annual']) * ci@namasks$annual$tmax) }
+
+# dual.threshold.exceedance.duration.index
+# calculates the number of consecdays consecutive days where op1 and op2 operating on daily.temp1 and daily.temp2 respectively are satisfied.
+dual.threshold.exceedance.duration.index <- function(daily.temp1, daily.temp2, date.factor, jdays, thresholds1, thresholds2, op1=">", op2=">", consecdays, spells.can.span.years, max.missing.days) {
+  stopifnot(is.numeric(c(daily.temp1,daily.temp2, thresholds1,thresholds2, consecdays)), is.factor(date.factor),
             is.function(match.fun(op1)),is.function(match.fun(op2)),
-            min.length1 > 0,min.length2 > 0)
+            consecdays > 0,length(daily.temp1)==length(daily.temp2))
   f1 <- match.fun(op1)
   f2 <- match.fun(op2)
 
@@ -312,26 +388,54 @@ dual.threshold.exceedance.duration.index <- function(daily.temp1, daily.temp2, d
   na.mask_combined = na.mask1 & na.mask2
 
   if(spells.can.span.years) {
-    periods1 <- select.blocks.gt.length(f1(daily.temp1, thresholds1[jdays]), min.length1 - 1)
-    periods2 <- select.blocks.gt.length(f2(daily.temp2, thresholds2[jdays]), min.length2 - 1)
-    periods_combined = periods1 & periods2	# an array of booleans
+    periods1 <- f1(daily.temp1, thresholds1[jdays])	#select.blocks.gt.length(f1(daily.temp1, thresholds1[jdays]), min.length1 - 1)
+    periods2 <- f2(daily.temp2, thresholds2[jdays])	#select.blocks.gt.length(f2(daily.temp2, thresholds2[jdays]), min.length2 - 1)
+    periods_combined = select.blocks.gt.length(periods1 & periods2,consecdays)	# an array of booleans
     return(tapply.fast(periods_combined, date.factor, sum) * na.mask_combined)
   } else {
     return(tapply.fast(1:length(daily.temp1), date.factor, function(idx) { 
-	periods1 = select.blocks.gt.length(f1(daily.temp1[idx], thresholds1[jdays[idx]]), min.length1 - 1)#   * na.mask1
-	periods2 = select.blocks.gt.length(f2(daily.temp2[idx], thresholds2[jdays[idx]]), min.length2 - 1)#   * na.mask2
-	periods_combined = periods1 & periods2
+	periods1 = f1(daily.temp1[idx], thresholds1[jdays[idx]])	#select.blocks.gt.length(f1(daily.temp1[idx], thresholds1[jdays[idx]]), min.length1 - 1)#   * na.mask1
+	periods2 = f2(daily.temp2[idx], thresholds2[jdays[idx]])	#select.blocks.gt.length(f2(daily.temp2[idx], thresholds2[jdays[idx]]), min.length2 - 1)#   * na.mask2
+	periods_combined = select.blocks.gt.length(periods1 & periods2,consecdays)
 	return(sum(periods_combined)) })*na.mask_combined)
   }
 }
 
-climdex.hddheat <- function(ci,Tb=18) {
-        Tbarr = ci@data$tavg
-        Tbarr = Tb
-	stopifnot(is.numeric(ci@data$tavg),is.numeric(Tb),any(ci@data$tavg < Tbarr))
-# need a tapply here
-	return(sum(Tbarr - ci@data$tavg))
+# SPEI
+# Measure of “drought” using the Standardised Precipitation Evapotranspiration Index on time scales of 3, 6 and 12 months. No missing data are allowed to calculate SPEIflex. 
+# Attempting to use the R package SPEI for the SPEI and SPI indices.
+climdex.spei <- function(ci,n=6) { stopifnot(is.numeric(ci@data$prec),is.numeric(n),n>0) ; 
+	ci@data$prec[length(ci@data$prec)]=ci@data$prec[length(ci@data$prec)-1] ; print(sum(is.na(ci@data$prec)));print((spei(ci@data$prec,n))$fitted) 
+print(str(ci))
+q()
+	return(spei(ci@data$prec,n))
 }
+
+# hwn
+# 
+# Heat wave indices
+climdex.hwn <- function(ci,base.range=c(1961,1990),n,min.base.data.fraction.present,lat) {
+	stopifnot(!is.null(lat))
+
+# step 1. Get 90th percentiles. Try using climdex's get.outofbase.quantiles function for this.
+	print(base.range)
+	min_max_quantiles <- get.outofbase.quantiles(ci@data$tmax,ci@data$tmin,ci@data$prec,tmax.dates=ci@dates,tmin.dates=ci@dates,prec.dates=ci@dates,base.range=base.range,n=n,temp.qtiles=0.9,prec.qtiles=0.9,
+							min.base.data.fraction.present=min.base.data.fraction.present)
+	mean_quantiles <- get.outofbase.quantiles(ci@data$tavg,ci@data$tmin,ci@data$prec,tmax.dates=ci@dates,tmin.dates=ci@dates,prec.dates=ci@dates,base.range=base.range,n=n,temp.qtiles=0.9,prec.qtiles=0.9,
+							min.base.data.fraction.present=min.base.data.fraction.present)
+	print(str(min_max_quantiles))
+	print(str(mean_quantiles))
+print(lat)
+q()
+
+# step 2. Determine if "conditions" (ambiguous word used in climpact manual) have persisted for >= 3 days. If so, count number of summer heat waves.
+}
+
+
+
+
+
+
 
 
 
@@ -361,41 +465,5 @@ tapply.fast <- function (X, INDEX, FUN = NULL, ..., simplify = TRUE) {
   ans <- unlist(ans, recursive = FALSE)
   names(ans) <- levels(INDEX)
   return(ans)
-}
-
-#' Select blocks of TRUE values of sufficient length.
-#' 
-#' Produces a sequence of booleans of the same length as input, with sequences
-#' of TRUE values shorter than n replaced with FALSE.
-#' 
-#' This function takes a series of booleans and returns a sequence of booleans
-#' of equal length, with all sequences of TRUE of length \code{n} or shorter
-#' replaced with sequences of FALSE. NA values are replaced with
-#' \code{na.value}.
-#' 
-#' @param d Sequence of booleans.
-#' @param n Longest sequence of TRUE to replace with FALSE.
-#' @param na.value Values to replace NAs with.
-#' @return A vector of booleans, with the length \code{n} or less sequences of
-#' TRUE replaced with FALSE.
-dual.select.blocks.gt.length <- function(d1,d2,n1,n2, na.value=FALSE) {
-  stopifnot(is.logical(d1),is.logical(d2),is.numeric(n1),is.numeric(n2))
-
-  if(n1 < 1 && n2 < 1)
-    return(d)
-
-  if(n >= length(d1))
-    return(rep(FALSE, length(d)))
-
-  d1[is.na(d1)] <- na.value
-  d2[is.na(d2)] <- na.value
-
-print("dual.select.blocks.gt.length")
-print(length(d1))
-print(d1)
-
-  d1a <- Reduce(function(x, y) { return(c(rep(FALSE, y), d1[1:(length(d1) - y)]) & x) }, 1:n, d1)
-print(d1a)
-  return(Reduce(function(x, y) { return(c(d1a[(y + 1):length(d1a)], rep(FALSE, y)) | x) }, 1:n, d1a))
 }
 
