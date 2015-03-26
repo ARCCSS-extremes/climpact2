@@ -10,6 +10,7 @@ In R you will need the following packages:
 -climdex.pcic
 -ncdf4
 -PCICt
+-SPEI
 
 **********************************
 
@@ -26,6 +27,7 @@ To run the code:
     - install.packages("climdex.pcic")
     - install.packages("ncdf4")
     - install.packages("PCICt")
+    - install.packages("SPEI")
 3) Edit and run test.climpact2.r. More information can be gleaned from the climpact.loader function header in climpact2_0.1.r.
 
 This should be all you need to run the software, but apologies if I've missed something (let me know).
