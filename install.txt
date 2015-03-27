@@ -23,8 +23,8 @@ To download the code to the storm servers by the following steps:
 To run the code:
 
 1) Load the R module if you don't already have it "module load R/3.0.3 nco/4.3.2" -> I added nco here for a meta-data hack I've got in place.
-2) In R install the following packages;
-    - install.packages("climdex.pcic")
+2) In R install the following packages (note if you already have climdex.pcic installed you will need to remove it with remove.packages("climdex.pcic"));
+    - install.packages("/file/path/to/climdex.pcic.tar.gz",repos=NULL,type="source")
     - install.packages("ncdf4")
     - install.packages("PCICt")
     - install.packages("SPEI")
