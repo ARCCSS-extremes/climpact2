@@ -11,6 +11,7 @@ library("ncdf4")
 library("PCICt")
 library(compiler)
 library(SPEI)
+library(tcltk)
 
 options(warn=1)
 
@@ -174,17 +175,17 @@ gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,ntxn
 #	                        index[i,j,] = array(indexcompile(ciarray[[i,j]]))
 			}
 		}
-print(length(index[1,1,]))
+
 	# Transpose dimensions to time,lat,lon
 	        index3d_trans = aperm(index,c(1,2,3))#(2,3,1))
 
 	# Write out
 	# NOTE: ncdf4 seems to only support numeric types for dimensions.
-		if(period == "monthly"){	# if monthly data
+		if(period == "monthly"){	# monthly data
                         timedim <- ncdim_def("time",paste("months since ",yeardate[1],"-01-01",sep=""),0.5:(nmonths-0.5))
-		} else if(period == "annual"){								# else assume annual data
+		} else if(period == "annual"){	# annual data
 	                timedim <- ncdim_def("time",paste("years since ",yeardate[1],"-01-01",sep=""),0.5:(nyears-0.5))
-		} else {
+		} else {			# 365 days of data
 			timedim <- ncdim_def("time","days since 0001-01-01",0.5:364.5)
 		}
 
@@ -200,7 +201,7 @@ print(length(index[1,1,]))
                         ncvar_put(tmpout,indexcdf,index)
 			ncvar_put(tmpout,loncdf,lon2d);ncvar_put(tmpout,latcdf,lat2d)
 			ncatt_put(tmpout,indexcdf,"coordinates","lon lat")
-			rm(loncdf,latcdf,lon2d,lat2d)
+			rm(loncdf,latcdf)
 		}else{tmpout = nc_create(outfile,list(indexcdf),force_v4=TRUE);ncvar_put(tmpout,indexcdf,index3d_trans)}
 
 	# metadata
@@ -407,28 +408,65 @@ dual.threshold.exceedance.duration.index <- function(daily.temp1, daily.temp2, d
 climdex.spei <- function(ci,n=6) { stopifnot(is.numeric(ci@data$prec),is.numeric(n),n>0) ; 
 	ci@data$prec[length(ci@data$prec)]=ci@data$prec[length(ci@data$prec)-1] ; print(sum(is.na(ci@data$prec)));print((spei(ci@data$prec,n))$fitted) 
 print(str(ci))
+print(length(spei(ci@data$prec,n)$fitted))
 q()
 	return(spei(ci@data$prec,n))
 }
 
 # hwn
-# 
-# Heat wave indices
-climdex.hwn <- function(ci,base.range=c(1961,1990),n,min.base.data.fraction.present,lat) {
+# Heat wave indices. From Perkins and Alexander (2013)
+#### NOTE: NEED TO DEAL WITH FIRST 33 DAYS OF RECORD THAT ARE NA...
+climdex.hwn <- function(ci,base.range=c(1961,1990),n=15,min.base.data.fraction.present,lat) {
 	stopifnot(!is.null(lat))
 
 # step 1. Get 90th percentiles. Try using climdex's get.outofbase.quantiles function for this.
 	print(base.range)
-	min_max_quantiles <- get.outofbase.quantiles(ci@data$tmax,ci@data$tmin,ci@data$prec,tmax.dates=ci@dates,tmin.dates=ci@dates,prec.dates=ci@dates,base.range=base.range,n=n,temp.qtiles=0.9,prec.qtiles=0.9,
+	tx90p_tn90p <- get.outofbase.quantiles(ci@data$tmax,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=n,temp.qtiles=0.9,prec.qtiles=0.9,
 							min.base.data.fraction.present=min.base.data.fraction.present)
-	mean_quantiles <- get.outofbase.quantiles(ci@data$tavg,ci@data$tmin,ci@data$prec,tmax.dates=ci@dates,tmin.dates=ci@dates,prec.dates=ci@dates,base.range=base.range,n=n,temp.qtiles=0.9,prec.qtiles=0.9,
+	tavg90p <- get.outofbase.quantiles(ci@data$tavg,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=n,temp.qtiles=0.9,prec.qtiles=0.9,
 							min.base.data.fraction.present=min.base.data.fraction.present)
-	print(str(min_max_quantiles))
-	print(str(mean_quantiles))
-print(lat)
-q()
 
-# step 2. Determine if "conditions" (ambiguous word used in climpact manual) have persisted for >= 3 days. If so, count number of summer heat waves.
+#	names(mean_quantiles$tmax)[1] <- "tavg"
+	tavg = (ci@data$tmax - ci@data$tmin)/2	#ci@data$tavg
+	EHIaccl = array(NA,length(tavg)) # get shells for the following three variables
+	EHIsig = array(NA,length(tavg))
+	EHF = array(NA,length(tavg))
+
+	# make an array of looping 1:365 to reference the right day for percentiles
+	annualrepeat = array(1:365,length(tavg))
+
+	for (a in 33:length(ci@data$tavg)) {
+		EHIaccl[a] = ((tavg[a] + tavg[a-1] + tavg[a-2])/3) - (sum(tavg[(a-32):(a-3)])/30)
+		EHIsig[a] = ((tavg[a] + tavg[a-1] + tavg[a-2])/3) - unlist(tavg90p$tmax[1])[annualrepeat[a]] #[(a %% 365)]
+print(EHIsig[a])
+		EHF[a] = max(1,EHIaccl[a])*EHIsig[a]
+print(EHF[a])
+	}
+
+print("END OF LOOP")
+#print(EHF)
+print(sum(is.na(EHF)))
+print(lat)
+
+# step 2. Determine if "conditions" have persisted for >= 3 days. If so, count number of summer heat waves.
+
+# create an array of booleans for each definition identifying runs 3 days or longer where conditions are met. i.e. for TX90p, TN90p, EHF.
+	tx90p_boolean = array(FALSE,length(tx90p_tn90p))
+        tn90p_boolean = array(FALSE,length(tx90p_tn90p))
+	EHF_boolean = array(FALSE,length(EHF))
+
+print(ci@data$tmax)
+print(tx90p_tn90p$tmax[1])
+q()
+# TO DO: loop through each element of tmax/tmin and compare to corresponding days percentile. 
+#  - also, create correct array size (in time dimension) back in netCDF loader.
+	tx90p_boolean = (ci@data$tmax[1] > tx90p_tn90p$tmax[1])
+	tn90p_boolean = (ci@data$tmin[1] > tx90p_tn90p$tmin[1])
+	EHF_boolean = (EHF > 0)
+
+print(tx90p_boolean)
+q()
+#print(tx90p_boolean)
 }
 
 
@@ -467,3 +505,195 @@ tapply.fast <- function (X, INDEX, FUN = NULL, ..., simplify = TRUE) {
   return(ans)
 }
 
+
+
+
+
+
+
+
+# GUI STUFF
+
+# fonts for different texts in GUI.
+
+startss <- function(){
+logo_require    <- FALSE
+ start1<-tktoplevel(bg='white')
+fontHeading     <- tkfont.create(family = "times", size = 40, weight = "bold", slant = "italic")
+
+fontHeading1    <- tkfont.create(family = "times", size = 20, weight = "bold")
+
+fontHeading2    <- tkfont.create(family = "times", size = 14, weight = "bold")
+
+fontTextLabel   <- tkfont.create(family = "times", size = 12)
+
+fontFixedWidth  <- tkfont.create(family = "courier", size = 12)
+
+font_small  <- "times 12"
+
+font_big    <- "times 15 bold"
+
+font_err    <- "times 13 bold"
+
+grey_font <- tkfont.create(family = "times", size = 30, weight = "bold", slant = "italic") #'times 20 grey bold'
+
+
+  # search logo files in current working directory.
+
+  no.logo <- FALSE;
+
+  dir0 <- getwd();
+
+  logo1 <- "WMOLogo.gif";
+
+  logo2 <- "UNSW.gif";
+
+  logo3 <- "coess.gif";
+
+
+
+  if (logo_require == TRUE)
+
+  {  # Users want to search another directory for the logo files.
+
+    while (file.exists(paste(dir0, "/", logo1, sep = "")) == FALSE)
+
+    {
+
+      dir0 <- tk_choose.dir(getwd(), caption = "Select directory containing three .gif files");
+
+      if (is.na(dir0) == TRUE)
+
+      {
+
+        no.logo <- TRUE;
+
+        break();
+
+      }
+
+    }
+
+  }
+
+  if (file.exists(paste(dir0, "/", logo1, sep = "")) == FALSE | 
+
+      file.exists(paste(dir0, "/", logo2, sep = "")) == FALSE |
+
+      file.exists(paste(dir0, "/", logo3, sep = "")) == FALSE) no.logo <- TRUE; # find logos?
+
+
+
+  tkwm.geometry(start1, "+0+0"); # position in upper left corner of screen
+
+  tkwm.title(start1, "ClimPACT test version");
+
+
+
+  # Show logos on upper half of the main window, or "no logos available".  
+
+  if (no.logo == FALSE)
+
+  {  # with logos
+
+    logo1 <- paste(dir0, "/", logo1, sep = "");
+
+    logo2 <- paste(dir0, "/", logo2, sep = "");
+
+    logo3 <- paste(dir0, "/", logo3, sep = "");
+
+
+
+    img  <- tkimage.create("photo", file = logo1);
+
+    img2 <- tkimage.create("photo", file = logo2, width = 0);
+
+    img3 <- tkimage.create("photo", file = logo3, width = 0);
+
+
+
+    left  <- tklabel(start1, image = img2);
+
+    right <- tklabel(start1, image = img3);
+
+    tkgrid(left, right);
+
+    tkgrid.configure(left,  sticky = "e");
+
+    tkgrid.configure(right, sticky = "w");
+
+  } else
+
+  {    # no logos, show a help button.
+
+    help.logo <- function()
+
+    {
+
+      tkmessageBox(message=paste('You can see this help because the logo files are not in the working directory of R!\n\nThree files are needed for the logos:\n',
+
+        logo1,', ',logo2,', and ',logo3,'\nAnd they must be in the working directory of R.\n\n',
+
+        'If you have those files, you can put them in the working directory, or set "logo_require=T" in line 57 of the source code and try again... ',
+
+        sep = ''), icon = 'question');
+
+    }
+
+
+
+    right <- tkbutton(start1, text = " ? ", command = help.logo, bg = "white", foreground = "light grey", width = 2);
+
+
+
+    left <- tklabel(start1, text = "  no logos available  ", font = grey_font, width = 30, bg = "white", foreground = "light grey");
+
+
+
+    # The following 2 lines could be used later if we want a wanring message when logo files are not available.
+
+    #tkgrid(left,right)   
+
+    #tkgrid.configure(left,sticky="e"); tkgrid.configure(right,sticky="w")
+
+  }
+
+
+
+  # lower half of the window.
+
+  tkgrid(tklabel(start1, text = "    ", bg = "white"));
+
+  tkgrid(tklabel(start1, text = "             ClimPACT             ", font = fontHeading, width = 30, bg = "white"), columnspan = 2);
+
+  tkgrid(tklabel(start1, text = "    ", bg = "white"));
+
+    
+
+    start.but   <- tkbutton(start1, text = "Load Data and Run QC", command = getfile0, width = 30, font = fontHeading2, bg = "white");
+
+    cal.but     <- tkbutton(start1, text = "Indices Calculation", command = nastat, width = 30, font = fontHeading2, bg = "white");
+
+    cancel.but  <- tkbutton(start1, text = "Exit", command = done, width = 30, font = fontHeading2, bg = "white");
+
+    help.but    <- tkbutton(start1, text = "About", command = get_help, width = 30, font = fontHeading2, bg = "white");
+
+    license.but <- tkbutton(start1, text = "Software Licence Agreement", command = license, width = 30, font = fontHeading2, bg = "white");
+
+    tkgrid(start.but,   columnspan = 2);
+
+    tkgrid(cal.but,     columnspan = 2);
+
+    tkgrid(help.but,    columnspan = 2);
+
+    tkgrid(license.but, columnspan = 2);
+
+    tkgrid(cancel.but,  columnspan = 2);
+
+    tkgrid(tklabel(start1, text = "", bg = "white"));
+
+    if (no.logo == FALSE) tkgrid(tklabel(start1, image = img), columnspan = 2);
+
+    tkfocus(start1);
+
+}
