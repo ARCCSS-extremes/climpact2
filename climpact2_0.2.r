@@ -18,7 +18,8 @@ software_id = "0.2"
 
 # climpact.loader
 #
-# This function reads in provided 3 dimensional netCDF files and calculates specified indices
+# This function reads in provided 3 dimensional netCDF files and calculates specified indices.
+# No unit conversion is done except for Kelvin to Celcius.
 #
 # INPUT
 #  tsminfile: min temperature file
@@ -48,7 +49,8 @@ software_id = "0.2"
 climpact.loader <- function(tsminfile=NULL,tsmaxfile=NULL,precfile=NULL,tsminname="tsmin",tsmaxname="tsmax",precname="prec",timename="time",indices=NULL,identifier=NULL,lonname="lon",latname="lat",baserange=c(1961,1990),
 freq=c("monthly","annual"),quantiles=NULL,tempqtiles=c(0.1,0.9),precqtiles=c(0.1,0.9),max.missing.days=c(annual=15, monthly=3),min.base.data.fraction.present=0.1,northern.hemisphere=TRUE,csdin_n=5,wsdin_n=5,
 cdd_spells.can.span.years=TRUE,cwd_spells.can.span.years=TRUE,csdin_spells.can.span.years=FALSE,wsdin_spells.can.span.years=FALSE,csdi_spells.can.span.years=FALSE,wsdi_spells.can.span.years=FALSE,ntxntn_spells.can.span.years=FALSE,
-gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,ntxntn_consecdays=5,hddheat_n=18,time_format=NULL,rxnday_n=5,rxnday_center.mean.on.last.day=FALSE,spei_n=1,hwn_min.base.data.fraction.present=0.1,hwn_n=5)
+ntxbntnb_spells.can.span.years=FALSE,ntxbntnb_consecdays=5,gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,ntxntn_consecdays=5,hddheat_n=18,time_format=NULL,rxnday_n=5,rxnday_center.mean.on.last.day=FALSE,
+spei_n=1,hwn_min.base.data.fraction.present=0.1,hwn_n=5)
 {
 # Initial checks
 # 1) at least one file is provided,
@@ -56,9 +58,10 @@ gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,ntxn
 # 3) that all indices are valid,
 # TO ADD: if a tsmax index is specified but tsmax file is not. BOMB.
 # TO ADD: FILES EXIST!! This should be first thing!
-	indexlist <- readLines("./index.master.list")
+	indexfile = "./index.master.list"
+	indexlist <- readLines(indexfile)
 	if(all(is.null(tsminfile),is.null(tsmaxfile),is.null(precfile))) stop("Must provide at least one filename for tsmin, tsmax and/or prec.")
-	if(is.null(indices)) stop("Must provide a list of indices to calculate. See XX for list.")
+	if(is.null(indices)) stop(paste("Must provide a list of indices to calculate. See ",indexfile," for list.",sep=""))
         if(any(!indices %in% indexlist)) stop(paste("One or more indices"," are unknown. See XX for list.",sep=""))
 
 # Set constants
@@ -94,9 +97,21 @@ gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,ntxn
 
 # Get the time
         time = get.time(refnc,timename,time_format) #ncvar_get(refnc,"time") ; print(time)
-        yeardate = unique(format(time,format="%Y"))
-        nmonths = length(yeardate)*12
-        nyears = length(yeardate)
+        yeardate = unique(format(time,format="%Y"))		# get unique years
+	monthdate = (unique(format(time,format="%Y-%m")))	# get unique year-month dates
+
+	# for NARCliM we will use hours since origin. For other datasets (that may not have an origin) we use years or months since the first time step.
+	if(is.null(time_format)) {
+		time_att = ncatt_get(refnc,timename,"units")[2]
+		origin=get.origin(time_att=time_att[[1]])
+		months_as_hours = as.numeric(as.Date(paste(monthdate,"-01",sep="")) - as.Date(origin))*24
+		years_as_hours = as.numeric(as.Date(paste(yeardate,"-01-01",sep="")) - as.Date(origin))*24
+	        nmonths = length(months_as_hours)
+        	nyears = length(years_as_hours)
+	} else {
+		nmonths = length(yeardate)*12
+		nyears = length(yeardate)
+	}
 
 	if(!is.null(tsminfile)) { tsmintime = time }; if(!is.null(tsmaxfile)) { tsmaxtime = time }; if(!is.null(precfile)) { prectime = time }
 
@@ -142,11 +157,12 @@ gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,ntxn
                         csdin={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",csdin_spells.can.span.years,",n=",csdin_n,"))",sep="")},
                         wsdin={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",wsdin_spells.can.span.years,",n=",wsdin_n,"))",sep="")},
                         ntxntn={indexparam = paste("array(indexcompile(",indexparam,",consecdays=",ntxntn_consecdays,",spells.can.span.years=",ntxntn_spells.can.span.years,"))",sep="")},
+                        ntxbntnb={indexparam = paste("array(indexcompile(",indexparam,",consecdays=",ntxbntnb_consecdays,",spells.can.span.years=",ntxbntnb_spells.can.span.years,"))",sep="")},
 			tx95t={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="")},
 
                         rxnday={indexparam = paste("array(indexcompile(",indexparam,",center.mean.on.last.day=",rxnday_center.mean.on.last.day,",n=",rxnday_n,"))",sep="")},spei={indexparam = paste("array(indexcompile(",indexparam,",n=",spei_n,"))",sep="")},
 			hw={
-				# find corrected call for retrieving lat
+				# find correct call for retrieving lat
 				if (irregular) { latstr="lat2d[j,i]" } else { latstr="lat[j]" }
 				indexparam = paste("array(indexcompile(",indexparam,",base.range=c(",baserange[1],",",baserange[2],"),n=",hwn_n,",min.base.data.fraction.present=",
 				hwn_min.base.data.fraction.present,",lat=",latstr,"))",sep="")},
@@ -155,24 +171,24 @@ gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,ntxn
 		print(eval(indexparam))
 
 	# Determine whether index to be calculated will be daily (currently only for tx95t), monthly or annual
-		if(indices[a] == "tx95t") {period = "365days"} else if (indices[a] == "rxnday") { period = "monthly" } else {
+		if(indices[a] == "tx95t") {period = "DAY"} else if (indices[a] == "rxnday") { period = "MON" } else {
 	                if(!is.null(formals(indexfun)$freq)) {
 				if(!is.null(freq)){
-					if(freq[1] == "monthly") {period = "monthly"} else {period = "annual"}
-				} else {period = "monthly"}
-			} else {period = "annual"}
+					if(freq[1] == "monthly") {period = "MON"} else {period = "ANN"}
+				} else {period = "MON"}
+			} else {period = "ANN"}
 		}
 
 	# Create empty array depending on whether index is monthly or annual
-		if(period == "monthly") {index = array(NA,c(length(lon),length(lat),nmonths))} else if(period == "annual") { index = array(NA,c(length(lon),length(lat),nyears))} else {index = array(NA,c(length(lon),length(lat),365))}
+		if(period == "MON") {index = array(NA,c(length(lon),length(lat),nmonths))} else if(period == "ANN") { index = array(NA,c(length(lon),length(lat),nyears))} else {index = array(NA,c(length(lon),length(lat),365))}
 
 	# Calculate the index
 		for(j in 1:length(lat)){
 			for(i in 1:length(lon)){
 				cio = cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=prec[i,j,],tmin.dates=tsmintime,tmax.dates=tsmaxtime,prec.dates=prectime,prec.qtiles=precqtiles,
 					temp.qtiles=tempqtiles,quantiles=quantiles,base.range=baserange)
-				index[i,j,] = eval(parse(text=indexparam))
 
+				index[i,j,] = eval(parse(text=indexparam))
 #	                        index[i,j,] = array(indexcompile(ciarray[[i,j]]))
 			}
 		}
@@ -182,15 +198,19 @@ gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,ntxn
 
 	# Write out
 	# NOTE: ncdf4 seems to only support numeric types for dimensions.
-		if(period == "monthly"){	# monthly data
-                        timedim <- ncdim_def("time",paste("months since ",yeardate[1],"-01-01",sep=""),0.5:(nmonths-0.5))
-		} else if(period == "annual"){	# annual data
-	                timedim <- ncdim_def("time",paste("years since ",yeardate[1],"-01-01",sep=""),0.5:(nyears-0.5))
-		} else {			# 365 days of data
-			timedim <- ncdim_def("time","days since 0001-01-01",0.5:364.5)
+
+	# Make time dimension according to time format
+		if(is.null(time_format)) {	# IF no time format supplied work with hours since.
+	                if(period == "MON") { timedim <- ncdim_def("time",paste("hours since ",origin,sep=""),months_as_hours) } 
+			else if(period == "ANN") { timedim <- ncdim_def("time",paste("hours since ",origin,sep=""),years_as_hours) } 
+			else { timedim <- ncdim_def("time","days since 0001-01-01",0.5:364.5) }
+		} else {			# ELSE use number of months or years since first time step.
+			if(period == "MON") { timedim <- ncdim_def("time",paste("months since ",yeardate[1],"-01-01",sep=""),0.5:(nmonths-0.5)) } 
+			else if(period == "ANN"){ timedim <- ncdim_def("time",paste("years since ",yeardate[1],"-01-01",sep=""),0.5:(nyears-0.5)) } 
+			else { timedim <- ncdim_def("time","days since 0001-01-01",0.5:364.5) }
 		}
 
-		outfile = paste(paste("CCRC",identifier,period,yeardate[1],yeardate[length(yeardate)],sep="_"),".nc",sep="")
+		outfile = paste(paste("CCRC",identifier,period,yeardate[1],yeardate[length(yeardate)],indices[a],sep="_"),".nc",sep="")
 	        indexcdf <- ncvar_def(indices[a],"units",list(londim,latdim,timedim),-1,prec="float")
 	        system(paste("rm -f ",outfile,sep=""))
 
@@ -209,7 +229,7 @@ gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,ntxn
         	ncatt_put(tmpout,0,"created_on",system("date",intern=TRUE))
 	        ncatt_put(tmpout,0,"created_by",system("whoami",intern=TRUE))
                 ncatt_put(tmpout,0,"software_version",software_id)
-                ncatt_put(tmpout,0,"base_period",paste(baserange[1],"-",baserange[2]))
+                ncatt_put(tmpout,0,"base_period",paste(baserange[1],"-",baserange[2],sep=""))
 
 	        nc_close(tmpout)
                 if(irregular) {system(paste("module load nco; ncks -C -O -x -v x,y",outfile,outfile,sep=" "))}
@@ -257,13 +277,6 @@ get.time <- function(nc=NULL,timename=NULL,time_format=NULL)
 		return(as.PCICt(ftime,cal="gregorian",origin=get.origin(time_att=time_att[[1]]),format=time_format))
 	}
 }
-
-# A universal wrapper function for the climdex (and climpact?) functions. This is needed simply to pass a ci object to the index functions, instead of a list object.
-#index.wrap <- function(ci=NULL,index=NULL,freq=NULL)
-#{
-#	indexfun = match.fun(paste("climdex",index,sep="."))
-#	return(indexfun(ci))
-#}
 
 ##############
 # NEW CLIMPACT INDICES THAT SHOULD WORK
@@ -386,7 +399,6 @@ dual.threshold.exceedance.duration.index <- function(daily.temp1, daily.temp2, d
             consecdays > 0,length(daily.temp1)==length(daily.temp2))
   f1 <- match.fun(op1)
   f2 <- match.fun(op2)
-
   na.mask1 <- get.na.mask(is.na(daily.temp1 + thresholds1[jdays]), date.factor, max.missing.days)
   na.mask2 <- get.na.mask(is.na(daily.temp2 + thresholds2[jdays]), date.factor, max.missing.days)
   na.mask_combined = na.mask1 & na.mask2
@@ -419,24 +431,26 @@ q()
 # hw
 # Heat wave indices. From Perkins and Alexander (2013)
 # This function will return a 3D dataset of dimensions [definition,aspect,year].
+# HEAT WAVE DEFINITIONS:
+#    - TX90p
+#    - TN90p
+#    - EHF (Excess heat factor)
+# HEAT WAVE ASPECTS:
+#    - HWM: heat wave magnitude
+#    - HWA: heat wave amplitude
+#    - HWN: heat wave number
+#    - HWD: heat wave duration
+#    - HWF: heat wave frequency
+#
 #### NOTE: NEED TO DEAL WITH FIRST 33 DAYS OF RECORD THAT ARE NA...
 climdex.hw <- function(ci,base.range=c(1961,1990),n=15,min.base.data.fraction.present,lat) {
 	stopifnot(!is.null(lat))
 
 # step 1. Get/calculate the three definitions of a heat wave. Try using climdex's get.outofbase.quantiles function for this (EVEN NEEDED? climdex.raw GETS THESE ALREADY).
-	print(base.range)
-	# Get 90th percentiles of tmin and tmax
-#	tx90p_tn90p <- get.outofbase.quantiles(ci@data$tmax,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=n,temp.qtiles=0.9,prec.qtiles=0.9,
-#							min.base.data.fraction.present=min.base.data.fraction.present)
-
 	# Get 90th percentile of tavg for EHIsig calculation below
 	tavg90p <- get.outofbase.quantiles(ci@data$tavg,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=n,temp.qtiles=0.95,prec.qtiles=0.9,
 							min.base.data.fraction.present=min.base.data.fraction.present)
 
-print(str(ci))
-print(ci@quantiles$tavg$outbase$q90)
-
-#	names(mean_quantiles$tmax)[1] <- "tavg"
 	# recalculate tavg here to ensure it is based on tmax/tmin
 	tavg = (ci@data$tmax - ci@data$tmin)/2	#ci@data$tavg
 
@@ -447,19 +461,14 @@ print(ci@quantiles$tavg$outbase$q90)
 
 	# make an array of repeating 1:365 to reference the right day for percentiles
 	annualrepeat = array(1:365,length(tavg))
-print(ci@quantiles$tavg$outbase$q95)
 
 	# Calculate EHI values and EHF for each day of the given record. Must start at day 33 since the previous 32 days are required for each calculation.
 	for (a in 33:length(ci@data$tavg)) {
 		EHIaccl[a] = ((tavg[a] + tavg[a-1] + tavg[a-2])/3) - (sum(tavg[(a-32):(a-3)])/30)
 		EHIsig[a] = ((tavg[a] + tavg[a-1] + tavg[a-2])/3) - unlist(tavg90p$tmax[1])[annualrepeat[a]] #[(a %% 365)]
-print(EHIsig[a])
 		EHF[a] = max(1,EHIaccl[a])*EHIsig[a]
-print(EHF[a])
 	}
 
-print("END OF LOOP")
-print(sum(is.na(EHF)))
 print(lat)
 
 # step 2. Determine if tx90p, tn90p or EHF conditions have persisted for >= 3 days. If so, count number of summer heat waves.
@@ -478,7 +487,7 @@ print(lat)
 	tx90p_arr <- array(ci@quantiles$tmax$outbase$q90,length(ci@data$tmax))
         tn90p_arr <- array(ci@quantiles$tmin$outbase$q90,length(ci@data$tmin))
 
-	# compare tmax/tmin of each day to it's corresponding percentile 
+	# Record which days had temperatures higher than 90p or where EHF > 0 
 	tx90p_boolean <- (ci@data$tmax > tx90p_arr)
 	tn90p_boolean <- (ci@data$tmin > tn90p_arr)
 	EHF_boolean <- (EHF > 0)
@@ -489,18 +498,36 @@ print(lat)
 	EHF_boolean <- select.blocks.gt.length(EHF_boolean,2)
 
 # Step 3. Calculate aspects for each definition.
-	hw_index <- array(NA,c(3,5,length(ci@date.factors$annual)))
-#	for (a in 1:3) {		# for each definition
-#		for (b in 1:5) {	# for each aspect
-#			hw_index[1,1,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,function(idx) { )
-#                        hw_index[1,2,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,sum)
-#                        hw_index[1,3,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,sum)
-#                        hw_index[1,4,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,sum)
-#                        hw_index[1,5,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,sum)
+	hw_index <- array(NA,c(3,5,length(levels(ci@date.factors$annual))))
+        hw1_index <- array(NA,c(5,length(levels(ci@date.factors$annual))))
+        hw2_index <- array(NA,c(5,length(levels(ci@date.factors$annual))))
+        hw3_index <- array(NA,c(5,length(levels(ci@date.factors$annual))))
+print("BREAK")
+print(levels(ci@date.factors$annual))
+print(str(ci))
 
-			
+#			hw_index[1,1,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,function(idx) { mean(ci@data$tmax[idx]) } )
+#                        hw_index[1,2,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,function(idx) { max(ci@data$tmax[idx]) } )
+#                        hw_index[1,3,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,function(idx) { length(rle(tx90p_boolean)$lengths) } )
+#                        hw_index[1,4,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,function(idx) { max(rle(tx90p_boolean)$lengths) } )
+#                        hw_index[1,5,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,function(idx) { sum(rle(tx90p_boolean)$lengths) } )
+
+	hw1_index <- get.hw.aspects(hw1_index,tx90p_boolean,ci@date.factors$annual,ci@data$tmax)
+        hw2_index <- get.hw.aspects(hw2_index,tn90p_boolean,ci@date.factors$annual,ci@data$tmin)
+        hw3_index <- get.hw.aspects(hw3_index,EHF_boolean,ci@date.factors$annual,EHF)
+q()
 }
 
+# heat wave aspects as per Perkins and Alexander (2013)
+get.hw.aspects <- function(aspect.array,boolean.str,date.factors,daily.data) {
+print(daily.data)
+	aspect.array[1,] <- tapply.fast(boolean.str,date.factors,function(idx) { mean(daily.data[idx]) } )
+        aspect.array[2,] <- tapply.fast(boolean.str,date.factors,function(idx) { max(daily.data[idx]) } )
+        aspect.array[3,] <- tapply.fast(boolean.str,date.factors,function(idx) { length(rle(boolean.str)$lengths) } )
+        aspect.array[4,] <- tapply.fast(boolean.str,date.factors,function(idx) { max(rle(tx90p_boolean)$lengths) } )
+        aspect.array[5,] <- tapply.fast(boolean.str,date.factors,function(idx) { sum(rle(tx90p_boolean)$lengths) } )
+	return(aspect.array)
+}
 
 
 
