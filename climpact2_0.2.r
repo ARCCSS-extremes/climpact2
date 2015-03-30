@@ -14,6 +14,7 @@ library(SPEI)
 library(tcltk)
 
 options(warn=1)
+software_id = "0.2"
 
 # climpact.loader
 #
@@ -144,7 +145,7 @@ gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,ntxn
 			tx95t={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="")},
 
                         rxnday={indexparam = paste("array(indexcompile(",indexparam,",center.mean.on.last.day=",rxnday_center.mean.on.last.day,",n=",rxnday_n,"))",sep="")},spei={indexparam = paste("array(indexcompile(",indexparam,",n=",spei_n,"))",sep="")},
-			hwn={
+			hw={
 				# find corrected call for retrieving lat
 				if (irregular) { latstr="lat2d[j,i]" } else { latstr="lat[j]" }
 				indexparam = paste("array(indexcompile(",indexparam,",base.range=c(",baserange[1],",",baserange[2],"),n=",hwn_n,",min.base.data.fraction.present=",
@@ -189,7 +190,7 @@ gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,ntxn
 			timedim <- ncdim_def("time","days since 0001-01-01",0.5:364.5)
 		}
 
-		outfile = paste(indices[a],"CLIMPACT",identifier,yeardate[1],yeardate[length(yeardate)],"nc",sep=".")
+		outfile = paste(paste("CCRC",identifier,period,yeardate[1],yeardate[length(yeardate)],sep="_"),".nc",sep="")
 	        indexcdf <- ncvar_def(indices[a],"units",list(londim,latdim,timedim),-1,prec="float")
 	        system(paste("rm -f ",outfile,sep=""))
 
@@ -207,15 +208,17 @@ gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,ntxn
 	# metadata
         	ncatt_put(tmpout,0,"created_on",system("date",intern=TRUE))
 	        ncatt_put(tmpout,0,"created_by",system("whoami",intern=TRUE))
+                ncatt_put(tmpout,0,"software_version",software_id)
+                ncatt_put(tmpout,0,"base_period",paste(baserange[1],"-",baserange[2]))
 
 	        nc_close(tmpout)
                 if(irregular) {system(paste("module load nco; ncks -C -O -x -v x,y",outfile,outfile,sep=" "))}
 
+        # Report back
+                print(paste(outfile," completed.",sep=""))
+
 	# Clean up for next iteration
 		rm(timedim,indexcdf,tmpout,outfile,index3d_trans)
-
-	# Report back
-		print(paste(paste("climdex",indices[a],sep=".")," completed.",sep=""))
 	}
 }
 
@@ -413,28 +416,40 @@ q()
 	return(spei(ci@data$prec,n))
 }
 
-# hwn
+# hw
 # Heat wave indices. From Perkins and Alexander (2013)
+# This function will return a 3D dataset of dimensions [definition,aspect,year].
 #### NOTE: NEED TO DEAL WITH FIRST 33 DAYS OF RECORD THAT ARE NA...
-climdex.hwn <- function(ci,base.range=c(1961,1990),n=15,min.base.data.fraction.present,lat) {
+climdex.hw <- function(ci,base.range=c(1961,1990),n=15,min.base.data.fraction.present,lat) {
 	stopifnot(!is.null(lat))
 
-# step 1. Get 90th percentiles. Try using climdex's get.outofbase.quantiles function for this.
+# step 1. Get/calculate the three definitions of a heat wave. Try using climdex's get.outofbase.quantiles function for this (EVEN NEEDED? climdex.raw GETS THESE ALREADY).
 	print(base.range)
-	tx90p_tn90p <- get.outofbase.quantiles(ci@data$tmax,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=n,temp.qtiles=0.9,prec.qtiles=0.9,
-							min.base.data.fraction.present=min.base.data.fraction.present)
-	tavg90p <- get.outofbase.quantiles(ci@data$tavg,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=n,temp.qtiles=0.9,prec.qtiles=0.9,
+	# Get 90th percentiles of tmin and tmax
+#	tx90p_tn90p <- get.outofbase.quantiles(ci@data$tmax,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=n,temp.qtiles=0.9,prec.qtiles=0.9,
+#							min.base.data.fraction.present=min.base.data.fraction.present)
+
+	# Get 90th percentile of tavg for EHIsig calculation below
+	tavg90p <- get.outofbase.quantiles(ci@data$tavg,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=n,temp.qtiles=0.95,prec.qtiles=0.9,
 							min.base.data.fraction.present=min.base.data.fraction.present)
 
+print(str(ci))
+print(ci@quantiles$tavg$outbase$q90)
+
 #	names(mean_quantiles$tmax)[1] <- "tavg"
+	# recalculate tavg here to ensure it is based on tmax/tmin
 	tavg = (ci@data$tmax - ci@data$tmin)/2	#ci@data$tavg
-	EHIaccl = array(NA,length(tavg)) # get shells for the following three variables
+
+	# get shells for the following three variables
+	EHIaccl = array(NA,length(tavg))
 	EHIsig = array(NA,length(tavg))
 	EHF = array(NA,length(tavg))
 
-	# make an array of looping 1:365 to reference the right day for percentiles
+	# make an array of repeating 1:365 to reference the right day for percentiles
 	annualrepeat = array(1:365,length(tavg))
+print(ci@quantiles$tavg$outbase$q95)
 
+	# Calculate EHI values and EHF for each day of the given record. Must start at day 33 since the previous 32 days are required for each calculation.
 	for (a in 33:length(ci@data$tavg)) {
 		EHIaccl[a] = ((tavg[a] + tavg[a-1] + tavg[a-2])/3) - (sum(tavg[(a-32):(a-3)])/30)
 		EHIsig[a] = ((tavg[a] + tavg[a-1] + tavg[a-2])/3) - unlist(tavg90p$tmax[1])[annualrepeat[a]] #[(a %% 365)]
@@ -444,29 +459,46 @@ print(EHF[a])
 	}
 
 print("END OF LOOP")
-#print(EHF)
 print(sum(is.na(EHF)))
 print(lat)
 
-# step 2. Determine if "conditions" have persisted for >= 3 days. If so, count number of summer heat waves.
+# step 2. Determine if tx90p, tn90p or EHF conditions have persisted for >= 3 days. If so, count number of summer heat waves.
 
-# create an array of booleans for each definition identifying runs 3 days or longer where conditions are met. i.e. for TX90p, TN90p, EHF.
-	tx90p_boolean = array(FALSE,length(tx90p_tn90p))
-        tn90p_boolean = array(FALSE,length(tx90p_tn90p))
+	# create an array of booleans for each definition identifying runs 3 days or longer where conditions are met. i.e. for TX90p, TN90p, EHF.
+	tx90p_boolean = array(FALSE,length(ci@quantiles$tmax$outbase$q90))
+        tn90p_boolean = array(FALSE,length(ci@quantiles$tmin$outbase$q90))
 	EHF_boolean = array(FALSE,length(EHF))
 
-print(ci@data$tmax)
-print(tx90p_tn90p$tmax[1])
-q()
-# TO DO: loop through each element of tmax/tmin and compare to corresponding days percentile. 
-#  - also, create correct array size (in time dimension) back in netCDF loader.
-	tx90p_boolean = (ci@data$tmax[1] > tx90p_tn90p$tmax[1])
-	tn90p_boolean = (ci@data$tmin[1] > tx90p_tn90p$tmin[1])
-	EHF_boolean = (EHF > 0)
+	# TO DO: loop through each element of tmax/tmin and compare to corresponding days percentile. 
+	#  - also, create correct array size (in time dimension) back in netCDF loader.
+	print(length(ci@data$tmax))
+	print(length(ci@quantiles$tmax$outbase$q90))
 
-print(tx90p_boolean)
-q()
-#print(tx90p_boolean)
+	# make repeating sequences of percentiles
+	tx90p_arr <- array(ci@quantiles$tmax$outbase$q90,length(ci@data$tmax))
+        tn90p_arr <- array(ci@quantiles$tmin$outbase$q90,length(ci@data$tmin))
+
+	# compare tmax/tmin of each day to it's corresponding percentile 
+	tx90p_boolean <- (ci@data$tmax > tx90p_arr)
+	tn90p_boolean <- (ci@data$tmin > tn90p_arr)
+	EHF_boolean <- (EHF > 0)
+
+	# Remove runs that are < 3 days long
+	tx90p_boolean <- select.blocks.gt.length(tx90p_boolean,2)
+        tn90p_boolean <- select.blocks.gt.length(tn90p_boolean,2)
+	EHF_boolean <- select.blocks.gt.length(EHF_boolean,2)
+
+# Step 3. Calculate aspects for each definition.
+	hw_index <- array(NA,c(3,5,length(ci@date.factors$annual)))
+#	for (a in 1:3) {		# for each definition
+#		for (b in 1:5) {	# for each aspect
+#			hw_index[1,1,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,function(idx) { )
+#                        hw_index[1,2,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,sum)
+#                        hw_index[1,3,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,sum)
+#                        hw_index[1,4,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,sum)
+#                        hw_index[1,5,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,sum)
+
+			
 }
 
 
