@@ -1,58 +1,47 @@
-wsdi2
-fd0
-fd2
-fdm2
-fdm20
-id0
-su
-su25
-tr20
-gsl
-txx
-tnn
-tnx
-txn
-dtr
-etr
-wsdi
-wsdin
-csdi
-csdin
-tx50p
-tx95t
-tx10p
-tx90p
-tn10p
-tn90p
-tm5a
-tm5b
-tm10a
-tm10b
-su30
-su35
-ntxntn
-hddheat
-cddcold
-gddgrow
-r20mm
-cdd
-cwd
-r10mm
-r20mm
-rx1day
-rx5day
-prcptot
-sdii
-r95p
-r95ptot
-r99p
-r99ptot
-rxnday
-spiflex
-speiflex
-hwn
-hwd
-hwf
-hwa
-hwm
-ntxntn
+fd	degC
+fd2	degC
+fdm2	degC
+fdm20	degC
+id	days
+su	days
+tr	days
+gsl	days
+txx	degC
+tnn	degC
+tnx	degC
+txn	degC
+dtr	degC
+wsdi	days
+wsdin	days
+csdi	days
+csdin	days
+tx50p	%
+tx95t	degC
+tx10p	%
+tx90p	%
+tn10p	%
+tn90p	%
+tm5a	degC
+tm5b	degC
+tm10a	degC
+tm10b	degC
+su30	degC
+su35	degC
+hddheat	days
+cddcold	days
+gddgrow	days
+r20mm	days
+cdd	days
+cwd	days
+r10mm	days
+r20mm	days
+rx1day	mm
+rx5day	mm
+prcptot	mm
+sdii	mm/day
+r95ptot	%
+r99ptot	%
+rxnday	mm
+ntxntn	days
+ntxbntnb	days
+hw	NA

@@ -14,6 +14,8 @@ library(SPEI)
 library(tcltk)
 
 options(warn=1)
+enableJIT(3)
+
 software_id = "0.3"
 
 # climpact.loader
@@ -28,7 +30,7 @@ software_id = "0.3"
 #  tsminname: name of min temperature variable in tsminfile
 #  tsmaxname: name of max temperature variable in tsmaxfile
 #  precname: name of daily precipitation variable in precfile
-#  indices: a list specifying which indices to calculate. See XX for a list of supported indices.
+#  indices: a list specifying which indices to calculate. See XX for a list of supported indices. Specify "all" to calculate all indices.
 #  identifier: an optional string to aid identifying output files (e.g. this may be the particular model/dataset the indices are being calculated on).
 #  lonname: name of longitude dimension.
 #  latname: name of latitude dimension.
@@ -48,8 +50,8 @@ software_id = "0.3"
 #
 climpact.loader <- function(tsminfile=NULL,tsmaxfile=NULL,precfile=NULL,tsminname="tsmin",tsmaxname="tsmax",precname="prec",timename="time",indices=NULL,identifier=NULL,lonname="lon",latname="lat",baserange=c(1961,1990),
 freq=c("monthly","annual"),tempqtiles=c(0.1,0.9),precqtiles=c(0.1,0.9),max.missing.days=c(annual=15, monthly=3),min.base.data.fraction.present=0.1,csdin_n=5,csdin_spells.can.span.years=FALSE,wsdin_n=5,wsdin_spells.can.span.years=FALSE,
-cdd_spells.can.span.years=TRUE,cwd_spells.can.span.years=TRUE,csdi_spells.can.span.years=FALSE,wsdi_spells.can.span.years=FALSE,ntxntn_spells.can.span.years=FALSE,ntxntn_consecdays=5,ntxbntnb_spells.can.span.years=FALSE,
-ntxbntnb_consecdays=5,gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,hddheat_n=18,time_format=NULL,rxnday_n=5,rxnday_center.mean.on.last.day=FALSE,rnnm_threshold=1,
+cdd_spells.can.span.years=TRUE,cwd_spells.can.span.years=TRUE,csdi_spells.can.span.years=FALSE,wsdi_spells.can.span.years=FALSE,ntxntn_spells.can.span.years=FALSE,ntxntn_n=5,ntxbntnb_spells.can.span.years=FALSE,
+ntxbntnb_n=5,gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,hddheat_n=18,time_format=NULL,rxnday_n=5,rxnday_center.mean.on.last.day=FALSE,rnnm_threshold=1,
 spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL)
 {
 # Initial checks
@@ -59,10 +61,13 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL)
 # TO ADD: if a tsmax index is specified but tsmax file is not. BOMB.
 # TO ADD: FILES EXIST!! This should be first thing! Including qtile file if specified.
 	indexfile = "index.master.list"
-	indexlist <- readLines(indexfile)
+	indexlist <- (read.table(indexfile))
+	units <- as.character(indexlist[,2])
+
+	if(indices[1] == "all") indices = indexlist[,1]
 	if(all(is.null(tsminfile),is.null(tsmaxfile),is.null(precfile))) stop("Must provide at least one filename for tsmin, tsmax and/or prec.")
 	if(is.null(indices)) stop(paste("Must provide a list of indices to calculate. See ",indexfile," for list.",sep=""))
-        if(any(!indices %in% indexlist)) stop(paste("One or more indices"," are unknown. See XX for list.",sep=""))
+        if(any(!indices %in% indexlist[,1])) stop(paste("One or more indices"," are unknown. See XX for list.",sep=""))
 	if(!is.null(quantile_file) && write_quantiles==TRUE) stop("Cannot both write quantiles AND read in quantiles from a file.")
 
 # Set constants
@@ -105,7 +110,7 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL)
 	if(is.null(time_format)) {
 		time_att = ncatt_get(refnc,timename,"units")[2]
 		origin=get.origin(time_att=time_att[[1]])
-		months_as_hours = as.numeric(as.Date(paste(monthdate,"-01",sep="")) - as.Date(origin))*24
+		months_as_hours = as.numeric(as.Date(paste(monthdate,"-01",sep="")) - as.Date(origin))*24	# convert days to hours
 		years_as_hours = as.numeric(as.Date(paste(yeardate,"-01-01",sep="")) - as.Date(origin))*24
 	        nmonths = length(months_as_hours)
         	nyears = length(years_as_hours)
@@ -129,8 +134,10 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL)
 	cicompile <- cmpfun(climdexInput.raw)
 
 # Loop through index list; get index, read variable, calculate index on grid, write out index on gridded netcdf
-        print("********* CALCULATING INDICES")
-        for(a in 1:length(indices)){
+        print("***************************************")
+        print("********* CALCULATING INDICES *********")
+	print("***************************************")
+        for(a in 1:length(indices[1])){
 	# Fetch and compile index function
 	        indexfun = match.fun(paste("climdex",indices[a],sep="."))
 		indexcompile = cmpfun(indexfun)
@@ -148,32 +155,33 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL)
 			rnnmm={indexparam = paste("array(indexcompile(",indexparam,",threshold=",rnnm_threshold,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
 			rx1day={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
 	                rx5day={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),",center.mean.on.last.day=",rx5day_centermean,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
+                        r95ptot={indexparam = paste("array(indexcompile(",indexparam,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.95) ; precqtiles_tmp = c(0.95) } },
+                        r99ptot={indexparam = paste("array(indexcompile(",indexparam,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.99) ; precqtiles_tmp = c(0.99) } },
 	                tn10p={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
 			tn90p={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.9) ; precqtiles_tmp = c(0.9) } },
 			tnn={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
 			tnx={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
 			tx10p={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
+                        tx50p={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.5) ; precqtiles_tmp = c(0.5) } },
 			tx90p={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.9) ; precqtiles_tmp = c(0.9) } },
 			txn={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
 			txx={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
 			wsdi={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",wsdi_spells.can.span.years,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.9) ; precqtiles_tmp = c(0.9) } },
                         csdin={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",csdin_spells.can.span.years,",n=",csdin_n,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
                         wsdin={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",wsdin_spells.can.span.years,",n=",wsdin_n,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.9) ; precqtiles_tmp = c(0.9) } },
-                        ntxntn={indexparam = paste("array(indexcompile(",indexparam,",consecdays=",ntxntn_consecdays,",spells.can.span.years=",ntxntn_spells.can.span.years,"))",sep="") ; 
+                        ntxntn={indexparam = paste("array(indexcompile(",indexparam,",n=",ntxntn_n,",spells.can.span.years=",ntxntn_spells.can.span.years,"))",sep="") ; 
 				if(!write_quantiles) {tempqtiles_tmp = c(0.95) ; precqtiles_tmp = c(0.95) } },
-                        ntxbntnb={indexparam = paste("array(indexcompile(",indexparam,",consecdays=",ntxbntnb_consecdays,",spells.can.span.years=",ntxbntnb_spells.can.span.years,"))",sep="") ; 
+                        ntxbntnb={indexparam = paste("array(indexcompile(",indexparam,",n=",ntxbntnb_n,",spells.can.span.years=",ntxbntnb_spells.can.span.years,"))",sep="") ; 
 				if(!write_quantiles) {tempqtiles_tmp = c(0.05) ; precqtiles_tmp = c(0.05) } },
 			tx95t={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.95) ; precqtiles_tmp = c(0.95) } },
                         rxnday={indexparam = paste("array(indexcompile(",indexparam,",center.mean.on.last.day=",rxnday_center.mean.on.last.day,",n=",rxnday_n,"))",sep="")},spei={indexparam = paste("array(indexcompile(",indexparam,",n=",spei_n,"))",sep="") ; 
 				if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
-			hw={
-				# find correct call for retrieving lat
-				if (irregular) { latstr="lat2d[j,i]" } else { latstr="lat[j]" }
+			hw={if(irregular) { latstr="lat2d[i,j]" } else { latstr="lat[j]" } ;
 				indexparam = paste("array(indexcompile(",indexparam,",base.range=c(",baserange[1],",",baserange[2],"),n=",hwn_n,",min.base.data.fraction.present=",
 				min.base.data.fraction.present,",lat=",latstr,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1,0.9) ; precqtiles_tmp = c(0.1,0.9) } },
 
 		{ indexparam = paste("array(indexcompile(",indexparam,"))",sep="") ; tempqtiles_tmp = tempqtiles ; precqtiles_tmp = precqtiles } )
-		print(eval(indexparam))
+		print(paste("diag: index call: ",eval(indexparam)),sep="")
 
 	# Determine whether index to be calculated will be daily (currently only for tx95t), monthly or annual
 		if(indices[a] == "tx95t") {period = "DAY"} else if (indices[a] == "rxnday") { period = "MON" } else {
@@ -184,8 +192,9 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL)
 			} else {period = "ANN"}
 		}
 
-	# array size depending on whether index is daily, monthly or annual
-		if(period == "MON") {index = array(NA,c(length(lon),length(lat),nmonths))} else if(period == "ANN") { index = array(NA,c(length(lon),length(lat),nyears))} else {index = array(NA,c(length(lon),length(lat),365))}
+	# array size depending on whether index is daily, monthly, annual or heatwave
+		if(indices[a] == "hw") { index = array(NA,c(3,5,length(lon),length(lat),nyears)) } else if(period == "MON") {index = array(NA,c(length(lon),length(lat),nmonths))} 
+		else if(period == "ANN") { index = array(NA,c(length(lon),length(lat),nyears))} else {index = array(NA,c(length(lon),length(lat),365))}
 
 	# create quantile arrays dimensions [lon,lat,days,percentiles,base]
 		if(write_quantiles == TRUE) { tminqtiles_array = array(NA,c(length(lon),length(lat),365,length(tempqtiles),2)) ; tmaxqtiles_array = array(NA,c(length(lon),length(lat),365,length(tempqtiles),2)) ; 
@@ -228,12 +237,15 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL)
 					tempqtiles_tmp <- precqtiles_tmp <- NULL
 		                } else { quantiles = NULL }
 
-				# CALCULATE CLIMDEX INPUT OBJECT AND INDEX
+				# Calculate climdex input object and index
 				cio = cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=prec[i,j,],tmin.dates=tsmintime,tmax.dates=tsmaxtime,prec.dates=prectime,prec.qtiles=precqtiles_tmp,
 					temp.qtiles=tempqtiles_tmp,quantiles=quantiles,base.range=baserange)
 #print(str(cio))
-				index[i,j,] = eval(parse(text=indexparam))
-
+				# Need a separate way to write out heat wave indices... better way to do this?
+				if(indices[a] == "hw") { index[,,i,j,] = eval(parse(text=indexparam)) }
+				else { index[i,j,] = eval(parse(text=indexparam)) }
+#print(index[,,i,j,])
+#q()
 				# DO QUANTILE WORK IF NECESSARY
 				# If quantiles are requested, record quantiles
 				if (write_quantiles == TRUE) { 
@@ -241,8 +253,6 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL)
 					for (l in 1:length(tempqtiles)) {
 						#### FIXME: inbase quantiles are bogus. Currently outbase percentiles are recorded for inbase percentiles. 
 						####        Need to understand what is being recorded for inbase and which dimension to write out.
-
-
 						tminqtiles_array[i,j,,l,1] = cio@quantiles$tmin$outbase[[l]]
                                                 tmaxqtiles_array[i,j,,l,1] = cio@quantiles$tmax$outbase[[l]]
                                                 tavgqtiles_array[i,j,,l,1] = tavgqtiles$tmax$outbase[[l]]	# while this is named tmax it is in fact tavg, see call for tavgqtiles creation.
@@ -258,7 +268,7 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL)
 		}
 
 	# Transpose dimensions to time,lat,lon
-	        index3d_trans = aperm(index,c(1,2,3))#(2,3,1))
+	        if(indices[a] == "hw") { index3d_trans = aperm(index,c(3,4,5,2,1)) } else { index3d_trans = aperm(index,c(1,2,3)) }#(2,3,1))
 
 # Write out
 # NOTE: ncdf4 seems to only support numeric types for dimensions.
@@ -281,14 +291,14 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL)
 			qout = nc_create(qfile,list(tmincdf,tmaxcdf,tavgcdf,preccdf),force_v4=TRUE)
 
 			# write out data
-			ncvar_put(qout,tmincdf,tminqtiles_array) ; ncvar_put(qout,tmaxcdf,tmaxqtiles_array) ; ncvar_put(qout,tavgcdf,tavgqtiles_array) ; ncvar_put(qout,preccdf,precqtiles_array)
+			ncvar_put(qout,tmincdf,tminqtiles_array) ; ncvar_put(qout,tmaxcdf,tmaxqtiles_array) ; ncvar_put(qout,tavgcdf,tavgqtiles_array) ; ncvar_put(qout,preccdf,precipqtiles_array)
 
 			write_quantiles = FALSE         # only need to write once
 
 			rm(timedim,tqdim,pqdim,tmincdf,tmaxcdf,preccdf,qout)
 		}
 
-	# createe time dimension according to time format
+	# create time dimension according to time format
 		if(is.null(time_format)) {	# IF no time format supplied work with hours since.
 	                if(period == "MON") { timedim <- ncdim_def("time",paste("hours since ",origin,sep=""),months_as_hours) } 
 			else if(period == "ANN") { timedim <- ncdim_def("time",paste("hours since ",origin,sep=""),years_as_hours) } 
@@ -299,16 +309,29 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL)
 			else { timedim <- ncdim_def("time","days since 0001-01-01",0.5:364.5) }
 		}
 
-		outfile = paste(paste("CCRC",identifier,period,yeardate[1],yeardate[length(yeardate)],indices[a],sep="_"),".nc",sep="")
-	        indexcdf <- ncvar_def(indices[a],"units",list(londim,latdim,timedim),-1,prec="float")
+	# create output file name customised for 'n' indices if needed
+		switch(indices[a],
+			wsdin={ outfile = paste(paste("CCRC",identifier,period,yeardate[1],yeardate[length(yeardate)],paste("wsdi",wsdin_n,sep=""),sep="_"),".nc",sep="") },
+			csdin={ outfile = paste(paste("CCRC",identifier,period,yeardate[1],yeardate[length(yeardate)],paste("csdi",csdin_n,sep=""),sep="_"),".nc",sep="") },
+			rxnday={ outfile = paste(paste("CCRC",identifier,period,yeardate[1],yeardate[length(yeardate)],paste("rx",rxnday_n,"day",sep=""),sep="_"),".nc",sep="") },
+                        ntxntn={ outfile = paste(paste("CCRC",identifier,period,yeardate[1],yeardate[length(yeardate)],paste(ntxntn_n,"tx",ntxntn_n,"tn",sep=""),sep="_"),".nc",sep="") },
+                        ntxbntnb={ outfile = paste(paste("CCRC",identifier,period,yeardate[1],yeardate[length(yeardate)],paste(ntxbntnb_n,"txb",ntxbntnb_n,"tnb",sep=""),sep="_"),".nc",sep="") },
+			{ outfile = paste(paste("CCRC",identifier,period,yeardate[1],yeardate[length(yeardate)],indices[a],sep="_"),".nc",sep="") } )
+
+	# create ncdf object
+	        if(indices[a] == "hw") { 
+			hw_defdim <- ncdim_def("heat_wave_definition","1=tx90,2=tn90,3=EHF",1.0:3.0) ; hw_aspdim <- ncdim_def("heat_wave_aspect","1=HWM,2=HWA,3=HWN,4=HWD,5=HWF",1.0:5.0)
+			indexcdf <- ncvar_def(indices[a],units[a],list(londim,latdim,timedim,hw_aspdim,hw_defdim),-1,prec="float") } 
+		else { indexcdf <- ncvar_def(indices[a],units[a],list(londim,latdim,timedim),-1,prec="float") }
+
 	        system(paste("rm -f ",outfile,sep=""))
 
                 if(irregular){
-			print("WORKING ON IRREGULAR GRID")
+			print("WORKING ON IRREGULAR GRID...")
                         loncdf <- ncvar_def(lonname,"degrees_east",list(londim,latdim),-1,prec="float")
                         latcdf <- ncvar_def(latname,"degrees_north",list(londim,latdim),-1,prec="float")
 	                tmpout = nc_create(outfile,list(indexcdf,loncdf,latcdf),force_v4=TRUE)
-                        ncvar_put(tmpout,indexcdf,index)
+                        ncvar_put(tmpout,indexcdf,index3d_trans)
 			ncvar_put(tmpout,loncdf,lon2d);ncvar_put(tmpout,latcdf,lat2d)
 			ncatt_put(tmpout,indexcdf,"coordinates","lon lat")
 			rm(loncdf,latcdf)
@@ -362,8 +385,7 @@ get.time <- function(nc=NULL,timename=NULL,time_format=NULL)
 	} else {
 	        if(grepl("hours",time_att)) {print("Time coordinate in hours, converting to seconds...") ; ftime = ftime*60*60}
         	if(grepl("days",time_att)) {print("Time coordinate in days, converting to seconds...") ; ftime = ftime*24*60*60}
-
-		return(as.PCICt(ftime,cal="gregorian",origin=get.origin(time_att=time_att[[1]]),format=time_format))
+		return(as.PCICt(ftime,cal="gregorian",origin=get.origin(time_att=time_att[[1]])))
 	}
 }
 
@@ -443,6 +465,12 @@ climdex.gddgrow <- function(ci,Tb=10) { Tbarr = array(Tb,length(ci@data$tavg)); 
 # Same as rx5day except specifying a monthly frequency and accepting user specified number of consecutive days
 climdex.rxnday <- function(ci, center.mean.on.last.day=FALSE,n=5) { stopifnot(!is.null(ci@data$prec)); return(nday.consec.prec.max(ci@data$prec, ci@date.factors$monthly, n, center.mean.on.last.day) * ci@namasks$monthly$prec) }
 
+# tx95t
+# Value of 95th percentile of TX
+##### TO CHECK/FIX ##### Need to understand how percentiles are calculated inside the base range. Currently this function reports the out of base 95th percentile (which I interpret to be what the index defines anyway). 
+######################## In climdex.pcic this has dimensions (365,nyears,nyears-1), not sure why.
+climdex.tx95t <- function(ci, freq=c("monthly", "annual")) { stopifnot(!is.null(ci@data$tmax) && !is.null(ci@quantiles$tmax)); return(ci@quantiles$tmax$outbase$q95) }
+
 ##############
 # NEW CLIMPACT INDICES THAT HOPEFULLY WORK
 ##############
@@ -458,34 +486,28 @@ climdex.tx50p <- function(ci, freq=c("monthly", "annual")) {
 stopifnot(!is.null(ci@data$tmax) && !is.null(ci@quantiles$tmax)); return(percent.days.op.threshold(ci@data$tmax, ci@dates, ci@jdays, ci@date.factors[[match.arg(freq)]], ci@quantiles$tmax$outbase$q50, ci@quantiles$tmax$inbase$q50, ci@base.range, ">", ci@max.missing.days[match.arg(freq)]) * ci@namasks[[match.arg(freq)]]$tmax)
 }
 
-# tx95t
-# Value of 95th percentile of TX
-##### TO CHECK/FIX ##### Need to understand how percentiles are calculated inside the base range. Currently this function reports the out of base 95th percentile (which I interpret to be what the index defines anyway). 
-######################## In climdex.pcic this has dimensions (365,nyears,nyears-1), not sure why.
-climdex.tx95t <- function(ci, freq=c("monthly", "annual")) { stopifnot(!is.null(ci@data$tmax) && !is.null(ci@quantiles$tmax)); return(ci@quantiles$tmax$outbase$q95) }
-
 # ntxntn
 # Annual count of n consecutive days where both TX > 95th percentile and TN > 95th percentile, where n >= 2 (and max of 10)
 # This function needs the new function dual.threshold.exceedance.duration.index, which was based on threshold.exceedance.duration.index
-climdex.ntxntn <- function(ci, spells.can.span.years=FALSE,consecdays=5) { 
+climdex.ntxntn <- function(ci, spells.can.span.years=FALSE,n=5) { 
 	stopifnot(!is.null(ci@data$tmax) && !is.null(ci@quantiles$tmax) || (!is.null(ci@data$tmin) && !is.null(ci@quantiles$tmin)))
 	return(dual.threshold.exceedance.duration.index(ci@data$tmax, ci@data$tmin, ci@date.factors$annual, ci@jdays, ci@quantiles$tmax$outbase$q95,ci@quantiles$tmin$outbase$q95, 
-		">",">", consecdays=consecdays,spells.can.span.years=spells.can.span.years, max.missing.days=ci@max.missing.days['annual']) * ci@namasks$annual$tmax) }
+		">",">", n=n,spells.can.span.years=spells.can.span.years, max.missing.days=ci@max.missing.days['annual']) * ci@namasks$annual$tmax) }
 
 # ntxbntnb
 # Annual count of n consecutive days where both TX < 5th percentile and TN < 5th percentile, where n >= 2 (and max of 10)
 # This function needs the new function dual.threshold.exceedance.duration.index, which was based on threshold.exceedance.duration.index
-climdex.ntxbntnb <- function(ci, spells.can.span.years=FALSE,consecdays=5) {
+climdex.ntxbntnb <- function(ci, spells.can.span.years=FALSE,n=5) {
         stopifnot(!is.null(ci@data$tmax) && !is.null(ci@quantiles$tmax) || (!is.null(ci@data$tmin) && !is.null(ci@quantiles$tmin)))
         return(dual.threshold.exceedance.duration.index(ci@data$tmax, ci@data$tmin, ci@date.factors$annual, ci@jdays, ci@quantiles$tmax$outbase$q5,ci@quantiles$tmin$outbase$q5,
-                "<","<", consecdays=consecdays,spells.can.span.years=spells.can.span.years, max.missing.days=ci@max.missing.days['annual']) * ci@namasks$annual$tmax) }
+                "<","<", n=n,spells.can.span.years=spells.can.span.years, max.missing.days=ci@max.missing.days['annual']) * ci@namasks$annual$tmax) }
 
 # dual.threshold.exceedance.duration.index
-# calculates the number of consecdays consecutive days where op1 and op2 operating on daily.temp1 and daily.temp2 respectively are satisfied.
-dual.threshold.exceedance.duration.index <- function(daily.temp1, daily.temp2, date.factor, jdays, thresholds1, thresholds2, op1=">", op2=">", consecdays, spells.can.span.years, max.missing.days) {
-  stopifnot(is.numeric(c(daily.temp1,daily.temp2, thresholds1,thresholds2, consecdays)), is.factor(date.factor),
+# calculates the number of n consecutive days where op1 and op2 operating on daily.temp1 and daily.temp2 respectively are satisfied.
+dual.threshold.exceedance.duration.index <- function(daily.temp1, daily.temp2, date.factor, jdays, thresholds1, thresholds2, op1=">", op2=">", n, spells.can.span.years, max.missing.days) {
+  stopifnot(is.numeric(c(daily.temp1,daily.temp2, thresholds1,thresholds2, n)), is.factor(date.factor),
             is.function(match.fun(op1)),is.function(match.fun(op2)),
-            consecdays > 0,length(daily.temp1)==length(daily.temp2))
+            n > 0,length(daily.temp1)==length(daily.temp2))
   f1 <- match.fun(op1)
   f2 <- match.fun(op2)
   na.mask1 <- get.na.mask(is.na(daily.temp1 + thresholds1[jdays]), date.factor, max.missing.days)
@@ -495,13 +517,13 @@ dual.threshold.exceedance.duration.index <- function(daily.temp1, daily.temp2, d
   if(spells.can.span.years) {
     periods1 <- f1(daily.temp1, thresholds1[jdays])	#select.blocks.gt.length(f1(daily.temp1, thresholds1[jdays]), min.length1 - 1)
     periods2 <- f2(daily.temp2, thresholds2[jdays])	#select.blocks.gt.length(f2(daily.temp2, thresholds2[jdays]), min.length2 - 1)
-    periods_combined = select.blocks.gt.length(periods1 & periods2,consecdays)	# an array of booleans
+    periods_combined = select.blocks.gt.length(periods1 & periods2,n)	# an array of booleans
     return(tapply.fast(periods_combined, date.factor, sum) * na.mask_combined)
   } else {
     return(tapply.fast(1:length(daily.temp1), date.factor, function(idx) { 
 	periods1 = f1(daily.temp1[idx], thresholds1[jdays[idx]])	#select.blocks.gt.length(f1(daily.temp1[idx], thresholds1[jdays[idx]]), min.length1 - 1)#   * na.mask1
 	periods2 = f2(daily.temp2[idx], thresholds2[jdays[idx]])	#select.blocks.gt.length(f2(daily.temp2[idx], thresholds2[jdays[idx]]), min.length2 - 1)#   * na.mask2
-	periods_combined = select.blocks.gt.length(periods1 & periods2,consecdays)
+	periods_combined = select.blocks.gt.length(periods1 & periods2,n)
 	return(sum(periods_combined)) })*na.mask_combined)
   }
 }
@@ -558,7 +580,7 @@ climdex.hw <- function(ci,base.range=c(1961,1990),n=15,min.base.data.fraction.pr
 		EHF[a] = max(1,EHIaccl[a])*EHIsig[a]
 	}
 
-print(lat)
+#	print(lat)
 
 # step 2. Determine if tx90p, tn90p or EHF conditions have persisted for >= 3 days. If so, count number of summer heat waves.
 
@@ -566,11 +588,6 @@ print(lat)
 	tx90p_boolean = array(FALSE,length(ci@quantiles$tmax$outbase$q90))
         tn90p_boolean = array(FALSE,length(ci@quantiles$tmin$outbase$q90))
 	EHF_boolean = array(FALSE,length(EHF))
-
-	# TO DO: loop through each element of tmax/tmin and compare to corresponding days percentile. 
-	#  - also, create correct array size (in time dimension) back in netCDF loader.
-	print(length(ci@data$tmax))
-	print(length(ci@quantiles$tmax$outbase$q90))
 
 	# make repeating sequences of percentiles
 	tx90p_arr <- array(ci@quantiles$tmax$outbase$q90,length(ci@data$tmax))
@@ -591,33 +608,28 @@ print(lat)
         hw1_index <- array(NA,c(5,length(levels(ci@date.factors$annual))))
         hw2_index <- array(NA,c(5,length(levels(ci@date.factors$annual))))
         hw3_index <- array(NA,c(5,length(levels(ci@date.factors$annual))))
-print("BREAK")
-print(levels(ci@date.factors$annual))
-print(str(ci))
 
-#			hw_index[1,1,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,function(idx) { mean(ci@data$tmax[idx]) } )
-#                        hw_index[1,2,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,function(idx) { max(ci@data$tmax[idx]) } )
-#                        hw_index[1,3,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,function(idx) { length(rle(tx90p_boolean)$lengths) } )
-#                        hw_index[1,4,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,function(idx) { max(rle(tx90p_boolean)$lengths) } )
-#                        hw_index[1,5,] <- tapply.fast(tx90p_boolean,ci@date.factors$annual,function(idx) { sum(rle(tx90p_boolean)$lengths) } )
+        hw_index[1,,] <- get.hw.aspects(hw1_index,tx90p_boolean,ci@date.factors$annual,ci@data$tmax)
+        hw_index[2,,] <- get.hw.aspects(hw2_index,tn90p_boolean,ci@date.factors$annual,ci@data$tmin)
+        hw_index[3,,] <- get.hw.aspects(hw3_index,EHF_boolean,ci@date.factors$annual,EHF)
 
-	hw1_index <- get.hw.aspects(hw1_index,tx90p_boolean,ci@date.factors$annual,ci@data$tmax)
-        hw2_index <- get.hw.aspects(hw2_index,tn90p_boolean,ci@date.factors$annual,ci@data$tmin)
-        hw3_index <- get.hw.aspects(hw3_index,EHF_boolean,ci@date.factors$annual,EHF)
-q()
+	return(hw_index)
 }
 
 # heat wave aspects as per Perkins and Alexander (2013)
 get.hw.aspects <- function(aspect.array,boolean.str,date.factors,daily.data) {
-print(daily.data)
-	aspect.array[1,] <- tapply.fast(boolean.str,date.factors,function(idx) { mean(daily.data[idx]) } )
-        aspect.array[2,] <- tapply.fast(boolean.str,date.factors,function(idx) { max(daily.data[idx]) } )
-        aspect.array[3,] <- tapply.fast(boolean.str,date.factors,function(idx) { length(rle(boolean.str)$lengths) } )
-        aspect.array[4,] <- tapply.fast(boolean.str,date.factors,function(idx) { max(rle(tx90p_boolean)$lengths) } )
-        aspect.array[5,] <- tapply.fast(boolean.str,date.factors,function(idx) { sum(rle(tx90p_boolean)$lengths) } )
+	aspect.array[1,] <- tapply.fast(boolean.str,date.factors,function(idx) { mean(daily.data[idx],na.rm=TRUE) } )
+        aspect.array[2,] <- tapply.fast(boolean.str,date.factors,function(idx) { suppressWarnings(max(daily.data[idx],na.rm=TRUE)) } )
+        aspect.array[3,] <- tapply.fast(boolean.str,date.factors,function(idx) { runlength = rle(as.logical(boolean.str[idx])) ; return(length(runlength$lengths[runlength$values=="TRUE"])) } )
+        aspect.array[4,] <- tapply.fast(boolean.str,date.factors,function(idx) { runlength = rle(as.logical(boolean.str[idx])) ; return(suppressWarnings(max(runlength$lengths[runlength$values=="TRUE"],na.rm=TRUE))) } )
+        aspect.array[5,] <- tapply.fast(boolean.str,date.factors,function(idx) { runlength = rle(as.logical(boolean.str[idx])) ; return(sum(runlength$lengths[runlength$values=="TRUE"])) } )
+
+	aspect.array[2,] <- ifelse(aspect.array[2,]=="-Inf",NaN,aspect.array[2,])
+	aspect.array[4,] <- ifelse(aspect.array[4,]=="-Inf",NaN,aspect.array[4,])
+#print(rle(as.logical(boolean.str))$lengths)
+#print(aspect.array[,])
 	return(aspect.array)
 }
-
 
 
 
