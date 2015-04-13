@@ -137,7 +137,7 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL)
         print("***************************************")
         print("********* CALCULATING INDICES *********")
 	print("***************************************")
-        for(a in 1:length(indices[1])){
+        for(a in 1:length(indices)){
 	# Fetch and compile index function
 	        indexfun = match.fun(paste("climdex",indices[a],sep="."))
 		indexcompile = cmpfun(indexfun)
