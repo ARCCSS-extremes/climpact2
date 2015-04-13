@@ -6,6 +6,8 @@ CURRENT ISSUES
 - USING CLIMDEX FUNCTIONS: To specify a parameter specific to a particular index (e.g. "cdd") simply prefix the parameter with the index name when calling climpact.loader (e.g. you could specify "cdd_spells.can.span.years = TRUE" or "csdin_spells.can.span.years=FALSE"). This currently doesn't apply to the 'freq' parameter which is currently universal.
 
 TIPS FOR TESTERS
+- There is now a option to specify multiple cores. Set 'cores' in the function call to an integer. As per good computing policy this should be not more than half the number of cores on any one machine so other users can still work. Default is to run in serial.
+
 - Since the indices take a while to calculate (~50 minutes per index), put 'nohup' in front of your Rscript command to ensure the process keeps running even if you have to disconnect. If you're running screen this won't matter.
 
 - For functional tests (i.e. those that don't require you checking that actual output of the index calculations), you should use small grids instead of the example NarClim data I include. The "cdo -selyear" and "cdo -sellonlatbox" commands let you chop up an existing dataset.
