@@ -96,7 +96,7 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL)
         if(!is.null(cores)) {
                 cl <- makeCluster(cores)
                 registerDoParallel(cl) }
-        exportlist <- c("get.hw.aspects","tapply.fast","indexcompile")
+        exportlist <- c("get.na.mask","dual.threshold.exceedance.duration.index","get.hw.aspects","tapply.fast","indexcompile")
 
 # Set up coordinate variables for writing to netCDF. If irregular grid then create x/y indices, if regular grid read in lat/lon coordinates.
 	if(length(dim(ncvar_get(refnc,latname))) > 1) {irregular = TRUE} else {irregular = FALSE}	# determine if irregular
