@@ -46,3 +46,5 @@ rnnmm	days	Annual count of days when PRCP >= n
 ntxntn	days	Annual count of n consecutive days where both TX > 95th percentile and TN > 95th percentile, where n >= 2 (and max of 10)
 ntxbntnb	days	Annual count of n consecutive days where both TX < 5th percentile and TN < 5th percentile where n >=2 and n <=10
 hw	NA	Heat wave magnitude, amplitude, number, duration and frequency calculated for the three definitions of Tx90, Tn90 and EHF from Perkins and Alexander (2013).
+spei	unitless	Standardised Precipitation Evapotranspiration Index. As implemented by the SPEI package in R.
+spi	unitless	Standardised Precipitation Index. As implemented by the SPEI package in R.

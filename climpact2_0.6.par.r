@@ -1,10 +1,13 @@
-# Climpact2
+# Climpact2 base
 # University of New South Wales
 #
-# Climpact2 combines the CRAN package climdex.pcic, developed by the Pacific Climate Impacts Consortium, with the Climpact code, developed at UNSW by XXXX. 
-# Science users are intended to access the indices through the climpact.loader function while non-specialists will be able to use the GUI.
+# Climpact2 combines the CRAN package climdex.pcic, developed by the Pacific Climate Impacts Consortium, with the Climpact code, developed by the UNSW Extremes Climate program. 
+# Science users are intended to access the indices through the climpact.loader function which will produce gridded datasets of the indices, while non-specialists can use the GUI to calculate point data.
 # 
 # nherold, 2015.
+
+# Nullify some objects to suppress spurious warning messages
+spei <- climdex.pcic <- SPEI <- NULL
 
 library(ncdf4)
 library(climdex.pcic)
@@ -12,13 +15,10 @@ library(PCICt)
 library(compiler)
 library(foreach)
 library(doParallel)
-library(SPEI)
 library(tcltk)
 library(abind)
-
 options(warn=1)
 enableJIT(3)
-
 software_id = "0.6"
 
 # climpact.loader
@@ -56,7 +56,7 @@ climpact.loader <- function(tsminfile=NULL,tsmaxfile=NULL,precfile=NULL,tsminnam
 freq=c("monthly","annual"),tempqtiles=c(0.1,0.9),precqtiles=c(0.1,0.9),max.missing.days=c(annual=15, monthly=3),min.base.data.fraction.present=0.1,csdin_n=5,csdin_spells.can.span.years=FALSE,wsdin_n=5,wsdin_spells.can.span.years=FALSE,
 cdd_spells.can.span.years=TRUE,cwd_spells.can.span.years=TRUE,csdi_spells.can.span.years=FALSE,wsdi_spells.can.span.years=FALSE,ntxntn_spells.can.span.years=FALSE,ntxntn_n=5,ntxbntnb_spells.can.span.years=FALSE,
 ntxbntnb_n=5,gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,hddheat_n=18,time_format=NULL,rxnday_n=5,rxnday_center.mean.on.last.day=FALSE,rnnm_threshold=1,
-spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL)
+spei_scale=3,spi_scale=3,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL)
 {
 # Initial checks
 # 1) at least one file is provided,
@@ -66,10 +66,10 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL)
 # TO ADD: FILES EXIST!! This should be first thing! Including qtile file if specified.
 	indexfile = "index.master.list"
 	indexlist <- (read.table(indexfile,sep="\t"))
-	units <- as.character(indexlist[,2])
-	desc <- as.character(indexlist[,3])
-
 	if(indices[1] == "all") indices = as.character(indexlist[,1])
+        units <- as.character(indexlist[match(indices,indexlist[,1]),2]) 
+        desc <- as.character(indexlist[match(indices,indexlist[,1]),3]) 
+
 	if(all(is.null(tsminfile),is.null(tsmaxfile),is.null(precfile))) stop("Must provide at least one filename for tsmin, tsmax and/or prec.")
 	if(is.null(indices)) stop(paste("Must provide a list of indices to calculate. See ",indexfile," for list.",sep=""))
         if(any(!indices %in% indexlist[,1])) stop(paste("One or more indices are unknown. See ",indexfile," for list.",sep=""))
@@ -85,6 +85,11 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL)
         if(!is.null(tsminfile)) { nc_tsmin=nc_open(tsminfile); tsmin <- ncvar_get(nc_tsmin,tsminname) ; refnc=nc_tsmin}
         if(!is.null(tsmaxfile)) { nc_tsmax=nc_open(tsmaxfile); tsmax <- ncvar_get(nc_tsmax,tsmaxname) ; refnc=nc_tsmax}
         if(!is.null(precfile)) { nc_prec=nc_open(precfile); prec <- ncvar_get(nc_prec,precname) ; refnc=nc_prec}
+print(nc_prec)
+print("STRUCTURE")
+print(str(nc_prec))
+print("GLOBATTS")
+print(nc_prec$natts)
 
 # Convert to Celcius
 	if(exists("nc_tsmin")) if (ncatt_get(nc_tsmin,tsminname,"units")[2] == "K") tsmin = tsmin-273.15
@@ -164,6 +169,7 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL)
 		indexparam = "cio"
 
 		tempqtiles_tmp = tempqtiles ; precqtiles_tmp = precqtiles
+		if(irregular) { latstr="lat2d[i,j]" } else { latstr="lat[j]" }
 		switch(indices[a],
 			cdd={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",cdd_spells.can.span.years,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
 			csdi={indexparam = paste("array(indexcompile(",indexparam,",spells.can.span.years=",csdi_spells.can.span.years,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
@@ -194,17 +200,18 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL)
                         ntxbntnb={indexparam = paste("array(indexcompile(",indexparam,",n=",ntxbntnb_n,",spells.can.span.years=",ntxbntnb_spells.can.span.years,"))",sep="") ; 
 				if(!write_quantiles) {tempqtiles_tmp = c(0.05) ; precqtiles_tmp = c(0.05) } },
 			tx95t={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.95) ; precqtiles_tmp = c(0.95) } },
-                        rxnday={indexparam = paste("array(indexcompile(",indexparam,",center.mean.on.last.day=",rxnday_center.mean.on.last.day,",n=",rxnday_n,"))",sep="")},spei={indexparam = paste("array(indexcompile(",indexparam,",n=",spei_n,"))",sep="") ; 
-				if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
-			hw={if(irregular) { latstr="lat2d[i,j]" } else { latstr="lat[j]" } ;
-				indexparam = paste("array(indexcompile(",indexparam,",base.range=c(",baserange[1],",",baserange[2],"),n=",hwn_n,",min.base.data.fraction.present=",
+                        rxnday={indexparam = paste("array(indexcompile(",indexparam,",center.mean.on.last.day=",rxnday_center.mean.on.last.day,",n=",rxnday_n,"))",sep="") ; 
+				if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) }},
+			spei={indexparam = paste("array(indexcompile(",indexparam,",scale=",spei_scale,",lat=",latstr,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
+                        spi={indexparam = paste("array(indexcompile(",indexparam,",scale=",spi_scale,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
+			hw={	indexparam = paste("array(indexcompile(",indexparam,",base.range=c(",baserange[1],",",baserange[2],"),n=",hwn_n,",min.base.data.fraction.present=",
 				min.base.data.fraction.present,",lat=",latstr,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1,0.9) ; precqtiles_tmp = c(0.1,0.9) } },
 
 		{ indexparam = paste("array(indexcompile(",indexparam,"))",sep="") ; tempqtiles_tmp <- precqtiles_tmp <- NULL } )
 		print(paste("diag: index call: ",eval(indexparam)),sep="")
 
 	# Determine whether index to be calculated will be daily (currently only for tx95t), monthly or annual
-		if(indices[a] == "tx95t") {period = "DAY"} else if (indices[a] == "rxnday") { period = "MON" } else {
+		if(indices[a] == "tx95t") {period = "DAY"} else if (indices[a] == "rxnday" || indices[a] == "spei" || indices[a] == "spi") { period = "MON" } else {
 	                if(!is.null(formals(indexfun)$freq)) {
 				if(!is.null(freq)){
 					if(freq[1] == "monthly") {period = "MON"} else {period = "ANN"}
@@ -221,6 +228,7 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL)
 				precipqtiles_array = array(NA,c(length(lon),length(lat),365,length(precqtiles))) }
 
         # If quantiles are requested, record quantiles. This will only happen once.
+	# TODO: Put this in a function.
                 if (write_quantiles == TRUE) {
 			print("WRITING QUANTILES")
 			qtilefetch = array(NA,c(3,length(tempqtiles),length(lon),length(lat),365))
@@ -267,8 +275,9 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL)
 
 		index<-foreach(j=1:length(lat),.combine='acomb',.export=c(exportlist,objects())) %dopar% {		# ls(envir=globalenv()),objects()
 #	                loop3 <- foreach(i=1:(length(lon))) %dopar% {	#"indexcompile","lat2d"
-                       library(climdex.pcic)	# done here as each core needs access to library
-                       for(i in 1:length(lon)){
+                        library(climdex.pcic)	# done here as each core needs access to library
+			if(indices[a] == "spei" | indices[a] == "spi") library(SPEI)
+                        for(i in 1:length(lon)){
 				# DO QUANTILE WORK IF NECESSARY
 				# If quantiles are provided, create the quantile list to feed climdexinput.raw and make tempqtiles and precqtiles NULL if not already/
 		                if(!is.null(quantile_file)) {
@@ -307,6 +316,7 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL)
 				cio = cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=prec[i,j,],tmin.dates=tsmintime,tmax.dates=tsmaxtime,prec.dates=prectime,prec.qtiles=precqtiles_tmp,
 					temp.qtiles=tempqtiles_tmp,quantiles=quantiles,base.range=baserange)
 #print(str(cio))
+#q()
 				# Need a separate way to write out heat wave indices... better way to do this?
 				if(indices[a] == "hw") { test[,,i,] = eval(parse(text=indexparam)) }
 				else { test[i,] = eval(parse(text=indexparam)) }
@@ -341,7 +351,6 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL)
 			ncvar_put(qout,tmincdf,tminqtiles_array) ; ncvar_put(qout,tmaxcdf,tmaxqtiles_array) ; ncvar_put(qout,tavgcdf,tavgqtiles_array) ; ncvar_put(qout,preccdf,precipqtiles_array)
 
 			write_quantiles = FALSE         # only need to write once
-
 			rm(timedim,tqdim,pqdim,tmincdf,tmaxcdf,preccdf,qout)
 		}
 
@@ -394,8 +403,9 @@ spei_n=1,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL)
 
 	# metadata
         	ncatt_put(tmpout,0,"created_on",system("date",intern=TRUE))
-	        ncatt_put(tmpout,0,"created_by",system("whoami",intern=TRUE))
-                ncatt_put(tmpout,0,"software_version",software_id)
+	        ncatt_put(tmpout,0,"created_by_userid",system("whoami",intern=TRUE))
+                ncatt_put(tmpout,0,"climpact2_version",software_id)
+                ncatt_put(tmpout,0,"R_version",as.character(getRversion()))
                 ncatt_put(tmpout,0,"base_period",paste(baserange[1],"-",baserange[2],sep=""))
 
 	        nc_close(tmpout)
@@ -571,44 +581,101 @@ dual.threshold.exceedance.duration.index <- function(daily.temp1, daily.temp2, d
   na.mask_combined = na.mask1 & na.mask2
 
   if(spells.can.span.years) {
-    periods1 <- f1(daily.temp1, thresholds1[jdays])	#select.blocks.gt.length(f1(daily.temp1, thresholds1[jdays]), min.length1 - 1)
-    periods2 <- f2(daily.temp2, thresholds2[jdays])	#select.blocks.gt.length(f2(daily.temp2, thresholds2[jdays]), min.length2 - 1)
+    periods1 <- f1(daily.temp1, thresholds1[jdays])
+    periods2 <- f2(daily.temp2, thresholds2[jdays])
     periods_combined = select.blocks.gt.length(periods1 & periods2,n)	# an array of booleans
     return(tapply.fast(periods_combined, date.factor, sum) * na.mask_combined)
   } else {
     return(tapply.fast(1:length(daily.temp1), date.factor, function(idx) { 
-	periods1 = f1(daily.temp1[idx], thresholds1[jdays[idx]])	#select.blocks.gt.length(f1(daily.temp1[idx], thresholds1[jdays[idx]]), min.length1 - 1)#   * na.mask1
-	periods2 = f2(daily.temp2[idx], thresholds2[jdays[idx]])	#select.blocks.gt.length(f2(daily.temp2[idx], thresholds2[jdays[idx]]), min.length2 - 1)#   * na.mask2
+	periods1 = f1(daily.temp1[idx], thresholds1[jdays[idx]])
+	periods2 = f2(daily.temp2[idx], thresholds2[jdays[idx]])
 	periods_combined = select.blocks.gt.length(periods1 & periods2,n)
 	return(sum(periods_combined)) })*na.mask_combined)
   }
 }
 
-# SPEI
-# MAKE A ONE LINER!!!!!!*****
-# Measure of “drought” using the Standardised Precipitation Evapotranspiration Index on time scales of 3, 6 and 12 months. No missing data are allowed to calculate SPEIflex. 
-# Attempting to use the R package SPEI for the SPEI and SPI indices.
-climdex.spei <- function(ci,n=c(3,6,12)) { stopifnot(is.numeric(ci@data$prec),is.numeric(n),n>0) ; 
-	ci@data$prec[length(ci@data$prec)]=ci@data$prec[length(ci@data$prec)-1] ; print(sum(is.na(ci@data$prec)));print((spei(ci@data$prec,n))$fitted) 
-print(str(ci))
-print(length(spei(ci@data$prec,n)$fitted))
-	speitest <- spei(ci@data$prec,n,na.rm=TRUE)
-print(speitest)
-q()
-	return(spei(ci@data$prec,n))
+# SPEI. From the SPEI CRAN package.
+# Calculates SPEI.
+# INPUT:
+#    - climdex input object
+#    - scale
+#    - kernal
+#    - distribution
+#    - fit
+#    - na.rm
+#    - ref.start
+#    - ref.end
+#    - x
+# OUTPUT:
+#    - a monthly (as per the index definition) time-series of SPEI values.
+climdex.spei <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift=0),distribution='log-Logistic',fit='ub-pwm',ref.start=NULL,ref.end=NULL,lat=NULL) { 
+	stopifnot(is.numeric(scale),scale>0)
+#print(str(ci))
+	if(is.null(ci@data$tmin) | is.null(ci@data$tmax)) stop("climdex.spei requires tmin and tmax")
+
+# get monthly means of tmin and tmax. And monthly total precip if precip exists.
+	tmax_monthly <- as.numeric(tapply.fast(ci@data$tmax,ci@date.factors$monthly,mean,na.rm=TRUE))
+	tmin_monthly <- as.numeric(tapply.fast(ci@data$tmin,ci@date.factors$monthly,mean,na.rm=TRUE))
+	if (!is.null(ci@data$prec)) { prec_sum <- as.numeric(tapply.fast(ci@data$prec,ci@date.factors$monthly,sum,na.rm=TRUE)) } else prec_sum <- NULL
+#print(prec_sum)
+#print(length(tmax_monthly))
+#print(length(tmin_monthly))
+# calculate PET
+	pet = hargreaves(tmin_monthly,tmax_monthly,lat=lat,Pre=prec_sum,na.rm=TRUE)
+#print(str(pet))
+#print(length(pet))
+
+# calculate spei
+	spei_col <- spei(pet,scale=scale,ref.start=ref.start,ref.end=ref.end,distribution=distribution,fit=fit,kernal=kernal,na.rm=TRUE)
+	x <- spei_col$fitted
+
+# remove NA, -Inf and Inf values which most likely occur due to unrealistic values in P or PET. This almost entirely occurs in ocean regions.
+	x[is.na(x)] = NaN
+	x <- ifelse(x=="-Inf" | x=="Inf" | x=="NaNf",NaN,x)
+
+#if(any(x=="NaNf")) { print(x) ; q() }
+	return(as.numeric(x))
 }
 
-# SPI
-climdex.spi <- function(ci,n=c(3,6,12)) { stopifnot(is.numeric(ci@data$prec),is.numeric(n),n>0) ; 
-spitest <- spi(ci@data$prec,n,na.rm=TRUE)
-print(spitest)
-q()
-return()
+# SPI. From the SPEI CRAN package.
+# INPUT:
+#    - climdex input object
+#    - scale
+#    - kernal
+#    - distribution
+#    - fit
+#    - na.rm
+#    - ref.start
+#    - ref.end
+#    - x
+# OUTPUT:
+#    - a monthly (as per the index definition) time-series of SPI values.
+climdex.spi <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift=0),distribution='log-Logistic',fit='ub-pwm',ref.start=NULL,ref.end=NULL,lat=NULL) {
+        stopifnot(is.numeric(scale),scale>0)
+        if(is.null(ci@data$prec)) stop("climdex.spi requires prec")
+
+# get monthly mean of prec
+	prec_mean <- as.numeric(tapply.fast(ci@data$prec,ci@date.factors$monthly,mean,na.rm=TRUE))
+
+# calculate spi
+	spi_col <- spi(prec_mean,scale=scale,ref.start=ref.start,ref.end=ref.end,distribution=distribution,fit=fit,kernal=kernal,na.rm=TRUE)
+        x <- spi_col$fitted
+
+# remove NA, -Inf and Inf values which most likely occur due to unrealistic values in P or PET. This almost entirely occurs in ocean regions.
+        x[is.na(x)] = NaN
+        x <- ifelse(x=="-Inf" | x=="Inf" | x=="NaNf",NaN,x)
+        return(as.numeric(x))
 }
 
 # hw
 # Heat wave indices. From Perkins and Alexander (2013)
-# This function will return a 3D dataset of dimensions [definition,aspect,year].
+# INPUT:
+#    - climdex input object
+#    - base range: a pair of integers indicating beginning and ending year of base period.
+#    - pwindow: number of days to apply a moving window for calculating percentiles. Hard-coded to 15 currently to ensure user does not deviate from definitions.
+#    - min.base.data.fraction.present: minimum fraction of data required to calculate percentiles.
+#    - lat: latitude of current grid cell (required for determining hemisphere).
+# OUTPUT: This function will return a 3D dataset of dimensions [definition,aspect,years], with corresponding lengths [3,5,nyears].
 # HEAT WAVE DEFINITIONS:
 #    - TX90p
 #    - TN90p
@@ -620,7 +687,7 @@ return()
 #    - HWD: heat wave duration
 #    - HWF: heat wave frequency
 #
-climdex.hw <- function(ci,base.range=c(1961,1990),n=15,min.base.data.fraction.present,lat) {
+climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fraction.present,lat) {
 	stopifnot(!is.null(lat))
 
 # step 1. Get/calculate the three definitions of a heat wave. Try using climdex's get.outofbase.quantiles function for this (EVEN NEEDED? climdex.raw GETS THESE ALREADY).
@@ -683,11 +750,25 @@ climdex.hw <- function(ci,base.range=c(1961,1990),n=15,min.base.data.fraction.pr
 	return(hw_index)
 }
 
-# return array of zeros or ones for each year supplied, indicating number of leap days in each year.
+# leapdays
+# INPUT:
+#    - year: an array of years.
+# OUTPUT:
+#    - an array of zeros or ones for each year supplied, indicating number of leap days in those years.
 leapdays <- function(year) { if(!is.numeric(year)) stop("year must be of type numeric") ; return(0 + (year %% 4 == 0)) }
 
-# heat wave aspects as per Perkins and Alexander (2013). HWM, HWA, HWN, HWD, HWF. 
+# get.hw.aspects
+# Calculate heat wave aspects as per Perkins and Alexander (2013). HWM, HWA, HWN, HWD, HWF. 
 # EHF definition is updated (personal comms Perkins 2015).
+# INPUT:
+#    - aspect.array: empty array used to hold aspects.
+#    - boolean.str: an array of booleans indicating the existence of a heatwave for each day.
+#    - yearly.date.factors: annual date factors from climdex.input object.
+#    - monthly.date.factors: monthly date factors from climdex.input object.
+#    - daily.data: daily values of either TX, TN or EHF.
+#    - lat: latitude of current grid cell.
+# OUTPUT:
+#    - aspect.array: filled with calculated aspects.
 get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.date.factors,daily.data,lat) {
 	month <- substr(monthly.date.factors,6,7)
 	# Move daily.data forward 6 months so that SH summer data is in the middle of the year. Then retrieve winter months (which will really be summer data)
@@ -752,197 +833,4 @@ tapply.fast <- function (X, INDEX, FUN = NULL, ..., simplify = TRUE) {
   ans <- unlist(ans, recursive = FALSE)
   names(ans) <- levels(INDEX)
   return(ans)
-}
-
-
-
-
-
-
-
-
-# GUI STUFF
-
-# fonts for different texts in GUI.
-
-startss <- function(){
-logo_require    <- FALSE
- start1<-tktoplevel(bg='white')
-fontHeading     <- tkfont.create(family = "times", size = 40, weight = "bold", slant = "italic")
-
-fontHeading1    <- tkfont.create(family = "times", size = 20, weight = "bold")
-
-fontHeading2    <- tkfont.create(family = "times", size = 14, weight = "bold")
-
-fontTextLabel   <- tkfont.create(family = "times", size = 12)
-
-fontFixedWidth  <- tkfont.create(family = "courier", size = 12)
-
-font_small  <- "times 12"
-
-font_big    <- "times 15 bold"
-
-font_err    <- "times 13 bold"
-
-grey_font <- tkfont.create(family = "times", size = 30, weight = "bold", slant = "italic") #'times 20 grey bold'
-
-
-  # search logo files in current working directory.
-
-  no.logo <- FALSE;
-
-  dir0 <- getwd();
-
-  logo1 <- "WMOLogo.gif";
-
-  logo2 <- "UNSW.gif";
-
-  logo3 <- "coess.gif";
-
-
-
-  if (logo_require == TRUE)
-
-  {  # Users want to search another directory for the logo files.
-
-    while (file.exists(paste(dir0, "/", logo1, sep = "")) == FALSE)
-
-    {
-
-      dir0 <- tk_choose.dir(getwd(), caption = "Select directory containing three .gif files");
-
-      if (is.na(dir0) == TRUE)
-
-      {
-
-        no.logo <- TRUE;
-
-        break();
-
-      }
-
-    }
-
-  }
-
-  if (file.exists(paste(dir0, "/", logo1, sep = "")) == FALSE | 
-
-      file.exists(paste(dir0, "/", logo2, sep = "")) == FALSE |
-
-      file.exists(paste(dir0, "/", logo3, sep = "")) == FALSE) no.logo <- TRUE; # find logos?
-
-
-
-  tkwm.geometry(start1, "+0+0"); # position in upper left corner of screen
-
-  tkwm.title(start1, "ClimPACT test version");
-
-
-
-  # Show logos on upper half of the main window, or "no logos available".  
-
-  if (no.logo == FALSE)
-
-  {  # with logos
-
-    logo1 <- paste(dir0, "/", logo1, sep = "");
-
-    logo2 <- paste(dir0, "/", logo2, sep = "");
-
-    logo3 <- paste(dir0, "/", logo3, sep = "");
-
-
-
-    img  <- tkimage.create("photo", file = logo1);
-
-    img2 <- tkimage.create("photo", file = logo2, width = 0);
-
-    img3 <- tkimage.create("photo", file = logo3, width = 0);
-
-
-
-    left  <- tklabel(start1, image = img2);
-
-    right <- tklabel(start1, image = img3);
-
-    tkgrid(left, right);
-
-    tkgrid.configure(left,  sticky = "e");
-
-    tkgrid.configure(right, sticky = "w");
-
-  } else
-
-  {    # no logos, show a help button.
-
-    help.logo <- function()
-
-    {
-
-      tkmessageBox(message=paste('You can see this help because the logo files are not in the working directory of R!\n\nThree files are needed for the logos:\n',
-
-        logo1,', ',logo2,', and ',logo3,'\nAnd they must be in the working directory of R.\n\n',
-
-        'If you have those files, you can put them in the working directory, or set "logo_require=T" in line 57 of the source code and try again... ',
-
-        sep = ''), icon = 'question');
-
-    }
-
-
-
-    right <- tkbutton(start1, text = " ? ", command = help.logo, bg = "white", foreground = "light grey", width = 2);
-
-
-
-    left <- tklabel(start1, text = "  no logos available  ", font = grey_font, width = 30, bg = "white", foreground = "light grey");
-
-
-
-    # The following 2 lines could be used later if we want a wanring message when logo files are not available.
-
-    #tkgrid(left,right)   
-
-    #tkgrid.configure(left,sticky="e"); tkgrid.configure(right,sticky="w")
-
-  }
-
-
-
-  # lower half of the window.
-
-  tkgrid(tklabel(start1, text = "    ", bg = "white"));
-
-  tkgrid(tklabel(start1, text = "             ClimPACT             ", font = fontHeading, width = 30, bg = "white"), columnspan = 2);
-
-  tkgrid(tklabel(start1, text = "    ", bg = "white"));
-
-    
-
-    start.but   <- tkbutton(start1, text = "Load Data and Run QC", command = getfile0, width = 30, font = fontHeading2, bg = "white");
-
-    cal.but     <- tkbutton(start1, text = "Indices Calculation", command = nastat, width = 30, font = fontHeading2, bg = "white");
-
-    cancel.but  <- tkbutton(start1, text = "Exit", command = done, width = 30, font = fontHeading2, bg = "white");
-
-    help.but    <- tkbutton(start1, text = "About", command = get_help, width = 30, font = fontHeading2, bg = "white");
-
-    license.but <- tkbutton(start1, text = "Software Licence Agreement", command = license, width = 30, font = fontHeading2, bg = "white");
-
-    tkgrid(start.but,   columnspan = 2);
-
-    tkgrid(cal.but,     columnspan = 2);
-
-    tkgrid(help.but,    columnspan = 2);
-
-    tkgrid(license.but, columnspan = 2);
-
-    tkgrid(cancel.but,  columnspan = 2);
-
-    tkgrid(tklabel(start1, text = "", bg = "white"));
-
-    if (no.logo == FALSE) tkgrid(tklabel(start1, image = img), columnspan = 2);
-
-    tkfocus(start1);
-
 }
