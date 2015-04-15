@@ -9,6 +9,7 @@
 # Nullify some objects to suppress spurious warning messages
 spei <- climdex.pcic <- SPEI <- NULL
 
+# Load global libraries and enable compilation.
 library(ncdf4)
 library(climdex.pcic)
 library(PCICt)
@@ -58,18 +59,19 @@ cdd_spells.can.span.years=TRUE,cwd_spells.can.span.years=TRUE,csdi_spells.can.sp
 ntxbntnb_n=5,gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,hddheat_n=18,time_format=NULL,rxnday_n=5,rxnday_center.mean.on.last.day=FALSE,rnnm_threshold=1,
 spei_scale=3,spi_scale=3,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL)
 {
-# Initial checks
-# 1) at least one file is provided,
-# 2) at least one index is provided, 
-# 3) that all indices are valid,
-# TO ADD: if a tsmax index is specified but tsmax file is not. BOMB.
-# TO ADD: FILES EXIST!! This should be first thing! Including qtile file if specified.
+# Read in climate index data
 	indexfile = "index.master.list"
 	indexlist <- (read.table(indexfile,sep="\t"))
 	if(indices[1] == "all") indices = as.character(indexlist[,1])
         units <- as.character(indexlist[match(indices,indexlist[,1]),2]) 
         desc <- as.character(indexlist[match(indices,indexlist[,1]),3]) 
 
+# Initial checks
+# 1) at least one file is provided,
+# 2) at least one index is provided, 
+# 3) that all indices are valid,
+# TO ADD: if a tsmax index is specified but tsmax file is not. BOMB.
+# TO ADD: FILES EXIST!! This should be first thing! Including qtile file if specified.
 	if(all(is.null(tsminfile),is.null(tsmaxfile),is.null(precfile))) stop("Must provide at least one filename for tsmin, tsmax and/or prec.")
 	if(is.null(indices)) stop(paste("Must provide a list of indices to calculate. See ",indexfile," for list.",sep=""))
         if(any(!indices %in% indexlist[,1])) stop(paste("One or more indices are unknown. See ",indexfile," for list.",sep=""))
@@ -81,17 +83,12 @@ spei_scale=3,spi_scale=3,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=
 	tsmin <- tsmax <- prec <- NULL
 	tsmintime <- tsmaxtime <- prectime <- NULL
 
-# Load files and variables. Assumedly this is a memory intensive step for large variables. Way to improve this? Read incrementally?
+# Load tmin, tmax and prec files and variables. Assumedly this is a memory intensive step for large variables. Way to improve this? Read incrementally?
         if(!is.null(tsminfile)) { nc_tsmin=nc_open(tsminfile); tsmin <- ncvar_get(nc_tsmin,tsminname) ; refnc=nc_tsmin}
         if(!is.null(tsmaxfile)) { nc_tsmax=nc_open(tsmaxfile); tsmax <- ncvar_get(nc_tsmax,tsmaxname) ; refnc=nc_tsmax}
         if(!is.null(precfile)) { nc_prec=nc_open(precfile); prec <- ncvar_get(nc_prec,precname) ; refnc=nc_prec}
-print(nc_prec)
-print("STRUCTURE")
-print(str(nc_prec))
-print("GLOBATTS")
-print(nc_prec$natts)
 
-# Convert to Celcius
+# Convert to Celcius. This is the only unit conversion done.
 	if(exists("nc_tsmin")) if (ncatt_get(nc_tsmin,tsminname,"units")[2] == "K") tsmin = tsmin-273.15
         if(exists("nc_tsmax")) if (ncatt_get(nc_tsmax,tsmaxname,"units")[2] == "K") tsmax = tsmax-273.15
 
@@ -114,7 +111,7 @@ print(nc_prec$natts)
                 lon2d = ncvar_get(refnc,lonname)
                 lat2d = ncvar_get(refnc,latname)
 		exportlist <- c(exportlist,"lat2d")
-	} else{						# else regular grid
+	} else {					# else regular grid
                 lat = ncvar_get(refnc,latname)
                 lon = ncvar_get(refnc,lonname)
                 londim <- ncdim_def("lon", "degrees_east",lon)
@@ -158,8 +155,6 @@ print(nc_prec$natts)
         print("********* CALCULATING INDICES *********")
 	print("***************************************")
         for(a in 1:length(indices)){
-#	loop1 <- foreach(a=1:(length(indices[1])),.packages=eval(match.fun(paste("climdex",indices[a],sep=".")))) %dopar% {
-
 	# Fetch and compile index function
 	        indexfun = match.fun(paste("climdex",indices[a],sep="."))
 		indexcompile = cmpfun(indexfun)
@@ -273,7 +268,7 @@ print(nc_prec$natts)
 		j = 1
                 if(indices[a] == "hw") { test = index[,,,1,] } else { test = index[,1,] } # create a dummy shell for the parrallel loop.
 
-		index<-foreach(j=1:length(lat),.combine='acomb',.export=c(exportlist,objects())) %dopar% {		# ls(envir=globalenv()),objects()
+		index <- foreach(j=1:length(lat),.combine='acomb',.export=c(exportlist,objects())) %dopar% {		# ls(envir=globalenv()),objects()
 #	                loop3 <- foreach(i=1:(length(lon))) %dopar% {	#"indexcompile","lat2d"
                         library(climdex.pcic)	# done here as each core needs access to library
 			if(indices[a] == "spei" | indices[a] == "spi") library(SPEI)
@@ -328,9 +323,9 @@ print(nc_prec$natts)
 	# Transpose dimensions to time,lat,lon
 	        if(indices[a] == "hw") { index3d_trans = aperm(index,c(3,5,4,2,1)) } else { index3d_trans = aperm(index,c(1,3,2)) }
 
-# Write out
+# Write data to file
 # NOTE: ncdf4 seems to only support numeric types for dimensions.
-	# write out qunatiles if requested
+	# write out quantiles if requested
 		if(write_quantiles == TRUE) {
 			qfile = paste(paste("CCRC",identifier,period,baserange[1],baserange[2],"quantiles",sep="_"),".nc",sep="")
 			system(paste("rm -f ",qfile,sep=""))
@@ -407,6 +402,9 @@ print(nc_prec$natts)
                 ncatt_put(tmpout,0,"climpact2_version",software_id)
                 ncatt_put(tmpout,0,"R_version",as.character(getRversion()))
                 ncatt_put(tmpout,0,"base_period",paste(baserange[1],"-",baserange[2],sep=""))
+	# write out global attributes from input file. Assumes all input files have the same global attributes.
+	        globatt <- ncatt_get(refnc,0)
+		for(i in 1:length(globatt)) { ncatt_put(tmpout,0,names(globatt)[i],globatt[[i]]) }
 
 	        nc_close(tmpout)
                 if(irregular) {system(paste("module load nco; ncks -C -O -x -v x,y",outfile,outfile,sep=" "))}
@@ -537,14 +535,9 @@ climdex.rxnday <- function(ci, center.mean.on.last.day=FALSE,n=5) { stopifnot(!i
 ######################## In climdex.pcic this has dimensions (365,nyears,nyears-1), not sure why.
 climdex.tx95t <- function(ci, freq=c("monthly", "annual")) { stopifnot(!is.null(ci@data$tmax) && !is.null(ci@quantiles$tmax)); return(ci@quantiles$tmax$outbase$q95) }
 
-##############
-# NEW CLIMPACT INDICES THAT HOPEFULLY WORK
-##############
-
 # tx50p
 # Percentage of days of days where TX>50th percentile
 # same as climdex.tx90p, except for 50th percentile
-#    NOT SURE ABOUT IMPLEMENTATION. HOW ARE QUANTILES HANDLED? Should be able to submit 'temp.qtiles=c(0.5)' to climdexInput.raw?
 #    UPDATE::: changed "qtiles=c(0.10,0.90)" to "qtiles" in get.temp.var.quantiles. This should allow the code to handle any specified percentiles.
 #          ::: contd. Not sure why this was hard coded.
 #          ::: contd. Contacted James Hiebert who maintains climdex and he agrees it's a bug, will be fixed in a future CRAN release.
@@ -610,30 +603,24 @@ dual.threshold.exceedance.duration.index <- function(daily.temp1, daily.temp2, d
 #    - a monthly (as per the index definition) time-series of SPEI values.
 climdex.spei <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift=0),distribution='log-Logistic',fit='ub-pwm',ref.start=NULL,ref.end=NULL,lat=NULL) { 
 	stopifnot(is.numeric(scale),scale>0)
-#print(str(ci))
-	if(is.null(ci@data$tmin) | is.null(ci@data$tmax)) stop("climdex.spei requires tmin and tmax")
+	if(is.null(ci@data$tmin) | is.null(ci@data$tmax) | is.null(ci@data$prec)) stop("climdex.spei requires tmin, tmax and precip.")
 
-# get monthly means of tmin and tmax. And monthly total precip if precip exists.
+# get monthly means of tmin and tmax. And monthly total precip.
 	tmax_monthly <- as.numeric(tapply.fast(ci@data$tmax,ci@date.factors$monthly,mean,na.rm=TRUE))
 	tmin_monthly <- as.numeric(tapply.fast(ci@data$tmin,ci@date.factors$monthly,mean,na.rm=TRUE))
-	if (!is.null(ci@data$prec)) { prec_sum <- as.numeric(tapply.fast(ci@data$prec,ci@date.factors$monthly,sum,na.rm=TRUE)) } else prec_sum <- NULL
-#print(prec_sum)
-#print(length(tmax_monthly))
-#print(length(tmin_monthly))
+	prec_sum <- as.numeric(tapply.fast(ci@data$prec,ci@date.factors$monthly,sum,na.rm=TRUE))
+
 # calculate PET
 	pet = hargreaves(tmin_monthly,tmax_monthly,lat=lat,Pre=prec_sum,na.rm=TRUE)
-#print(str(pet))
-#print(length(pet))
 
 # calculate spei
-	spei_col <- spei(pet,scale=scale,ref.start=ref.start,ref.end=ref.end,distribution=distribution,fit=fit,kernal=kernal,na.rm=TRUE)
+	spei_col <- spei(prec_sum-pet,scale=scale,ref.start=ref.start,ref.end=ref.end,distribution=distribution,fit=fit,kernal=kernal,na.rm=TRUE)
 	x <- spei_col$fitted
 
 # remove NA, -Inf and Inf values which most likely occur due to unrealistic values in P or PET. This almost entirely occurs in ocean regions.
 	x[is.na(x)] = NaN
 	x <- ifelse(x=="-Inf" | x=="Inf" | x=="NaNf",NaN,x)
 
-#if(any(x=="NaNf")) { print(x) ; q() }
 	return(as.numeric(x))
 }
 
@@ -652,13 +639,13 @@ climdex.spei <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift
 #    - a monthly (as per the index definition) time-series of SPI values.
 climdex.spi <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift=0),distribution='log-Logistic',fit='ub-pwm',ref.start=NULL,ref.end=NULL,lat=NULL) {
         stopifnot(is.numeric(scale),scale>0)
-        if(is.null(ci@data$prec)) stop("climdex.spi requires prec")
+        if(is.null(ci@data$prec)) stop("climdex.spi requires precip.")
 
-# get monthly mean of prec
-	prec_mean <- as.numeric(tapply.fast(ci@data$prec,ci@date.factors$monthly,mean,na.rm=TRUE))
+# get monthly total precip.
+	prec_sum <- as.numeric(tapply.fast(ci@data$prec,ci@date.factors$monthly,sum,na.rm=TRUE))
 
 # calculate spi
-	spi_col <- spi(prec_mean,scale=scale,ref.start=ref.start,ref.end=ref.end,distribution=distribution,fit=fit,kernal=kernal,na.rm=TRUE)
+	spi_col <- spi(prec_sum,scale=scale,ref.start=ref.start,ref.end=ref.end,distribution=distribution,fit=fit,kernal=kernal,na.rm=TRUE)
         x <- spi_col$fitted
 
 # remove NA, -Inf and Inf values which most likely occur due to unrealistic values in P or PET. This almost entirely occurs in ocean regions.
@@ -668,7 +655,7 @@ climdex.spi <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift=
 }
 
 # hw
-# Heat wave indices. From Perkins and Alexander (2013)
+# Calculate heat wave indices. From Perkins and Alexander (2013)
 # INPUT:
 #    - climdex input object
 #    - base range: a pair of integers indicating beginning and ending year of base period.
@@ -690,7 +677,7 @@ climdex.spi <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift=
 climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fraction.present,lat) {
 	stopifnot(!is.null(lat))
 
-# step 1. Get/calculate the three definitions of a heat wave. Try using climdex's get.outofbase.quantiles function for this (EVEN NEEDED? climdex.raw GETS THESE ALREADY).
+# step 1. Get data needed for the three definitions of a heat wave. Try using climdex's get.outofbase.quantiles function for this (EVEN NEEDED? climdex.raw GETS THESE ALREADY).
 	# Get 90th percentile of tavg for EHIsig calculation below
 	# recalculate tavg here to ensure it is based on tmax/tmin. Then get 15 day moving windows of percentiles.
 	tavg = (ci@data$tmax - ci@data$tmin)/2
@@ -716,7 +703,6 @@ climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fract
 #	print(lat)
 
 # step 2. Determine if tx90p, tn90p or EHF conditions have persisted for >= 3 days. If so, count number of summer heat waves.
-
 	# create an array of booleans for each definition identifying runs 3 days or longer where conditions are met. i.e. for TX90p, TN90p, EHF.
 	tx90p_boolean = array(FALSE,length(ci@quantiles$tmax$outbase$q90))
         tn90p_boolean = array(FALSE,length(ci@quantiles$tmin$outbase$q90))
@@ -771,21 +757,22 @@ leapdays <- function(year) { if(!is.numeric(year)) stop("year must be of type nu
 #    - aspect.array: filled with calculated aspects.
 get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.date.factors,daily.data,lat) {
 	month <- substr(monthly.date.factors,6,7)
-	# Move daily.data forward 6 months so that SH summer data is in the middle of the year. Then retrieve winter months (which will really be summer data)
-	# Then also need to add 1 to yearly date factors.
 	daily.data = ifelse(boolean.str=="TRUE",daily.data,NA)			# remove daily data that is not considered a heat wave.
 
 	if(lat < 0) {
-		daily.data[!month %in% c("11","12","01","02","03")] <- NA	# step1. Remove NDJFM months from daily data and boolean array
+	# step1. Remove NDJFM months from daily data and boolean array
+		daily.data[!month %in% c("11","12","01","02","03")] <- NA
 		boolean.str[!month %in% c("11","12","01","02","03")] <- NA
 		daily.data2 <- array(NA,length(daily.data))
 		boolean.str2 <- array(NA,length(boolean.str))
 		ind1 <- length(daily.data)-179
 
-		daily.data2[180:length(daily.data)] <- daily.data[1:ind1]	# step2. Move data time-series and boolean array forward around 6 months. Don't need to be exact as data just needs to be in the right year.
+	# step2. Move data time-series and boolean array forward around 6 months. Don't need to be exact as data just needs to be in the right year.
+		daily.data2[180:length(daily.data)] <- daily.data[1:ind1]
 		boolean.str2[180:length(boolean.str)] <- boolean.str[1:ind1]
 
-		daily.data2[1:366] <- NA 					# step3. Remove data from first year since it has only a partial summer.  #; daily.data2[ind2:length(daily.data2)] <- NA
+	# step3. Remove data from first year since it has only a partial summer.
+		daily.data2[1:366] <- NA
 		daily.data <- daily.data2
 		boolean.str2[1:366] <- NA
 		boolean.str <- boolean.str2
