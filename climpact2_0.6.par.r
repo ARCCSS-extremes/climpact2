@@ -82,6 +82,7 @@ spei_scale=3,spi_scale=3,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=
 	cal <- "gregorian"
 	tsmin <- tsmax <- prec <- NULL
 	tsmintime <- tsmaxtime <- prectime <- NULL
+	missingval <- 3.3e10
 
 # Load tmin, tmax and prec files and variables. Assumedly this is a memory intensive step for large variables. Way to improve this? Read incrementally?
         if(!is.null(tsminfile)) { nc_tsmin=nc_open(tsminfile); tsmin <- ncvar_get(nc_tsmin,tsminname) ; refnc=nc_tsmin}
@@ -199,7 +200,7 @@ spei_scale=3,spi_scale=3,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=
 				if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) }},
 			spei={indexparam = paste("array(indexcompile(",indexparam,",scale=",spei_scale,",lat=",latstr,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
                         spi={indexparam = paste("array(indexcompile(",indexparam,",scale=",spi_scale,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
-			hw={	indexparam = paste("array(indexcompile(",indexparam,",base.range=c(",baserange[1],",",baserange[2],"),n=",hwn_n,",min.base.data.fraction.present=",
+			hw={	indexparam = paste("array(indexcompile(",indexparam,",base.range=c(",baserange[1],",",baserange[2],"),pwindow=",hwn_n,",min.base.data.fraction.present=",
 				min.base.data.fraction.present,",lat=",latstr,"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1,0.9) ; precqtiles_tmp = c(0.1,0.9) } },
 
 		{ indexparam = paste("array(indexcompile(",indexparam,"))",sep="") ; tempqtiles_tmp <- precqtiles_tmp <- NULL } )
@@ -323,7 +324,7 @@ spei_scale=3,spi_scale=3,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=
 	# Transpose dimensions to time,lat,lon
 	        if(indices[a] == "hw") { index3d_trans = aperm(index,c(3,5,4,2,1)) } else { index3d_trans = aperm(index,c(1,3,2)) }
 
-# Write data to file
+# WRITE DATA TO FILE
 # NOTE: ncdf4 seems to only support numeric types for dimensions.
 	# write out quantiles if requested
 		if(write_quantiles == TRUE) {
@@ -336,10 +337,10 @@ spei_scale=3,spi_scale=3,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=
 			timedim <- ncdim_def("time","days",1:365) ; tqdim <- ncdim_def("tqtile","unitless",tqnames) ; pqdim <- ncdim_def("pqtile","unitless",pqnames)
 
 			# create variable ncdf objects
-                        tmincdf = ncvar_def(paste("tmin",sep=""),"C",list(londim,latdim,timedim,tqdim),-1,prec="float")
-                        tmaxcdf = ncvar_def(paste("tmax",sep=""),"C",list(londim,latdim,timedim,tqdim),-1,prec="float")
-                        tavgcdf = ncvar_def(paste("tavg",sep=""),"C",list(londim,latdim,timedim,tqdim),-1,prec="float")
-                        preccdf = ncvar_def(paste("prec",sep=""),"mm/day",list(londim,latdim,timedim,pqdim),-1,prec="float")
+                        tmincdf = ncvar_def(paste("tmin",sep=""),"C",list(londim,latdim,timedim,tqdim),missingval,prec="float")
+                        tmaxcdf = ncvar_def(paste("tmax",sep=""),"C",list(londim,latdim,timedim,tqdim),missingval,prec="float")
+                        tavgcdf = ncvar_def(paste("tavg",sep=""),"C",list(londim,latdim,timedim,tqdim),missingval,prec="float")
+                        preccdf = ncvar_def(paste("prec",sep=""),"mm/day",list(londim,latdim,timedim,pqdim),missingval,prec="float")
 			qout = nc_create(qfile,list(tmincdf,tmaxcdf,tavgcdf,preccdf),force_v4=TRUE)
 
 			# write out data
@@ -372,23 +373,23 @@ spei_scale=3,spi_scale=3,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=
 	# create ncdf variable objects
 	        if(indices[a] == "hw") { 
 			hw_defdim <- ncdim_def("heat_wave_definition","1=tx90,2=tn90,3=EHF",1.0:3.0) ; hw_aspdim <- ncdim_def("heat_wave_aspect","1=HWM,2=HWA,3=HWN,4=HWD,5=HWF",1.0:5.0)
-			hwmcdf <- ncvar_def("HWM","degC",list(londim,latdim,timedim,hw_defdim),-1,longname="Heat wave magnitude",prec="float")
-			hwacdf <- ncvar_def("HWA","degC",list(londim,latdim,timedim,hw_defdim),-1,longname="Heat wave amplitude",prec="float")
-			hwncdf <- ncvar_def("HWN","heat waves",list(londim,latdim,timedim,hw_defdim),-1,longname="Heat wave number",prec="float")
-			hwdcdf <- ncvar_def("HWD","days",list(londim,latdim,timedim,hw_defdim),-1,longname="Heat wave duration",prec="float")
-			hwfcdf <- ncvar_def("HWF","days",list(londim,latdim,timedim,hw_defdim),-1,longname="Heat wave frequency",prec="float") ; varlist <- list(hwmcdf,hwacdf,hwncdf,hwdcdf,hwfcdf) 
-		} else { indexcdf <- ncvar_def(indices[a],units[a],list(londim,latdim,timedim),-1,longname=desc[a],prec="float") ; varlist <- list(indexcdf) }
+			hwmcdf <- ncvar_def("HWM","degC",list(londim,latdim,timedim,hw_defdim),missingval,longname="Heat wave magnitude",prec="float")
+			hwacdf <- ncvar_def("HWA","degC",list(londim,latdim,timedim,hw_defdim),missingval,longname="Heat wave amplitude",prec="float")
+			hwncdf <- ncvar_def("HWN","heat waves",list(londim,latdim,timedim,hw_defdim),missingval,longname="Heat wave number",prec="float")
+			hwdcdf <- ncvar_def("HWD","days",list(londim,latdim,timedim,hw_defdim),missingval,longname="Heat wave duration",prec="float")
+			hwfcdf <- ncvar_def("HWF","days",list(londim,latdim,timedim,hw_defdim),missingval,longname="Heat wave frequency",prec="float") ; varlist <- list(hwmcdf,hwacdf,hwncdf,hwdcdf,hwfcdf) 
+		} else { indexcdf <- ncvar_def(indices[a],units[a],list(londim,latdim,timedim),missingval,longname=desc[a],prec="float") ; varlist <- list(indexcdf) }
 
 	        system(paste("rm -f ",outfile,sep=""))
 
                 if(irregular){
 			print("WORKING ON IRREGULAR GRID...")
-                        loncdf <- ncvar_def(lonname,"degrees_east",list(londim,latdim),-1,prec="float")
-                        latcdf <- ncvar_def(latname,"degrees_north",list(londim,latdim),-1,prec="float")
+                        loncdf <- ncvar_def(lonname,"degrees_east",list(londim,latdim),missingval,prec="float")
+                        latcdf <- ncvar_def(latname,"degrees_north",list(londim,latdim),missingval,prec="float")
 			varlist[[length(varlist)+1]] <- loncdf ; varlist[[length(varlist)+1]] <- latcdf
 	                tmpout = nc_create(outfile,varlist,force_v4=TRUE)
 			ncvar_put(tmpout,loncdf,lon2d) ; ncvar_put(tmpout,latcdf,lat2d)
-#			ncatt_put(tmpout,indexcdf,"coordinates","lon lat")
+			ncatt_put(tmpout,indexcdf,"coordinates","lon lat")
 			rm(loncdf,latcdf)
 		} else { tmpout = nc_create(outfile,varlist,force_v4=TRUE) }
 
@@ -396,15 +397,33 @@ spei_scale=3,spi_scale=3,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=
 		if(indices[a] == "hw") { ncvar_put(tmpout,hwmcdf,index3d_trans[,,,1,]) ; ncvar_put(tmpout,hwacdf,index3d_trans[,,,2,]) ; ncvar_put(tmpout,hwncdf,index3d_trans[,,,3,])
                                 ncvar_put(tmpout,hwdcdf,index3d_trans[,,,4,]) ; ncvar_put(tmpout,hwfcdf,index3d_trans[,,,5,]) } else { ncvar_put(tmpout,indexcdf,index3d_trans) }
 
-	# metadata
-        	ncatt_put(tmpout,0,"created_on",system("date",intern=TRUE))
-	        ncatt_put(tmpout,0,"created_by_userid",system("whoami",intern=TRUE))
-                ncatt_put(tmpout,0,"climpact2_version",software_id)
-                ncatt_put(tmpout,0,"R_version",as.character(getRversion()))
-                ncatt_put(tmpout,0,"base_period",paste(baserange[1],"-",baserange[2],sep=""))
+        # copy arbitrary variables stored in 'varcopy' from input file to output file
+                varcopy <- c("Rotated_pole")
+                for (j in 1:length(varcopy)) {
+			if(any(refnc$var==varcopy[j])) {
+	                        tmpvar <- ncvar_get(refnc,varcopy[j])
+        	                tmpvarcdf <- ncvar_def(varcopy[j],"",prec="char")
+                	        tmpvarput <- ncvar_put(tmpout,tmpvarcdf,tmpvar)
+			}
+                }
+
+	# METADATA
+        	ncatt_put(tmpout,0,"Climpact2_data_created_on",system("date",intern=TRUE))
+	        ncatt_put(tmpout,0,"Climpact2_data_created_by_userid",system("whoami",intern=TRUE))
+                ncatt_put(tmpout,0,"Climpact2_version",software_id)
+                ncatt_put(tmpout,0,"Climpact2_R_version",as.character(getRversion()))
+                ncatt_put(tmpout,0,"Climpact2_base_period",paste(baserange[1],"-",baserange[2],sep=""))
+
 	# write out global attributes from input file. Assumes all input files have the same global attributes.
 	        globatt <- ncatt_get(refnc,0)
 		for(i in 1:length(globatt)) { ncatt_put(tmpout,0,names(globatt)[i],globatt[[i]]) }
+
+	# write out coordinate variable attributes from input file. Assumes all input files have the same attributes for their coordinate variables
+		attcopy <- c(latname,lonname,timename)
+		for (j in 1:length(attcopy)) {
+			tmpatt <- ncatt_get(refnc,attcopy[j])
+			for(i in 1:length(tmpatt)) { ncatt_put(tmpout,attcopy[j],names(tmpatt)[i],tmpatt[[i]]) }
+		}
 
 	        nc_close(tmpout)
                 if(irregular) {system(paste("module load nco; ncks -C -O -x -v x,y",outfile,outfile,sep=" "))}
@@ -676,11 +695,10 @@ climdex.spi <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift=
 #
 climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fraction.present,lat) {
 	stopifnot(!is.null(lat))
-
 # step 1. Get data needed for the three definitions of a heat wave. Try using climdex's get.outofbase.quantiles function for this (EVEN NEEDED? climdex.raw GETS THESE ALREADY).
 	# Get 90th percentile of tavg for EHIsig calculation below
 	# recalculate tavg here to ensure it is based on tmax/tmin. Then get 15 day moving windows of percentiles.
-	tavg = (ci@data$tmax - ci@data$tmin)/2
+	tavg = (ci@data$tmax + ci@data$tmin)/2
         tavg90p <- suppressWarnings(get.outofbase.quantiles(tavg,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=15,temp.qtiles=0.9,prec.qtiles=0.9,
                                                         min.base.data.fraction.present=min.base.data.fraction.present))
 	TxTn90p <- suppressWarnings(get.outofbase.quantiles(ci@data$tmax,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=15,temp.qtiles=0.9,prec.qtiles=0.9,
@@ -697,8 +715,20 @@ climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fract
 	# Calculate EHI values and EHF for each day of the given record. Must start at day 33 since the previous 32 days are required for each calculation.
 	for (a in 33:length(ci@data$tavg)) {
 		EHIaccl[a] = (sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3) - (sum(tavg[(a-32):(a-3)],na.rm=TRUE)/30)
+#print(ci@data$tmax[1:10])
+#print(ci@data$tmin[1:10])
+#print(lat)
+#print((sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3))
+#print((sum(tavg[(a-32):(a-3)],na.rm=TRUE)/30))
 		EHIsig[a] = (sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3) - as.numeric(unlist(tavg90p$tmax[1])[annualrepeat[a]]) #[(a %% 365)]
-		EHF[a] = max(1,EHIaccl[a])*EHIsig[a]
+#print("EHIsig")
+#print((sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3))
+#print(as.numeric(unlist(tavg90p$tmax[1])[annualrepeat[a]]))
+#print(as.numeric(tavg90p$tmax[1])[annualrepeat[a]])
+#print(str(tavg90p))
+		EHF[a] = max(1,EHIaccl[a],na.rm=TRUE)*EHIsig[a]
+#print(max(1,EHIaccl[a],na.rm=TRUE))
+#q()
 	}
 #	print(lat)
 
