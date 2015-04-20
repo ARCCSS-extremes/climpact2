@@ -27,9 +27,9 @@ tm10a	days	Annual count when TM >= 10 degC
 tm10b	days	Annual count when TM < 10 degC
 su30	days	Annual count when TX >= 30 degC
 su35	days	Annual count when TX >= 35 degC
-hddheat	days	Annual sum of Tb - TM (where Tb is a user-defined location-specific base temperature and TM < Tb)
-cddcold	days	Annual sum of TM - Tb (where Tb is a user-defined location-specific base temperature and TM > Tb)
-gddgrow	days	Annual sum of TM - Tb (where Tb is a user-defined location-specific base temperature and TM > Tb)
+hddheat	degC	Annual sum of Tb - TM (where Tb is a user-defined location-specific base temperature and TM < Tb)
+cddcold	degC	Annual sum of TM - Tb (where Tb is a user-defined location-specific base temperature and TM > Tb)
+gddgrow	degC	Annual sum of TM - Tb (where Tb is a user-defined location-specific base temperature and TM > Tb)
 r20mm	days	Annual count of days when P >= 20mm
 cdd	days	Maximum annual number of consecutive dry days (when precipitation < 1.0 mm)
 cwd	days	Maximum annual number of consecutive wet days (when precipitation >= 1.0 mm)
