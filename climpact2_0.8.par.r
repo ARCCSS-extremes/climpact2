@@ -351,13 +351,15 @@ spei_scale=3,spi_scale=3,hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=
 			varlist[[length(varlist)+1]] <- loncdf ; varlist[[length(varlist)+1]] <- latcdf
 	                tmpout = nc_create(outfile,varlist,force_v4=TRUE)
 			ncvar_put(tmpout,loncdf,lon2d) ; ncvar_put(tmpout,latcdf,lat2d)
-			ncatt_put(tmpout,indexcdf,"coordinates","lon lat")
 			rm(loncdf,latcdf)
 		} else { tmpout = nc_create(outfile,varlist,force_v4=TRUE) }
 
-        # write out variables
-		if(indices[a] == "hw") { ncvar_put(tmpout,hwmcdf,index3d_trans[,,,1,]) ; ncvar_put(tmpout,hwacdf,index3d_trans[,,,2,]) ; ncvar_put(tmpout,hwncdf,index3d_trans[,,,3,])
-                                ncvar_put(tmpout,hwdcdf,index3d_trans[,,,4,]) ; ncvar_put(tmpout,hwfcdf,index3d_trans[,,,5,]) } else { ncvar_put(tmpout,indexcdf,index3d_trans) }
+        # write out variables and 'coordinates' attribute if on a irregular grid.
+                if(indices[a] == "hw") { ncvar_put(tmpout,hwmcdf,index3d_trans[,,,1,]) ; ncvar_put(tmpout,hwacdf,index3d_trans[,,,2,]) ; ncvar_put(tmpout,hwncdf,index3d_trans[,,,3,])
+                                ncvar_put(tmpout,hwdcdf,index3d_trans[,,,4,]) ; ncvar_put(tmpout,hwfcdf,index3d_trans[,,,5,])
+                                if (irregular) { ncatt_put(tmpout,hwmcdf,"coordinates","lon lat") ; ncatt_put(tmpout,hwacdf,"coordinates","lon lat") ; ncatt_put(tmpout,hwncdf,"coordinates","lon lat") ; ncatt_put(tmpout,hwdcdf,"coordinates","lon lat")
+                                ncatt_put(tmpout,hwfcdf,"coordinates","lon lat") } }
+                                else { ncvar_put(tmpout,indexcdf,index3d_trans) ; if (irregular) ncatt_put(tmpout,indexcdf,"coordinates","lon lat") }
 
         # copy arbitrary variables stored in 'varcopy' from input file to output file
                 varcopy <- c("Rotated_pole")
