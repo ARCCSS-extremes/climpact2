@@ -1,36 +1,36 @@
-fd	degC	Annual number of days when T min < 0 degC
-fd2	degC	Annual number of days when T min < 2 degC
-fdm2	degC	Annual number of days when T min < -2 degC
-fdm20	degC	Annual number of days when T min < -20 degC
-id	days	Annual number of days when T max < 0 degC
-su	days	Annual number of days when T max > 25 degC
-tr	days	Annual number of days when T min > 20 degC
+fd	days	Annual number of days when Tmin < 0 degC
+fd2	days	Annual number of days when Tmin < 2 degC
+fdm2	days	Annual number of days when Tmin < -2 degC
+fdm20	days	Annual number of days when Tmin < -20 degC
+id	days	Annual number of days when Tmax < 0 degC
+su	days	Annual number of days when Tmax > 25 degC
+tr	days	Annual number of days when Tmin > 20 degC
 gsl	days	Annual number of days between the first occurrence of 6 consecutive days with T mean > 5 degC and the first occurrence of 6 consecutive days with T mean < 5 degC. 
-txx	degC	Warmest daily maximum temperature
-tnn	degC	Coldest daily minimum temperature
-tnx	degC	Warmest daily minimum temperature
-txn	degC	Coldest daily maximum temperature
+txx	degC	Warmest daily tmax
+tnn	degC	Coldest daily tmin
+tnx	degC	Warmest daily tmin
+txn	degC	Coldest daily tmax
 dtr	degC	Mean difference between daily maximum and daily minimum temperature
-wsdi	days	Annual number of days with at least 6 consecutive days when T max > 90th percentile
-wsdin	days	Annual number of days with at least n consecutive days when T max > 90th percentile
-csdi	days	Annual number of days with at least 6 consecutive days when T min < 10th percentile
-csdin	days	Annual number of days with at least n consecutive days when T min < 10th percentile
-tx50p	%	Percentage of days of days where TX > 50th percentile 
-tx95t	degC	Value of 95th percentile of TX
-tx10p	%	Percentage of days when T max < 10th percentile
-tx90p	%	Percentage of days when T max > 90th percentile
-tn10p	%	Percentage of days when T min < 10th percentile
-tn90p	%	Percentage of days when T min > 90th percentile
-tm5a	days	Annual count when TM >= 5 degC
-tm5b	days	Annual count when TM < 5 degC
-tm10a	days	Annual count when TM >= 10 degC
-tm10b	days	Annual count when TM < 10 degC
-su30	days	Annual count when TX >= 30 degC
-su35	days	Annual count when TX >= 35 degC
-hddheat	degC	Annual sum of Tb - TM (where Tb is a user-defined location-specific base temperature and TM < Tb)
-cddcold	degC	Annual sum of TM - Tb (where Tb is a user-defined location-specific base temperature and TM > Tb)
-gddgrow	degC	Annual sum of TM - Tb (where Tb is a user-defined location-specific base temperature and TM > Tb)
-r20mm	days	Annual count of days when P >= 20mm
+wsdi	days	Annual number of days with at least 6 consecutive days when Tmax > 90th percentile
+wsdin	days	Annual number of days with at least n consecutive days when Tmax > 90th percentile
+csdi	days	Annual number of days with at least 6 consecutive days when Tmin < 10th percentile
+csdin	days	Annual number of days with at least n consecutive days when Tmin < 10th percentile
+tx50p	%	Percentage of days of days where Tmax > 50th percentile 
+tx95t	degC	Value of 95th percentile of Tmax
+tx10p	%	Percentage of days when Tmax < 10th percentile
+tx90p	%	Percentage of days when Tmax > 90th percentile
+tn10p	%	Percentage of days when Tmin < 10th percentile
+tn90p	%	Percentage of days when Tmin > 90th percentile
+tm5a	days	Annual number of days when Tavg >= 5 degC
+tm5b	days	Annual number of days when Tavg < 5 degC
+tm10a	days	Annual number of days when Tavg >= 10 degC
+tm10b	days	Annual number of days when Tavg < 10 degC
+su30	days	Annual number of days when Tmax >= 30 degC
+su35	days	Annual number of days when Tmax >= 35 degC
+hddheat	degC	Annual sum of Tb - Tavg (where Tb is a user-defined location-specific base temperature and Tavg < Tb)
+cddcold	degC	Annual sum of Tavg - Tb (where Tb is a user-defined location-specific base temperature and Tavg > Tb)
+gddgrow	degC	Annual sum of Tavg - Tb (where Tb is a user-defined location-specific base temperature and Tavg > Tb)
+r20mm	days	Annual number of days of days when P >= 20mm
 cdd	days	Maximum annual number of consecutive dry days (when precipitation < 1.0 mm)
 cwd	days	Maximum annual number of consecutive wet days (when precipitation >= 1.0 mm)
 r10mm	days	Annual number of days when precipitation > 10 mm
@@ -39,12 +39,14 @@ rx1day	mm	Maximum 1-day precipitation total
 rx5day	mm	Maximum 5-day precipitation total
 prcptot	mm	Annual sum of daily precipitation >= 1.0 mm
 sdii	mm/day	Annual total precipitation divided by the number of wet days (when total precipitation >= 1.0 mm)
-r95ptot	%	R95p × 100/PRCPTOT
-r99ptot	%	R99p × 100/PRCPTOT
+r95p	mm	Annual total PRCP when RR > 95p
+r99p	mm	Annual total PRCP when RR > 99p
+r95ptot	%	100*r95p / PRCPTOT
+r99ptot	%	100*r99p / PRCPTOT
 rxnday	mm	Maximum n-day precipitation total
-rnnmm	days	Annual count of days when PRCP >= n
-ntxntn	days	Annual count of n consecutive days where both TX > 95th percentile and TN > 95th percentile, where n >= 2 (and max of 10)
-ntxbntnb	days	Annual count of n consecutive days where both TX < 5th percentile and TN < 5th percentile where n >=2 and n <=10
+rnnmm	days	Annual number of days when PRCP >= n
+ntxntn	events	Annual number of n consecutive days where both TX > 95th percentile and TN > 95th percentile, where n >= 2 (and max of 10)
+ntxbntnb	events	Annual number of n consecutive days where both TX < 5th percentile and TN < 5th percentile where n >=2 and n <=10
 hw	NA	Heat wave magnitude, amplitude, number, duration and frequency calculated for the three definitions of Tx90, Tn90 and EHF from Perkins and Alexander (2013).
 spei	unitless	Standardised Precipitation Evapotranspiration Index. As implemented by the SPEI package in R.
 spi	unitless	Standardised Precipitation Index. As implemented by the SPEI package in R.
