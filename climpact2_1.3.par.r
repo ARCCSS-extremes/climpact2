@@ -11,7 +11,7 @@
 # nherold, 2015.
 
 # Nullify some objects to suppress spurious warning messages
-latdim <<- londim <<- hargreaves <<- spei <<- spi <<- j <<- tsmin <<- tsmax <<- prec <<- tsmintime <<- tsmaxtime <<- prectime <<- missingval <<- cicompile <<- tminqtiles_array <<- tmaxqtiles_array <<-  
+latdim <<- londim <<- j <<- tsmin <<- tsmax <<- prec <<- tsmintime <<- tsmaxtime <<- prectime <<- missingval <<- cicompile <<- tminqtiles_array <<- tmaxqtiles_array <<-  
 tavgqtiles_array <<- precipqtiles_array <<- NULL
 
 # Load global libraries and enable compilation.
@@ -23,6 +23,7 @@ library(foreach)
 library(doParallel)
 library(tcltk)
 library(abind)
+library(SPEI)
 options(warn=1)
 enableJIT(3)
 software_id = "1.3"
@@ -61,7 +62,7 @@ software_id = "1.3"
 climpact.loader <- function(tsminfile=NULL,tsmaxfile=NULL,precfile=NULL,tsminname="tsmin",tsmaxname="tsmax",precname="prec",timename="time",indices=NULL,identifier=NULL,lonname="lon",latname="lat",baserange=c(1961,1990),
 freq=c("monthly","annual"),tempqtiles=c(0.1,0.9),precqtiles=c(0.1,0.9),max.missing.days=c(annual=15, monthly=3),min.base.data.fraction.present=0.1,csdin_n=5,csdin_spells.can.span.years=FALSE,wsdin_n=5,wsdin_spells.can.span.years=FALSE,
 cdd_spells.can.span.years=TRUE,cwd_spells.can.span.years=TRUE,csdi_spells.can.span.years=FALSE,wsdi_spells.can.span.years=FALSE,ntxntn_n=5,
-ntxbntnb_n=5,gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,hddheat_n=18,time_format=NULL,rxnday_n=5,rxnday_center.mean.on.last.day=FALSE,rnnm_threshold=1,
+ntxbntnb_n=5,gslmode=c("GSL", "GSL_first", "GSL_max", "GSL_sum"),rx5day_centermean=FALSE,hddheat_n=18,cddcold_n=18,gddgrow_n=10,time_format=NULL,rxnday_n=5,rxnday_center.mean.on.last.day=FALSE,rnnm_threshold=1,
 spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL,output_dir="./")
 {
 # Read in climate index data. Do indices check.
@@ -216,6 +217,12 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 			tx95t={indexparam = paste("array(indexcompile(",indexparam,",freq=",dQuote(freq[1]),"))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.95) ; precqtiles_tmp = c(0.95) } },
                         rxnday={indexparam = paste("array(indexcompile(",indexparam,",center.mean.on.last.day=",rxnday_center.mean.on.last.day,",n=",rxnday_n,"))",sep="") ; 
 				if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) }},
+			hddheat={indexparam = paste("array(indexcompile(",indexparam,",Tb=",hddheat_n,"))",sep="") ;
+                                if(!write_quantiles) {tempqtiles_tmp = c(0.95) ; precqtiles_tmp = c(0.95) } },
+                        cddcold={indexparam = paste("array(indexcompile(",indexparam,",Tb=",cddcold_n,"))",sep="") ;
+                                if(!write_quantiles) {tempqtiles_tmp = c(0.95) ; precqtiles_tmp = c(0.95) } },
+                        gddgrow={indexparam = paste("array(indexcompile(",indexparam,",Tb=",gddgrow_n,"))",sep="") ;
+                                if(!write_quantiles) {tempqtiles_tmp = c(0.95) ; precqtiles_tmp = c(0.95) } },
 			spei={indexparam = paste("array(indexcompile(",indexparam,",scale=",spei_scale,",lat=",latstr,",ref.start=",paste("c(",baserange[1],",1)",sep=""),
 				",ref.end=",paste("c(",baserange[2],",1)",",ini.date=",yeardate[1],"))",sep="")) ; if(!write_quantiles) {tempqtiles_tmp = c(0.1) ; precqtiles_tmp = c(0.1) } },
                         spi={indexparam = paste("array(indexcompile(",indexparam,",scale=",spi_scale,",ref.start=",paste("c(",baserange[1],",1)",sep=""),",ref.end=",paste("c(",
@@ -402,7 +409,7 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 		attcopy <- c(latname,lonname,timename)
 		for (j in 1:length(attcopy)) {
 			tmpatt <- ncatt_get(refnc,attcopy[j])
-			for(i in 1:length(tmpatt)) { ncatt_put(tmpout,attcopy[j],names(tmpatt)[i],tmpatt[[i]]) }
+			for(i in 1:length(tmpatt))  { if(names(tmpatt)[i] == "_FillValue") print("NOT OVERWRITING _FillValue ATTRIBUTE") else ncatt_put(tmpout,attcopy[j],names(tmpatt)[i],tmpatt[[i]]) }
 		}
 
 	        nc_close(tmpout)
@@ -609,8 +616,11 @@ climdex.hddheat <- function(ci,Tb=18) {
 	Tbarr = array(Tb,length(ci@data$tavg))
 	tavg.tmp <- ci@data$tavg 
 	tavg.tmp = ifelse(tavg.tmp >= Tbarr,NaN,tavg.tmp)
-        ci.tmp = cicompile(tavg=tavg.tmp,tavg.dates=ci@dates,base.range=c(as.numeric(format(as.Date(as.character(ci@base.range[1])),format="%Y")),as.numeric(format(as.Date(as.character(ci@base.range[2])),format="%Y"))))
-	return(tapply.fast(Tbarr - ci.tmp@data$tavg,ci.tmp@date.factors$annual,sum,na.rm=TRUE))*ci.tmp@namasks$annual }
+        tavg.tmp = ifelse(is.na(tavg.tmp),NaN,tavg.tmp)
+#        if(!exists("cicompile",mode="function")) { cicompile <- cmpfun(climdexInput.raw) }
+#        ci.tmp = cicompile(tavg=tavg.tmp,tavg.dates=ci@dates,base.range=c(as.numeric(format(as.Date(as.character(ci@base.range[1])),format="%Y")),as.numeric(format(as.Date(as.character(ci@base.range[2])),format="%Y"))))
+#	return(tapply.fast(Tbarr - ci.tmp@data$tavg,ci.tmp@date.factors$annual,sum,na.rm=TRUE))} #*ci.tmp@namasks$annual$tavg) }
+	return(tapply.fast(Tbarr - tavg.tmp,ci@date.factors$annual,sum,na.rm=TRUE)*ci@namasks$annual$tavg)}
 
 # CDDcold
 # Annual sum of TM-Tb (where Tb is a user-defined location-specific base temperature and TM > Tb)
@@ -619,8 +629,11 @@ climdex.cddcold <- function(ci,Tb=18) {
 	Tbarr = array(Tb,length(ci@data$tavg))
         tavg.tmp <- ci@data$tavg
         tavg.tmp = ifelse(tavg.tmp <= Tbarr,NaN,tavg.tmp)
-        ci.tmp = cicompile(tavg=tavg.tmp,tavg.dates=ci@dates,base.range=c(as.numeric(format(as.Date(as.character(ci@base.range[1])),format="%Y")),as.numeric(format(as.Date(as.character(ci@base.range[2])),format="%Y"))))
-	return(tapply.fast(ci.tmp@data$tavg - Tbarr,ci.tmp@date.factors$annual,sum,na.rm=TRUE))*ci.tmp@namasks$annual }
+        tavg.tmp = ifelse(is.na(tavg.tmp),NaN,tavg.tmp)
+#        if(!exists("cicompile",mode="function")) { cicompile <- cmpfun(climdexInput.raw) }
+#        ci.tmp = cicompile(tavg=tavg.tmp,tavg.dates=ci@dates,base.range=c(as.numeric(format(as.Date(as.character(ci@base.range[1])),format="%Y")),as.numeric(format(as.Date(as.character(ci@base.range[2])),format="%Y"))))
+#	return(tapply.fast(ci.tmp@data$tavg - Tbarr,ci.tmp@date.factors$annual,sum,na.rm=TRUE))} #*ci.tmp@namasks$annual$tavg) }
+	return(tapply.fast(tavg.tmp - Tbarr,ci@date.factors$annual,sum,na.rm=TRUE)*ci@namasks$annual$tavg)}
 
 # GDDgrow
 # Annual sum of TM-Tb (where Tb is a user-defined location-specific base temperature and TM > Tb)
@@ -629,8 +642,11 @@ climdex.gddgrow <- function(ci,Tb=10) {
 	Tbarr = array(Tb,length(ci@data$tavg))
         tavg.tmp <- ci@data$tavg
         tavg.tmp = ifelse(tavg.tmp <= Tbarr,NaN,tavg.tmp)
-        ci.tmp = cicompile(tavg=ci@data$tavg,tavg.dates=ci@dates,base.range=c(as.numeric(format(as.Date(as.character(ci@base.range[1])),format="%Y")),as.numeric(format(as.Date(as.character(ci@base.range[2])),format="%Y"))))
-	return(tapply.fast(ci.tmp@data$tavg - Tbarr,ci.tmp@date.factors$annual,sum,na.rm=TRUE))*ci.tmp@namasks$annual }
+        tavg.tmp = ifelse(is.na(tavg.tmp),NaN,tavg.tmp)
+#        if(!exists("cicompile",mode="function")) { cicompile <- cmpfun(climdexInput.raw) }
+#        ci.tmp = cicompile(tavg=ci@data$tavg,tavg.dates=ci@dates,base.range=c(as.numeric(format(as.Date(as.character(ci@base.range[1])),format="%Y")),as.numeric(format(as.Date(as.character(ci@base.range[2])),format="%Y"))))
+#	return(tapply.fast(ci.tmp@data$tavg - Tbarr,ci.tmp@date.factors$annual,sum,na.rm=TRUE))} #*ci.tmp@namasks$annual$tavg) }
+	return(tapply.fast(tavg.tmp - Tbarr,ci@date.factors$annual,sum,na.rm=TRUE)*ci@namasks$annual$tavg)}
 
 # Rxnday
 # Monthly maximum consecutive n-day precipitation (up to a maximum of 10)
