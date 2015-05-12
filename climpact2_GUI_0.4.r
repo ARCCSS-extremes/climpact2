@@ -1,7 +1,6 @@
 # Climpact2 GUI
 # This file constitutes graphical functionality for the Climpact2 package "climpact2".
 
-climfile <- "climpact2_1.3.par.r"
 source("climpact2_1.3.par.r")
 library(tcltk)
 
@@ -1288,8 +1287,17 @@ index.calc2<-function(){
                 if (cbv[48]==1) { print(paste("calculating",indices[48])) ; index.store <- climdex.ntxntn(cio,n=txtn_ud) ; write.index.csv(index.store,index.name=indices[48]) ; plot.call(index.store,index.name=indices[48],index.units=units[48],x.label="Years") }
                 if (cbv[49]==1) { print(paste("calculating",indices[49])) ; index.store <- climdex.ntxbntnb(cio,n=txtn_ud) ; write.index.csv(index.store,index.name=indices[49]) ; plot.call(index.store,index.name=indices[49],index.units=units[49],x.label="Years") }
                 if (cbv[50]==1) { print(paste("calculating",indices[50])) ; index.store <- climdex.hw(cio,lat=latitude) ; write.hw.csv(index.store,index.name=indices[50]) ; plot.hw(index.store,index.name=indices[50],index.units=units[50],x.label="Years") }
-                if (cbv[51]==1) { print(paste("calculating",indices[51])) ; rm(index.store); index.store <- climdex.spei(cio,ref.start=c(as.numeric(base.year.start),1),ref.end=c(as.numeric(base.year.end),1)
-				,ini.date=min(as.numeric(date.years),na.rm=TRUE),lat=latitude) ; print(str(index.store)); write.precindex.csv(index.store,index.name=indices[51]) ; plot.precindex(index.store,index.name=indices[51],index.units=units[51],x.label="Years") }
+                if (cbv[51]==1) { print(paste("calculating",indices[51])) ; 
+mon.dates <- as.numeric(substr(cio@date.factors$monthly,6,7)) #as.numeric(format(pcict.dates,format="%m")) ; 
+print(cio@date.factors$annual)
+print("*********")
+print(cio@date.factors$annual[length(cio@date.factors$annual)])
+yr.dates <- (cio@date.factors$annual) 	#as.numeric(format(pcict.dates,format="%Y")) ; 
+end.date = c(as.numeric(cio@date.factors$annual[length(cio@date.factors$annual)]),mon.dates[length(mon.dates)]) ;
+beg.date = c(as.numeric(cio@date.factors$annual[1]),mon.dates[1])
+print(beg.date) ; print(end.date) ; print(c(yr.dates[1])) ; print(length(cio@data$tmin)) ; print(length(pcict.dates)) ; print(length(cio@date.factors$monthly)) ;
+
+index.store <- climdex.spei(cio,ref.start=c(as.numeric(base.year.start),1),ref.end=c(as.numeric(base.year.end),1),ts.start=c(yr.dates[1]),ts.end=c(yr.dates[length(yr.dates)],mon.dates[length(mon.dates)]),lat=latitude) ; write.precindex.csv(index.store,index.name=indices[51]) ; plot.precindex(index.store,index.name=indices[51],index.units=units[51],x.label="Years") }
                 if (cbv[52]==1) { print(paste("calculating",indices[52])) ; index.store <- climdex.spi(cio) ; write.precindex.csv(index.store,index.name=indices[52]) ; plot.precindex(index.store,index.name=indices[52],index.units=units[52],x.label="Years") }
 
 		dev.off(pdf.dev)
@@ -1401,21 +1409,26 @@ plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) {
 # takes a time series of hw and writes to file
 write.precindex.csv <- function(index=NULL,index.name=NULL) {
         if(is.null(index)) stop("Need SPEI data to write CSV file.")
+	colnames <- list("time","SPEI")
+print(rbind((date.months),index[1,]))
+print(date.months)
 print(str(index))
+print(length(date.months))
+
         # write 3 month data
         nam1 <- paste(outinddir, paste(ofilename, "_3month_SPEI.csv", sep = ""), sep = "/")
-#        write.table(aspect.names, file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
-        write.table(cbind((date.years),index[1,]), file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = "time, SPEI")
+        write.table(colnames, file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
+        write.table(cbind((date.months),index[1,]), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 
-        # write 6 month ata
+        # write 6 month data
         nam1 <- paste(outinddir, paste(ofilename, "_6month_SPEI.csv", sep = ""), sep = "/")
-        write.table(aspect.names, file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
-        write.table(cbind((date.years),aperm(index[2,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
+        write.table(colnames, file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
+        write.table(cbind((date.months),index[2,]), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 
         # write 12 month data
         nam1 <- paste(outinddir, paste(ofilename, "_12month_SPEI.csv", sep = ""), sep = "/")
-        write.table(aspect.names, file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
-        write.table(cbind((date.months),aperm(index[3,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
+        write.table(colnames, file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
+        write.table(cbind((date.months),index[3,]), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 }
 
 # plot.precindex
