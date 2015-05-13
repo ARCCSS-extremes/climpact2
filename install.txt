@@ -18,7 +18,7 @@ In R you will need the following packages:
 
 **********************************
 
-To download the code to the storm servers by the following steps:
+Download the code to the storm servers by the following steps:
 
 1) Create a new directory
 2) CD to above directory and run "git clone git@github.com:heroldn/climpact2.git"
@@ -30,9 +30,8 @@ To run the code:
 2) In R install the following packages (note if you already have climdex.pcic installed you will need to remove it with remove.packages("climdex.pcic"));
     - install.packages("/file/path/to/climdex.pcic.tar.gz",repos=NULL,type="source")
     - install ncdf4,PCICt,SPEI,foreach,doParallel,abind,tcltk
-3) Edit and run test.climpact2.r. More information can be gleaned from the climpact.loader function header in climpact2_0.1.r.
-
-This should be all you need to run the software, but apologies if I've missed something (let me know).
+3) Edit and run test.climpact2.r. More information can be gleaned from the climpact.loader function header in climpact2_XX.YY.r.
+4) To run the GUI open R and type source("PATH/TO/climpact2_GUI_X.Y.r")
 
 **********************************
 
