@@ -1,7 +1,7 @@
 # Climpact2 GUI
 # This file constitutes graphical functionality for the Climpact2 package "climpact2".
 
-source("climpact2_1.3.par.r")
+#source("climpact2_1.6.par.r")
 library(tcltk)
 
 # Global setup
@@ -483,7 +483,7 @@ pplotts <- function(var = "prcp", type = "h", tit = NULL)
 	    xlab = "", ylab = "", xaxt = "n", xlim = c(1, 3660), ylim = c(ymin, ymax))
 	  abline(h = 0)
 	  tt <- seq(1, length(ttmp))
-	  if(!is.null(ttmp)) tt <- tt[is.na(ttmp) == TRUE] else print(paste(var,"is null"))
+	  if(!is.null(ttmp)) tt <- tt[is.na(ttmp) == TRUE] #else print(paste(var,"is null."))
 	  axis(side = 1, at = at, labels = c(i:(i + 9)))
 	  for(k in 1:10) abline(v = at[k], col = "yellow")
 	  lines(tt, rep(0, length(tt)), type = "p", col = "red")
@@ -535,7 +535,7 @@ load.data.qc <- function() {
 	
 	# Load data
 	load.data <- function() {
-		print("Loading climdex input object...")
+		print("LOADING CLIMDEX INPUT OBJECT...")
 	# create a PCICt object for dates
 		yyymmdd <- paste(data[,1],data[,2],data[,3],sep="-")
 		dates <- as.Date(yyymmdd,format="%Y-%m-%d")
@@ -631,7 +631,7 @@ print(str(cio))
 	#==============================================
 	qcontrol <- function() {
 		# source climpact code and load data from ascii file into climdex object
-		source("climpact2_1.3.par.r")
+		source("climpact2_1.6.par.r")
                 latitude  <- as.numeric(tclvalue(latentry))   # get user-input parameter, and check if they're valid.
                 longitude <- as.numeric(tclvalue(lonentry))
                 ofilename <- tclvalue(station.entry)
@@ -676,7 +676,6 @@ print(str(cio))
 		mid <- mid[mid < 0]
 		nam1 <- paste(outlogdir, paste(ofilename, "_prcpQC.csv", sep = ""), sep = "/")
 		write.table(mid, file = nam1, append = FALSE, quote = FALSE, sep = ", ", row.names = FALSE)
-print(length(mid))
 		if (length(mid) > 0) tkconfigure(err1, text = "!!!! error in PRCP found !!!!", font = font_err)
 
 		# STEP 3.
@@ -746,18 +745,17 @@ print(length(mid))
 		noleap.dates <- cio@dates[format(cio@dates, format="%m-%d", tz="GMT")!="02-29"]
 		noleap.day.factors <- factor(format(noleap.dates, format="%m-%d", tz="GMT"))
 
-		print("calculating means and standard deviations...")
+		print("CALCULATING MEANS AND STANDARD DEVIATIONS...")
 		tmax.mean <- tapply(cio@data$tmax,day.factors,mean,na.rm=TRUE)
 		tmax.stddev <- sqrt(tapply(cio@data$tmax,day.factors,var,na.rm=TRUE))
 		tmin.mean <- tapply(cio@data$tmin,day.factors,mean,na.rm=TRUE)
 		tmin.stddev <- sqrt(tapply(cio@data$tmin,day.factors,var,na.rm=TRUE))
 		rm(dtr)		# need to redefine dtr using climdex object tmin and tmax since they have additional NA values at the end to make up the remainder of the last year.
-#		cio@data$dtr <<- cio@data$tmax - cio@data$tmin
 		dtr.mean <- tapply(cio@data$dtr,day.factors,mean,na.rm=TRUE)
 		dtr.stddev <- sqrt(tapply(cio@data$dtr,day.factors,var,na.rm=TRUE))
 		#ys <- yeare - years + 1
 
-		print("testing data... please wait")
+		print("TESTING DATA, PLEASE WAIT...")
 		tmax.outliers <- tapply(1:length(cio@data$tmax),all.day.factors,function(idx) {
 			if(!is.na(cio@data$tmax[idx])) { month.day <- format(as.Date(all.day.factors[idx]),format="%m-%d")
 				if(abs(cio@data$tmax[idx] - tmax.mean[month.day]) > (stddev.crit*tmax.stddev[month.day])) { return(TRUE) } else { return(FALSE) } }
@@ -772,10 +770,6 @@ print(length(mid))
 		                if(abs(cio@data$dtr[idx] - dtr.mean[month.day]) > (stddev.crit*dtr.stddev[month.day])) { return(TRUE) } else { return(FALSE) } }
 		        else { return(FALSE) } } )
 
-		print(length(tmax.outliers))
-		print(length(tmax.outliers[tmax.outliers=="FALSE"]))
-		print(length(tmax.outliers[tmax.outliers=="TRUE"]))
-		
 		# If outliers are found above, write out corresponding dates that have the suspect data.
 		if (any(tmax.outliers==TRUE) | any(tmin.outliers==TRUE) | any(dtr.outliers==TRUE))
 		{	# this segment needs rewriting. Need to output a .csv...
@@ -1099,7 +1093,6 @@ index.calc1 <- function() {
 
 	check.then.continue<-function(){   # get user-definded parameters, check if they're valid, and set as global variable.
 		frequency <- as.character(tclvalue(rbValue)) ; assign("frequency",frequency,envir=.GlobalEnv)
-		print(frequency)
 
 		uuu<-as.numeric(tclvalue(textEntry6)); assign("uuu",uuu,envir=.GlobalEnv)
 		ulu<-as.numeric(tclvalue(textEntry7)); assign("uul",ulu,envir=.GlobalEnv)
@@ -1287,18 +1280,10 @@ index.calc2<-function(){
                 if (cbv[48]==1) { print(paste("calculating",indices[48])) ; index.store <- climdex.ntxntn(cio,n=txtn_ud) ; write.index.csv(index.store,index.name=indices[48]) ; plot.call(index.store,index.name=indices[48],index.units=units[48],x.label="Years") }
                 if (cbv[49]==1) { print(paste("calculating",indices[49])) ; index.store <- climdex.ntxbntnb(cio,n=txtn_ud) ; write.index.csv(index.store,index.name=indices[49]) ; plot.call(index.store,index.name=indices[49],index.units=units[49],x.label="Years") }
                 if (cbv[50]==1) { print(paste("calculating",indices[50])) ; index.store <- climdex.hw(cio,lat=latitude) ; write.hw.csv(index.store,index.name=indices[50]) ; plot.hw(index.store,index.name=indices[50],index.units=units[50],x.label="Years") }
-                if (cbv[51]==1) { print(paste("calculating",indices[51])) ; 
-mon.dates <- as.numeric(substr(cio@date.factors$monthly,6,7)) #as.numeric(format(pcict.dates,format="%m")) ; 
-print(cio@date.factors$annual)
-print("*********")
-print(cio@date.factors$annual[length(cio@date.factors$annual)])
-yr.dates <- (cio@date.factors$annual) 	#as.numeric(format(pcict.dates,format="%Y")) ; 
-end.date = c(as.numeric(cio@date.factors$annual[length(cio@date.factors$annual)]),mon.dates[length(mon.dates)]) ;
-beg.date = c(as.numeric(cio@date.factors$annual[1]),mon.dates[1])
-print(beg.date) ; print(end.date) ; print(c(yr.dates[1])) ; print(length(cio@data$tmin)) ; print(length(pcict.dates)) ; print(length(cio@date.factors$monthly)) ;
-
-index.store <- climdex.spei(cio,ref.start=c(as.numeric(base.year.start),1),ref.end=c(as.numeric(base.year.end),1),ts.start=c(yr.dates[1]),ts.end=c(yr.dates[length(yr.dates)],mon.dates[length(mon.dates)]),lat=latitude) ; write.precindex.csv(index.store,index.name=indices[51]) ; plot.precindex(index.store,index.name=indices[51],index.units=units[51],x.label="Years") }
-                if (cbv[52]==1) { print(paste("calculating",indices[52])) ; index.store <- climdex.spi(cio) ; write.precindex.csv(index.store,index.name=indices[52]) ; plot.precindex(index.store,index.name=indices[52],index.units=units[52],x.label="Years") }
+                if (cbv[51]==1) { print(paste("calculating",indices[51])) ; if(all(is.na(cio@data$tmin)) | all(is.na(cio@data$tmax)) | all(is.na(cio@data$prec))) { print("NOT PLOTTING SPEI: climdex.spei REQUIRES TMIN, TMAX AND PRECIP DATA.") } else {
+			index.store <- climdex.spei(cio,ref.start=c(as.numeric(base.year.start),1),ref.end=c(as.numeric(base.year.end),1),lat=latitude) ; write.precindex.csv(index.store,index.name=indices[51]) ; plot.precindex(index.store,index.name=indices[51],index.units=units[51],x.label="Years") } }
+                if (cbv[52]==1) { print(paste("calculating",indices[52])) ; if(all(is.na(cio@data$prec))) warning("NOT PLOTTING SPI: climdex.spi REQUIRES PRECIP DATA.") else {
+			index.store <- climdex.spi(cio,ref.start=c(as.numeric(base.year.start),1),ref.end=c(as.numeric(base.year.end),1)) ; write.precindex.csv(index.store,index.name=indices[52]) ; plot.precindex(index.store,index.name=indices[52],index.units=units[52],x.label="Years") } }
 
 		dev.off(pdf.dev)
 		graphics.off()  # close the pdf file, so you can open to view it now.
@@ -1409,51 +1394,40 @@ plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) {
 # takes a time series of hw and writes to file
 write.precindex.csv <- function(index=NULL,index.name=NULL) {
         if(is.null(index)) stop("Need SPEI data to write CSV file.")
-	colnames <- list("time","SPEI")
-print(rbind((date.months),index[1,]))
-print(date.months)
-print(str(index))
-print(length(date.months))
+	colnames <- list("time",index.name)
 
         # write 3 month data
-        nam1 <- paste(outinddir, paste(ofilename, "_3month_SPEI.csv", sep = ""), sep = "/")
+        nam1 <- paste(outinddir, paste(ofilename, "_3month_",index.name,".csv", sep = ""), sep = "/")
         write.table(colnames, file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
-        write.table(cbind((date.months),index[1,]), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
+        write.table(cbind(unique(cio@date.factors$monthly),index[1,]), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 
         # write 6 month data
-        nam1 <- paste(outinddir, paste(ofilename, "_6month_SPEI.csv", sep = ""), sep = "/")
+        nam1 <- paste(outinddir, paste(ofilename, "_6month_",index.name,".csv", sep = ""), sep = "/")
         write.table(colnames, file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
-        write.table(cbind((date.months),index[2,]), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
+        write.table(cbind(unique(cio@date.factors$monthly),index[2,]), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 
         # write 12 month data
-        nam1 <- paste(outinddir, paste(ofilename, "_12month_SPEI.csv", sep = ""), sep = "/")
+        nam1 <- paste(outinddir, paste(ofilename, "_12month_",index.name,".csv", sep = ""), sep = "/")
         write.table(colnames, file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
-        write.table(cbind((date.months),index[3,]), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
+        write.table(cbind(unique(cio@date.factors$monthly),index[3,]), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 }
 
 # plot.precindex
 # not sure how generic this process can be
 plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) {
-        if(is.null(index)) stop("Need heatwave data to plot.")
+        if(is.null(index)) stop("Need precip data to plot.")
 
-        definitions <- c("Tx90","Tn90","EHF")
-        aspects <- c("HWM","HWA","HWN","HWD","HWF")
-        units <- c("degC","degC","heat waves","days","days")
-
-        for (def in 1:length(definitions)) {
-                for (asp in 1:length(aspects)) {
-                        plot.title <- paste(title.station,definitions[def],aspects[asp],sep=", ")
-                        namp <- paste(outjpgdir, paste(ofilename, "_", definitions[def],"_",aspects[asp], ".jpg", sep = ""), sep = "/")
-                        jpeg(file = namp, width = 1024, height = 768)
-                        dev0 = dev.cur()
-
-                        if(definitions[def]=="EHF" && any(aspects[asp]=="HWM",aspects[asp]=="HWA")) unit = "degC^2" else unit = units[asp]
-                        plotx(as.numeric(date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label)
-
-                        dev.set(which = pdf.dev)
-                        dev.copy()
-                        dev.off(dev0)
-                }
+        for (time in 1:3) {
+	        plot.title <- paste(title.station," ",index.name,", ",time," month",sep="")
+	        namp <- paste(outjpgdir, paste(ofilename, "_",time,"month_",index.name,".jpg", sep = ""), sep = "/")
+	        jpeg(file = namp, width = 1024, height = 768)
+	        dev0 = dev.cur()
+	
+	        plotx(as.numeric(unique(cio@date.factors$monthly)), index[time,], main = gsub('\\*', index.units, plot.title),ylab = index.units,xlab = x.label)
+	
+	        dev.set(which = pdf.dev)
+	        dev.copy()
+	        dev.off(dev0)
         }
 }
 
@@ -1484,7 +1458,7 @@ plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) 
 # make plots, this is called twice to make jpg and pdf files. 
 plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0)
 {
-	if(all(is.na(y0))) { print("No data to plot") ; return() }
+	if(all(is.na(y0))) { print("NO DATA TO PLOT") ; return() }
 
 	x <- x0  # take a copy of input, so we will not modify the input by mistake.
 	y <- y0
