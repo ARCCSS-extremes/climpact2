@@ -918,7 +918,7 @@ print(str(cio))
 	assign('orig.name',dir.file.name,envir=.GlobalEnv)
 
 # read in data from file
-	data <- read.table(dir.file.name,header=F,col.names=c("year","month","day","prcp","tmax","tmin"),colClasses=rep("real",6))
+	data <- read.table(gsub(","," ",dir.file.name),header=F,col.names=c("year","month","day","prcp","tmax","tmin"),colClasses=rep("real",6))
 	outdirtmp<-strsplit(dir.file.name,"/")[[1]]
 	assign("data",data,envir=.GlobalEnv)
 
