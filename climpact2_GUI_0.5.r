@@ -9,7 +9,7 @@ library(tcltk)
 rm(list = ls(all = TRUE))
 graphics.off()
 
-nordaytem1 <<- outthresdir <<- quantiles <<- cio <<- ofilename <<- orig.name <<- title.station <<- outlogdir <<- thres.calc <<- ttmp <<- outqcdir <<- nordaytem1 <<- NULL
+nordaytem1 <<- outthresdir <<- quantiles <<- cio <<- ofilename <<- infor1 <<- orig.name <<- title.station <<- outlogdir <<- thres.calc <<- ttmp <<- outqcdir <<- nordaytem1 <<- NULL
 
 #logo_require    <- FALSE
 start1<-tktoplevel(bg='white')
@@ -453,7 +453,8 @@ pplotts <- function(var = "prcp", type = "h", tit = NULL)
 	  ymax <- max(cio@data[[var]], na.rm = TRUE) + 1
 	  ymin <- min(cio@data[[var]], na.rm = TRUE) - 1
 	}
-	
+	if(var == "prcp") { var1 = "prec" } else { var1 = var }
+
 	# set default y scales if proper ones can't be calculated
 	# but do we really want to try to plot if there's no data available at all?
 	if (is.na(ymax) | is.na(ymin) | (ymax == -Inf) | (ymin == -Inf))
@@ -478,7 +479,7 @@ pplotts <- function(var = "prcp", type = "h", tit = NULL)
 	  }
 	
 	      tmp.dates <- format(pcict.dates,format="%Y")
-	      ttmp <- cio@data[[var]][tmp.dates>=i & tmp.dates <= min(i + 9, yeare)]
+	      ttmp <- cio@data[[var1]][tmp.dates>=i & tmp.dates <= min(i + 9, yeare)]
 	  plot(1:length(ttmp), ttmp, type = type, col = "blue",
 	    xlab = "", ylab = "", xaxt = "n", xlim = c(1, 3660), ylim = c(ymin, ymax))
 	  abline(h = 0)
@@ -487,7 +488,7 @@ pplotts <- function(var = "prcp", type = "h", tit = NULL)
 	  axis(side = 1, at = at, labels = c(i:(i + 9)))
 	  for(k in 1:10) abline(v = at[k], col = "yellow")
 	  lines(tt, rep(0, length(tt)), type = "p", col = "red")
-	  title(paste("Station: ", tit, ", ", i, "~", min(i + 9, yeare), ",  ", var, sep = ""))
+	  title(paste("Station: ", tit, ", ", i, "~", min(i + 9, yeare), ",  ", var1, sep = ""))
 	}
 }
 # end of pplotts.
@@ -555,8 +556,6 @@ load.data.qc <- function() {
 		assign('date.months',date.months,envir=.GlobalEnv)
                 assign('date.years',date.years,envir=.GlobalEnv)
 
-print(data[1:1000,4])
-print(data$prcp[1:1000])
 	# create a climdex input object
 		cio <- climdexInput.raw(tmin=data[,6],tmax=data[,5],prec=data[,4],tmin.dates=pcict.dates,tmax.dates=pcict.dates,prec.dates=pcict.dates,base.range=c(base.year.start,base.year.end),prec.qtiles=prec.quantiles,
 			temp.qtiles=temp.quantiles)
@@ -640,10 +639,13 @@ print(str(cio))
 	#==============================================
 	qcontrol <- function() {
 		# source climpact code and load data from ascii file into climdex object
-		source("climpact2_1.7.par.r")
 
-#		qc.tt <- tktoplevel()
-		tkconfigure(infor1,cursor="watch")
+# NICK: Starting the 'watch' mouse icon here doesn't work consistently, glitch in tcltk? So we start it farther down.
+#		tkmessageBox(message = paste("This will take some time, please be patient.",sep = ""))
+#		tkconfigure(infor1,cursor="watch")
+#		tkconfigure(start1,cursor="watch")
+                source("climpact2_1.7.par.r")
+
                 latitude  <- as.numeric(tclvalue(latentry))   # get user-input parameter, and check if they're valid.
                 longitude <- as.numeric(tclvalue(lonentry))
                 ofilename <- tclvalue(station.entry)
@@ -695,12 +697,15 @@ print(str(cio))
 		nam1 <- paste(outlogdir, paste(ofilename, "_prcpPLOT.pdf", sep = ""), sep = "/")
 		pdf(file = nam1)
 		
-		prcp <- cio@data$prcp[cio@data$prcp >= 1]
+		prcp <- cio@data$prec[cio@data$prec >= 1 & !is.na(cio@data$prec)]
+print(prcp)
+print(max(prcp))
+print(min(prcp))
 #		prcp <- prcp[!is.na(prcp)]	# combine these two lines
 		if(length(prcp) > 30)
 		{
 		  hist(prcp, main = paste("Histogram for Station:", ofilename, " of PRCP>=1mm", sep = ""),
-		    breaks = c(seq(0, 20, 2), max(30, ttmp)), xlab = "", col = "green" , freq = FALSE)
+		    breaks = c(seq(0, 40, 2),max(prcp)), xlab = "", col = "green" , freq = FALSE)
 		  lines(density(prcp, bw = 0.2, from = 1), col = "red")
 		}
 		pplotts(var = "prcp", tit = ofilename)
@@ -743,7 +748,7 @@ print(str(cio))
 
 		if(any(tmin.rle$lengths[tmin.rle$values==0] > running.zero.allowed.in.temperature)) {
 			# Get index of beginning of anomalous zero run
-			end.index <- sum(tmin.rle.na$lengths[1:which(tmin.rle.na$values==0 & tmin.rle.na$lengths>running.zero.allowed.in.temperature)])
+			end.index <- sum(tmin.rle.na$lengths[1:which(tmin.rle.na$values==0 & tmin.rle.na$lengths>running.zero.allowed.in.temperature)[1]])
 			beg.index <- end.index-tmin.rle.na$lengths[tmin.rle.na$values==0 & tmin.rle.na$lengths>running.zero.allowed.in.temperature]+1
 
 	                tkmessageBox(message = paste("A series of ",running.zero.allowed.in.temperature," zeroes were found in your minimum temperature data between ",
@@ -752,7 +757,7 @@ print(str(cio))
 		}
                 if(any(tmax.rle$lengths[tmax.rle$values==0] > running.zero.allowed.in.temperature)) {
                         # Get index of beginning of anomalous zero run
-                        end.index <- sum(tmax.rle.na$lengths[1:which(tmax.rle.na$values==0 & tmax.rle.na$lengths>running.zero.allowed.in.temperature)])
+                        end.index <- sum(tmax.rle.na$lengths[1:which(tmax.rle.na$values==0 & tmax.rle.na$lengths>running.zero.allowed.in.temperature)[1]])
                         beg.index <- end.index-tmax.rle.na$lengths[tmax.rle.na$values==0 & tmax.rle.na$lengths>running.zero.allowed.in.temperature]+1
 
                         tkmessageBox(message = paste("A series of ",running.zero.allowed.in.temperature," zeroes were found in your maximum temperature data between ",
@@ -772,6 +777,8 @@ print(str(cio))
 		}
 		
 		# NICK: re-write everything below in this function.
+                tkconfigure(infor1,cursor="watch")
+                tkconfigure(start1,cursor="watch")
 
 		# CHECK FOR TEMPERATURES OUTSIDE OF A SET NUMBER OF STDDEV'S.
 		### We don't need to worry about leap years as climdex simply makes any values on the 29th feb = NA
@@ -819,17 +826,23 @@ print(str(cio))
 			ofile <- cbind(as.character(cio@dates[idx]),cio@data$tmax[idx],cio@data$tmin[idx],cio@data$dtr[idx])	# TODO: write out stddev's as well?
 			write.table(ofile, file = nam1, append = FALSE, quote = FALSE, sep = ",", row.names = FALSE,col.names=c(" DATE"," TMAX"," TMIN"," DTR"))
 		}
-		
+
+#	print(data[1,])	
+#	data <- data[c("year", "month", "day", "prcp", "tmax", "tmin"),]
+#print(str(data))
 		data <- data[, c("year", "month", "day", "prcp", "tmax", "tmin")]
 		assign("data", data, envir = .GlobalEnv)
 		
 		namcal <- paste(nama, "_indcal.csv", sep = "")  # User should change this file if error was reported because it will be used for all calculation.
 		assign("namcal", namcal, envir = .GlobalEnv)
 		write.table(data, file = namcal, append = FALSE, quote = FALSE, sep = ",", row.names = FALSE, na = "-99.9")
+
 		allqc(master = orig.name, output = outqcdir, outrange = stddev.crit)   # extraQC is called here. NOTE the default outrange=3 in original verson.
 		
 		tclvalue(qc.yes) <- TRUE  # the QC step is done, so you can continue...
-		tkconfigure(infor1,cursor="arrow")
+
+                tkconfigure(infor1,cursor="arrow")
+		tkconfigure(start1,cursor="arrow")
 		print("COMPLETED CHECKING FOR TEMPERATURE OUTLIERS.")
 	} # end of qcontrol()
 
@@ -912,13 +925,27 @@ print(str(cio))
 	thres.calc <<- FALSE #tclvalue(thres.yes) <- FALSE
 
 # get a file from user
-	dir.file.name <- tclvalue(tkgetOpenFile(filetypes="{{TEXT Files} {.txt}} {{All files} *}"))
+	dir.file.name <- tclvalue(tkgetOpenFile(filetypes="{{TEXT Files} {.txt}}"))
 	if (dir.file.name=="") { no_file=T; assign('no_file',no_file,envir=.GlobalEnv); return(); tkfocus(start1) }
 	nama<-substr(dir.file.name,start=1,stop=(nchar(dir.file.name)-4))
 	assign('orig.name',dir.file.name,envir=.GlobalEnv)
 
 # read in data from file
-	data <- read.table(gsub(","," ",dir.file.name),header=F,col.names=c("year","month","day","prcp","tmax","tmin"),colClasses=rep("real",6))
+# Scan the file and replace any commas with a tab \t. Since read.table can only handle one separator type at a time.
+	temp.filename = "temporary.data.txt"
+	raw.table = readLines(dir.file.name)
+	newtext = gsub(",","\t",raw.table)
+	cat(newtext,file=temp.filename,sep="\n")
+        assign('orig.name',temp.filename,envir=.GlobalEnv)
+
+# Try to catch errors in the formatting of the user's text file gracefully.
+	data <- tryCatch(read.table(temp.filename,header=F,col.names=c("year","month","day","prcp","tmax","tmin"),colClasses=rep("real",6)),
+			error= function(c) {
+				tkmessageBox(message = paste("Your input file doesn't appear to be formatted correctly. \n\nError returned was: ",c$message,
+				"\n\nPlease correct your file, see the manual for correct formatting.", sep=""),icon = "warning", title = "ClimPACT - warning")
+				tkfocus(start1)
+				} )
+
 	outdirtmp<-strsplit(dir.file.name,"/")[[1]]
 	assign("data",data,envir=.GlobalEnv)
 
@@ -934,7 +961,6 @@ print(str(cio))
 
 # replace missing values (-99.9) with NA
 	data$prcp[data$prcp==-99.9]=NA ; data[data$tmax==(-99.9),"tmax"]=NA ; data[data$tmin==(-99.9),"tmin"]=NA
-print(data$prcp[1:1000])
 
 # STUFF NOT INCLUDED HERE FROM CLIMPACT
 	years<-data[1,1] ; yeare<-data[dim(data)[1],1]
@@ -952,7 +978,7 @@ print(data$prcp[1:1000])
 	
 	# Draw interface
 	# enter station name and the times of standard deviation
-	infor1 <- tktoplevel(bg = "white")
+	infor1 <<- tktoplevel(bg = "white")
 	tkfocus(infor1)
 	tkgrab.set(infor1)
 	tkwm.geometry(infor1, "+0+0") # position in upper left corner of screen
@@ -1291,6 +1317,8 @@ index.calc2<-function(){
 	# Do all the calculations.
 	#========================================
 	index.calc3 <- function(){
+                tkconfigure(main,cursor="watch")
+
 		cbv=rep(0,length(indices))
 		for(i in 1:length(indices)) cbv[i]=tclvalue(cbvalue[i])
 		
@@ -1397,6 +1425,8 @@ print(base.year.start);			index.store <- climdex.spi(cio,ref.start=c(as.numeric(
 		tkpack(textlabel3)
 		tkpack(textlabel0)
 		tkpack(okk.but)
+
+                tkconfigure(main,cursor="arrow")
 	}
 
 	# If you choose "cancel", close current window, and return to main window (start1).
