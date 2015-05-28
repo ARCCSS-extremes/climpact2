@@ -525,20 +525,14 @@ load.data.qc <- function() {
 		if(length(dates) != length(date.seq)) { 
                         test <- tkmessageBox(message = "Based on the first and last dates in your input file some intermediate dates seem to be missing. Check that the dates in your input file are complete and based on the gregorian calendar.",icon = "warning", title = "ClimPACT2 - warning")
 			close(process.pb)
-                        tkfocus(start1)
-			loaded <<- FALSE
                         return() }
 		if(any(is.na(dates),is.nan(dates))) {
                         test <- tkmessageBox(message = "Some dates are registering as NA, NaN or infinite. Please check dates in your input file.",icon = "warning", title = "ClimPACT2 - warning")
                         close(process.pb)
-                        tkfocus(start1)
-		        loaded <<- FALSE
                         return() }
                 if(any(dates[1:length(dates)-1] > dates[2:length(dates)])) {
                         test <- tkmessageBox(message = "Some dates are out of order. Please check dates in your input file.",icon = "warning", title = "ClimPACT2 - warning")
                         close(process.pb)
-                        tkfocus(start1)
-		        loaded <<- FALSE
                         return() }
 
 		days <- dates-as.Date("1850-01-01") #dates[1] # days since first date, needed for PCICt
@@ -717,7 +711,7 @@ load.data.qc <- function() {
 		}
 
 	# NICK: After this point all references to data should be made to the climdex input object 'cio'
-		load.data()
+		load.data() ; if(!thres.calc) return()
                 setTkProgressBar(process.pb,30,label="Checking precipitation data...")
 
 		assign("latitude",  latitude, envir = .GlobalEnv)
