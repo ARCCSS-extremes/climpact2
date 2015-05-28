@@ -1,16 +1,83 @@
-# climpact2
-Combining climdex.pcic and climpact @ UNSW
 
-CURRENT ISSUES
-- CLIMDEX BUGS: There are two bugs in climdex.pcic that need fixing before using climpact2. If you have climdex.pcic already installed you will need to remove it (see install.txt). The climdex.pcic maintainer is aware of these bugs but their fixes are not incorporated in the current CRAN release.
-- USING CLIMDEX FUNCTIONS: To specify a parameter specific to a particular index (e.g. "cdd") simply prefix the parameter with the index name when calling climpact.loader (e.g. you could specify "cdd_spells.can.span.years = TRUE" or "csdin_spells.can.span.years=FALSE"). This currently doesn't apply to the 'freq' parameter which is currently universal.
 
-TIPS FOR TESTERS
-- There is now a option to specify multiple cores. Set 'cores' in the function call to an integer. As per good computing policy this should be not more than half the number of cores on any one machine so other users can still work. Default is to run in serial.
+				ClimPACT2
+			Last updated: 31/5/2015
 
-- Since the indices take a while to calculate (~50 minutes per index), put 'nohup' in front of your Rscript command to ensure the process keeps running even if you have to disconnect. If you're running screen this won't matter.
 
-- For functional tests (i.e. those that don't require you checking that actual output of the index calculations), you should use small grids instead of the example NarClim data I include. The "cdo -selyear" and "cdo -sellonlatbox" commands let you chop up an existing dataset.
+  What is it?
+  -----------
+  
+  ClimPACT2 is an R software package that calculates the ETSCI indices, ETCCDI 
+  indices, and the heatwave indices from Perkins and Alexander (2013). It directly 
+  incorporates the R climdex.pcic package (available on CRAN) to perform most 
+  of the calculations. It was developed at the University of New South Wales and
+  has several dependencies on other R packages. Two separate files allow the
+  indices to be calculated in different ways. The climpact.loader function in 
+  climpact2.r allows power users to process gridded netCDF data, while climpact2.GUI.r 
+  provides a basic graphical user interface for processing ASCII time-series data.
+  
+  
+  Where can I get it?
+  -------------------
+  
+  ClimPACT2 is available on github @ https://github.com/heroldn/climpact2
+  
+  
+  Documentation
+  -------------
+  
+  Documentation exists in the form of this README file, the official ClimPACT2
+  manual (available with this software on github) as well as the source code
+  itself.
+  
+  
+  Installation
+  ------------
+  
+    Software you will need:
+    	-R
+    
+    The following R packages need to be installed. For the GUI only the first
+    4 packages are required.
+    	-climdex.pcic (there is a custom version of this package to be installed which
+           	contains minor fixes and is downloaded automatically with the rest of the
+     	        ClimPACT2 software)
+        -tcltk
+	-PCICt
+    	-SPEI
+    	-foreach
+    	-doParallel
+    	-abind
+        -ncdf4
 
-RECORDING PROBLEMS/ISSUES
-- When you find an error or want to make a comment or suggestion use the "Issues" tab on the right side of this screen.
+    1) Create a new directory
+    2) cd to above directory and run "git clone https://github.com/heroldn/climpact2.git"
+    
+    3) Run "Rscript climpact2.checker.r" to install the required R packages.
+  
+    4) The required packages are now installed. To calculate indices from gridded netCDF data 
+       source the climpact2.r file and call climpact.loader. Alternatively, to load time-series 
+       of ASCII data source climpact2.GUI.r. Refer to the user manual for more detailed instructions.
+  
+  
+  Licensing
+  ---------
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS "AS IS" AND
+  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  
+  
+
+  Contacts
+  --------
+  
+  Software issues contact Nicholas Herold : nicholas.herold@unsw.edu.au
+  All other issues contact Lisa Alexander : lisa.alexander@unsw.edu.au
+
