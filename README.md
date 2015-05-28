@@ -58,8 +58,9 @@
        climpact2.checker.r
   
     4) To calculate indices from gridded netCDF datasets source the climpact2.r file and 
-       call climpact.loader. Alternatively, to load time-series of ASCII data source 
-       climpact2.GUI.r. Refer to the user manual for more detailed instructions.
+       call the climpact.loader function (see climpact2.wrapper.r for an example). 
+       Alternatively, to load time-series from ASCII files source climpact2.GUI.r to use
+       the graphical user interface. Refer to the user manual for more detailed instructions.
   
   
   Licensing

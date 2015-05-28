@@ -1,12 +1,12 @@
 # ------------------------------------------------ #
-# ClimPACT2. V. 0.1.
+# ClimPACT2 V.0.1.
 # University of New South Wales
 # ------------------------------------------------ #
 #
-# This file constitutes version 2 of Climpact, an R package designed to calculate the ETCCDI and ETRCSI indices (and some others). Climpact2 combines the CRAN package climdex.pcic, developed by the 
-# Pacific Climate Impacts Consortium, with additional code containing ETRCSI indices and a netCDF loader, which was developed at the University of New South Wales. Science users are intended to access 
-# the indices through the climpact.loader function. This function takes gridded netCDF files of tmin, tmax and precip and produces gridded datasets of the requested indices. Conversely, non-specialists
-# are able to use the GUI (accessed by sourcing climpact2.gui.r) to calculate point data from ASCII files.
+# This file constitutes version 2 of ClimPACT, an R package designed to calculate the ETCCDI and ETSCI indices (and some others). ClimPACT2 combines the CRAN package climdex.pcic, developed by the 
+# Pacific Climate Impacts Consortium, with additional code containing ETSCI indices and a netCDF loader, which was developed at the University of New South Wales. Science users are intended to access 
+# the indices through the climpact.loader function contained in this file. This function accepts gridded netCDF files of tmin, tmax and precip and produces gridded datasets of the requested indices. 
+# Conversely, non-specialists are able to use the GUI (accessed by sourcing climpact2.GUI.r) to calculate point data from ASCII files.
 #
 # This package is available on github https://github.com/heroldn/climpact2.
 # 

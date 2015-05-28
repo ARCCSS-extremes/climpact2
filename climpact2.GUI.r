@@ -3,8 +3,9 @@
 # University of New South Wales
 # ------------------------------------------------ #
 #
-# This file constitutes the graphical user interface for ClimPACT2 and is available from github https://github.com/heroldn/climpact2.
-# This file depends on other files available at the above repository.
+# This file constitutes the graphical user interface for ClimPACT2.
+#
+# This package is available on github https://github.com/heroldn/climpact2.
 #
 # nherold, May 2015.
 #
@@ -2153,10 +2154,10 @@ about <- function(){
         frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
         tkgrid(frame.space)
         tkgrid(tklabel(tt2,text=
-"This code was developed by Hongang Yang, Lisa Alexander and Sarah Perkins based on the RClimDEX 
-software developed by the joint WMO CCl/CLIVAR/JCOMM Expert Team on Climate Change Detection and 
-Indies (ETCCDI), with modifications by several researchers and students. Please refer to the 
-software manual for technical support. \n\nLast updated on 2013-06-04. \n"
+"Developed by Nicholas Herold, Lisa Alexander, Hongang Yang, James Goldie, Sarah Perkins.
+Based on the RClimDEX software developed by the joint WMO CCl/CLIVAR/JCOMM Expert Team on 
+Climate Change Detection and Indies (ETCCDI), with modifications by several researchers 
+and students."
 ,bg='white',font=font_small,width=90),sticky="nsew")
         tkgrid(frame.space)
         tkgrid(tt2);tkpack(tt2)
@@ -2198,13 +2199,13 @@ license <- function(){
 	frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
 	tkgrid(frame.space)
 	tkgrid(tklabel(tt2,text=
-"This software is distributed freely, anyone is free to modify and redistribute this software under 
+"This software is distributed as open source, anyone is free to modify and redistribute this software under 
 the following conditions; that acknowledgement is given the original authors (see \"About\") and the 
 World Meteorological Organisation, and that it is acknowledged that any changes to the ETCCDI or ETSCI 
 indices as they are calculated here will no longer be considered official. The indices as they are 
 calculated in ClimPACT2 are considered the official implementation (and are subject to change only by 
-XX). Lastly, this software is provided as-is and the authors nor their host institutions take no
-responsibility for the accuracy of the data produced by it.",bg='white',font=font_small,width=90),sticky="nsew")
+members of the ETSCI or ETCCDI). Lastly, this software is provided as-is and the authors nor their 
+host institutions take any responsibility for the accuracy of the data produced by it.",bg='white',font=font_small,width=90),sticky="nsew")
         tkgrid(frame.space)
 	tkgrid(tt2)
 	tkpack(tt2)#,side = "left")
