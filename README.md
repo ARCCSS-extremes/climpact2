@@ -43,7 +43,7 @@
            	contains minor fixes and is downloaded automatically with the rest of the
      	        ClimPACT2 software)
         -tcltk
-	-PCICt
+        -PCICt
     	-SPEI
     	-foreach
     	-doParallel
