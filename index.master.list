@@ -5,12 +5,12 @@ fdm20	days	Annual number of days when TN < -20 degC
 id	days	Annual number of days when TX < 0 degC
 su	days	Annual number of days when TX > 25 degC
 tr	days	Annual number of days when TN > 20 degC
-gsl	days	Annual number of days between the first occurrence of 6 consecutive days with TM > 5 degC and the first occurrence of 6 consecutive days with TM < 5 degC. 
+gsl	days	Annual number of days between the first occurrence of 6 consecutive days with TM > 5 degC and the first occurrence of 6 consecutive days with TM < 5 degC
 txx	degC	Warmest daily TX
 tnn	degC	Coldest daily TN
 tnx	degC	Warmest daily TN
 txn	degC	Coldest daily TX
-dtr	degC	Mean difference between dail TX and daily TN
+dtr	degC	Mean difference between daily TX and daily TN
 wsdi	days	Annual number of days with at least 6 consecutive days when TX > 90th percentile
 wsdin	days	Annual number of days with at least n consecutive days when TX > 90th percentile
 csdi	days	Annual number of days with at least 6 consecutive days when TN < 10th percentile
@@ -30,23 +30,22 @@ su35	days	Annual number of days when TX >= 35 degC
 hddheat	degC	Annual sum of Tb - TM (where Tb is a user-defined location-specific base temperature and TM < Tb)
 cddcold	degC	Annual sum of TM - Tb (where Tb is a user-defined location-specific base temperature and TM > Tb)
 gddgrow	degC	Annual sum of TM - Tb (where Tb is a user-defined location-specific base temperature and TM > Tb)
-r20mm	days	Annual number of days of days when P >= 20mm
 cdd	days	Maximum annual number of consecutive dry days (when precipitation < 1.0 mm)
 cwd	days	Maximum annual number of consecutive wet days (when precipitation >= 1.0 mm)
-r10mm	days	Annual number of days when precipitation > 10 mm
-r20mm	days	Annual number of days when precipitation > 20 mm
+r10mm	days	Annual number of days when precipitation >= 10 mm
+r20mm	days	Annual number of days when precipitation >= 20 mm
 rx1day	mm	Maximum 1-day precipitation total
 rx5day	mm	Maximum 5-day precipitation total
 prcptot	mm	Annual sum of daily precipitation >= 1.0 mm
 sdii	mm/day	Annual total precipitation divided by the number of wet days (when total precipitation >= 1.0 mm)
-r95p	mm	Annual total PRCP when RR > 95p
-r99p	mm	Annual total PRCP when RR > 99p
+r95p	mm	Annual sum of daily precipitation > 95th percentile
+r99p	mm	Annual sum of daily precipitation > 99th percentile
 r95ptot	%	100*r95p / PRCPTOT
 r99ptot	%	100*r99p / PRCPTOT
 rxnday	mm	Maximum n-day precipitation total
-rnnmm	days	Annual number of days when PRCP >= n
-ntxntn	events	Annual number of n consecutive days where both TX > 95th percentile and TN > 95th percentile, where n >= 2 (and max of 10)
-ntxbntnb	events	Annual number of n consecutive days where both TX < 5th percentile and TN < 5th percentile where n >=2 and n <=10
-hw	NA	Heat wave magnitude, amplitude, number, duration and frequency calculated for the three definitions of TX90, TN90 and EHF from Perkins and Alexander (2013).
-spei	unitless	Standardised Precipitation Evapotranspiration Index. As implemented by the SPEI package in R.
-spi	unitless	Standardised Precipitation Index. As implemented by the SPEI package in R.
+rnnmm	days	Annual number of days when precipitation >= n
+ntxntn	events	Annual number of n consecutive days where both TX > 95th percentile and TN > 95th percentile, where 10 >= n >= 2
+ntxbntnb	events	Annual number of n consecutive days where both TX < 5th percentile and TN < 5th percentile where 10 >= n >=2
+hw	NA	Heat wave magnitude, amplitude, number, duration and frequency calculated for the three definitions of TX90, TN90 and EHF
+spei	unitless	Standardised Precipitation Evapotranspiration Index. As implemented by the SPEI package in R
+spi	unitless	Standardised Precipitation Index. As implemented by the SPEI package in R
