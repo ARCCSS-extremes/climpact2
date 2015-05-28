@@ -1,46 +1,83 @@
-**********************************
-  INSTALLING CLIMPACT2
-**********************************
 
-Software you will need:
--R
--NCO (for the time being),
 
-In R you will need the following packages:
--climdex.pcic
--ncdf4
--PCICt
--SPEI
--foreach
--doParallel
--abind
--tcltk
+				ClimPACT2
+			Last updated: 31/5/2015
 
-**********************************
 
-Download the code to the storm servers by the following steps:
+  What is it?
+  -----------
+  
+  ClimPACT2 is an R software package that calculates the ETSCI indices, ETCCDI 
+  indices, and the heatwave indices from Perkins and Alexander (2013). It directly 
+  incorporates the R climdex.pcic package (available on CRAN) to perform most 
+  of the calculations. It was developed at the University of New South Wales and
+  has several dependencies on other R packages. Two separate files allow the
+  indices to be calculated in different ways. The climpact.loader function in 
+  climpact2.r allows power users to process gridded netCDF data, while climpact2.GUI.r 
+  provides a basic graphical user interface for processing ASCII time-series data.
+  
+  
+  Where can I get it?
+  -------------------
+  
+  ClimPACT2 is available on github @ https://github.com/heroldn/climpact2
+  
+  
+  Documentation
+  -------------
+  
+  Documentation exists in the form of this README file, the official ClimPACT2
+  manual (available with this software on github) as well as the source code
+  itself.
+  
+  
+  Installation
+  ------------
+  
+    Software you will need:
+    	-R
+    
+    The following R packages need to be installed. For the GUI only the first
+    4 packages are required.
+    	-climdex.pcic (there is a custom version of this package to be installed which
+           	contains minor fixes and is downloaded automatically with the rest of the
+     	        ClimPACT2 software)
+        -tcltk
+	-PCICt
+    	-SPEI
+    	-foreach
+    	-doParallel
+    	-abind
+        -ncdf4
 
-1) Create a new directory
-2) CD to above directory and run "git clone git@github.com:heroldn/climpact2.git"
-	NOTE: if the above address doesn't work try https://github.com/heroldn/climpact2.git.
+    1) Create a new directory
+    2) cd to above directory and run "git clone https://github.com/heroldn/climpact2.git"
+    
+    3) Run "Rscript climpact2.checker.r" to install the required R packages.
+  
+    4) The required packages are now installed. To calculate indices from gridded netCDF data 
+       source the climpact2.r file and call climpact.loader. Alternatively, to load time-series 
+       of ASCII data source climpact2.GUI.r. Refer to the user manual for more detailed instructions.
+  
+  
+  Licensing
+  ---------
 
-To run the code:
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS "AS IS" AND
+  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  
+  
 
-1) Load the R module if you don't already have it "module load R/3.0.3 nco/4.3.2" -> I added nco here for a meta-data hack I've got in place.
-2) In R install the following packages (note if you already have climdex.pcic installed you will need to remove it with remove.packages("climdex.pcic"));
-    - install.packages("/file/path/to/climdex.pcic.tar.gz",repos=NULL,type="source")
-    - install ncdf4,PCICt,SPEI,foreach,doParallel,abind,tcltk
-3) Edit and run test.climpact2.r. More information can be gleaned from the climpact.loader function header in climpact2_XX.YY.r.
-4) To run the GUI open R and type source("PATH/TO/climpact2_GUI_X.Y.r")
+  Contacts
+  --------
+  
+  Software issues contact Nicholas Herold : nicholas.herold@unsw.edu.au
+  All other issues contact Lisa Alexander : lisa.alexander@unsw.edu.au
 
-**********************************
-
-MORE DETAILS:
-
-There are numerous parameters that can be specified in climpact.loader. However, the only necessary data needed is at least one filename for either the min temperature, max temperature or precipitation, and a list of one or more indices to calculate.
-
-Some sample NarClim data are already specified along with the bare minimum parameters.
-
-The indices can be specified by their abbreviation in lower case (you can see the valid indices in index.master.list). E.g. TX95t should be called with tx95t. 
-
-Feel free to load in any other gridded data that has daily values. A big assumption here is that all files sent to climpact.loader are from the same source and have the same time and space dimensions.
