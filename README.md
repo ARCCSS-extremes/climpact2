@@ -55,9 +55,10 @@
     
     3) Run "Rscript climpact2.checker.r" to install the required R packages.
   
-    4) The required packages are now installed. To calculate indices from gridded netCDF data 
-       source the climpact2.r file and call climpact.loader. Alternatively, to load time-series 
-       of ASCII data source climpact2.GUI.r. Refer to the user manual for more detailed instructions.
+    4) The required packages are now installed. To calculate indices from gridded netCDF 
+       data source the climpact2.r file and call climpact.loader. Alternatively, to load 
+       time-series of ASCII data source climpact2.GUI.r. Refer to the user manual for more 
+       detailed instructions.
   
   
   Licensing
