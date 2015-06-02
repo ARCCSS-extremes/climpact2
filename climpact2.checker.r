@@ -4,6 +4,8 @@
 list.of.packages <- c(  "ncdf4",
 			"PCICt",
 			"foreach",
+			"caTools",
+			"Rcpp",
 			"doParallel",
 			"abind",
 			"SPEI")
