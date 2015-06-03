@@ -1043,55 +1043,69 @@ climdex.spi <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift=
 #    - HWD: heat wave duration
 #    - HWF: heat wave frequency
 climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fraction.present,lat,tavg90p=NULL,tn90p=NULL,tx90p=NULL) {
-	stopifnot(!is.null(lat),!is.null(ci@data$tmin),!is.null(ci@data$tmax))
+        stopifnot(!is.null(lat),!is.null(ci@data$tmin),!is.null(ci@data$tmax))
 # step 1. Get data needed for the three definitions of a heat wave. 
-	# recalculate tavg here to ensure it is based on tmax/tmin. Then get 15 day moving windows of percentiles.
-	tavg = (ci@data$tmax + ci@data$tmin)/2
-	if(any(is.null(tavg90p),is.null(tx90p),is.null(tn90p))) {
-		# need to reference 'tmax' data slot in tavg90p because of naming convention in get.outofbase.quantiles
-	        tavg90p <- suppressWarnings(get.outofbase.quantiles(tavg,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=15,temp.qtiles=0.9,prec.qtiles=0.9,
-        	                                                min.base.data.fraction.present=min.base.data.fraction.present))
-		tavg90p <- tavg90p$tmax$outbase$q90
-		TxTn90p <- suppressWarnings(get.outofbase.quantiles(ci@data$tmax,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=15,temp.qtiles=0.9,prec.qtiles=0.9,
-        	                                                min.base.data.fraction.present=min.base.data.fraction.present))
-		tn90p <- TxTn90p$tmin$outbase$q90
-		tx90p <- TxTn90p$tmax$outbase$q90 } 
+        # recalculate tavg here to ensure it is based on tmax/tmin. Then get 15 day moving windows of percentiles.
+        tavg = (ci@data$tmax + ci@data$tmin)/2
+        if(any(is.null(tavg90p),is.null(tx90p),is.null(tn90p))) { print("CALCULATING OWN HW THRESHOLDS")
+                # need to reference 'tmax' data slot in tavg90p because of naming convention in get.outofbase.quantiles
+                tavg90p <- suppressWarnings(get.outofbase.quantiles(tavg,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=15,temp.qtiles=0.9,prec.qtiles=0.9,
+                                                                min.base.data.fraction.present=min.base.data.fraction.present))
+                tavg90p <- tavg90p$tmax$outbase$q90
+                TxTn90p <- suppressWarnings(get.outofbase.quantiles(ci@data$tmax,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=15,temp.qtiles=0.9,prec.qtiles=0.9,
+                                                                min.base.data.fraction.present=min.base.data.fraction.present))
+                tn90p <- TxTn90p$tmin$outbase$q90
+                tx90p <- TxTn90p$tmax$outbase$q90 }
 
-	# get shells for the following three variables
-	EHIaccl = array(NA,length(tavg))
-	EHIsig = array(NA,length(tavg))
-	EHF = array(NA,length(tavg))
+        # get shells for the following three variables
+        EHIaccl = array(NA,length(tavg))
+        EHIsig = array(NA,length(tavg))
+        EHF = array(NA,length(tavg))
 
-	# make an array of repeating 1:365 to reference the right day for percentiles
-	annualrepeat = array(1:365,length(tavg))
-	annualrepeat_tavg90 = array(tavg90p,length(tavg))
+        # take any non leap year to create 365 month-day factors
+        beg = as.Date("2001-01-01",format="%Y-%m-%d")
+        end = as.Date("2001-12-31",format="%Y-%m-%d")
+        dat.seq = seq(beg,end,by = "1 day")
+        fact = factor(format(dat.seq,format="%m-%d"))
 
-	# Calculate EHI values and EHF for each day of the given record. Must start at day 33 since the previous 32 days are required for each calculation.
-	for (a in 33:length(tavg)) {
-		EHIaccl[a] = (sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3) - (sum(tavg[(a-32):(a-3)],na.rm=TRUE)/30)
-		EHIsig[a] = (sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3) - as.numeric(unlist(annualrepeat_tavg90[a]))  #as.numeric(unlist(tavg90p$tmax[1])[annualrepeat[a]]) #[(a %% 365)]
-		EHF[a] = max(1,EHIaccl[a],na.rm=TRUE)*EHIsig[a]
-	}
+        # create date sequence from beginning of record to end, then create month-day factors
+        beg2 = as.Date(paste(ci@date.factors$annual[1],"01","01",sep="-"))
+        end2 = as.Date(paste(ci@date.factors$annual[length(ci@date.factors$annual)],"12","31",sep="-"))
+        dat.seq2 = seq(beg2,end2,by = "1 day")
+        fact2 = factor(format(dat.seq2,format="%m-%d"))
+
+        # assign the 365 percentiles to the entire time series based on date factors (so as to account for leap years) - February 29 days will be NA.
+        annualrepeat_tavg90 = array(NA,length(tavg))
+        annualrepeat_tavg90 = tavg90p[match(fact2,fact)]
+
+        # Calculate EHI values and EHF for each day of the given record. Must start at day 33 since the previous 32 days are required for each calculation.
+        for (a in 33:length(tavg)) {
+                EHIaccl[a] = (sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3) - (sum(tavg[(a-32):(a-3)],na.rm=TRUE)/30)
+                EHIsig[a] = (sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3) - as.numeric(unlist(annualrepeat_tavg90[a]))  #as.numeric(unlist(tavg90p$tmax[1])[annualrepeat[a]]) #[(a %% 365)]
+                EHF[a] = max(1,EHIaccl[a],na.rm=TRUE)*EHIsig[a]
+        }
 
 # step 2. Determine if tx90p, tn90p or EHF conditions have persisted for >= 3 days. If so, count number of summer heat waves.
-	# create an array of booleans for each definition identifying runs 3 days or longer where conditions are met. i.e. for TX90p, TN90p, EHF.
-	tx90p_boolean = array(FALSE,length(tx90p))
+        # assign the 365 percentiles to the entire time series based on date factors (so as to account for leap years) - February 29 days will be NA.
+        tx90p_arr <- array(NA,length(ci@data$tmax))
+        tx90p_arr <- tx90p[match(fact2,fact)]
+        tn90p_arr <- array(NA,length(ci@data$tmin))
+        tn90p_arr <- tn90p[match(fact2,fact)]
+
+        # create an array of booleans for each definition identifying runs 3 days or longer where conditions are met. i.e. for TX90p, TN90p, EHF.
+        tx90p_boolean = array(FALSE,length(tx90p))
         tn90p_boolean = array(FALSE,length(tn90p))
-	EHF_boolean = array(FALSE,length(EHF))
+        EHF_boolean = array(FALSE,length(EHF))
 
-	# make repeating sequences of percentiles
-	tx90p_arr <- array(tx90p,length(ci@data$tmax))
-        tn90p_arr <- array(tn90p,length(ci@data$tmin))
+        # Record which days had temperatures higher than 90p or where EHF > 0 
+        tx90p_boolean <- (ci@data$tmax > tx90p_arr)
+        tn90p_boolean <- (ci@data$tmin > tn90p_arr)
+        EHF_boolean <- (EHF > 0)
 
-	# Record which days had temperatures higher than 90p or where EHF > 0 
-	tx90p_boolean <- (ci@data$tmax > tx90p_arr)
-	tn90p_boolean <- (ci@data$tmin > tn90p_arr)
-	EHF_boolean <- (EHF > 0)
-
-	# Remove runs that are < 3 days long
-	tx90p_boolean <- select.blocks.gt.length(tx90p_boolean,2)
+        # Remove runs that are < 3 days long
+        tx90p_boolean <- select.blocks.gt.length(tx90p_boolean,2)
         tn90p_boolean <- select.blocks.gt.length(tn90p_boolean,2)
-	EHF_boolean <- select.blocks.gt.length(EHF_boolean,2)
+        EHF_boolean <- select.blocks.gt.length(EHF_boolean,2)
 
 # Step 3. Calculate aspects for each definition.
 	hw_index <- array(NA,c(3,5,length(levels(ci@date.factors$annual))))
@@ -1103,7 +1117,7 @@ climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fract
         hw_index[2,,] <- get.hw.aspects(hw2_index,tn90p_boolean,ci@date.factors$annual,ci@date.factors$monthly,ci@data$tmin,lat)
         hw_index[3,,] <- get.hw.aspects(hw3_index,EHF_boolean,ci@date.factors$annual,ci@date.factors$monthly,EHF,lat)
 
-	rm(tavg,tavg90p,TxTn90p,EHIaccl,EHIsig,EHF,annualrepeat,tx90p_boolean,tn90p_boolean,EHF_boolean,tx90p_arr,tn90p_arr,hw1_index,hw2_index,hw3_index,tn90p,tx90p)
+        rm(tavg,tavg90p,EHIaccl,EHIsig,EHF,tx90p_boolean,tn90p_boolean,EHF_boolean,tx90p_arr,tn90p_arr,hw1_index,hw2_index,hw3_index,tn90p,tx90p,beg,end,beg2,end2,dat.seq,dat.seq2,fact,fact2)
 	return(hw_index)
 }
 
