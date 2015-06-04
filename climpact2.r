@@ -49,6 +49,8 @@ software_id = "0.1"
 #  max.missing.days: maximum missing days under which indices will still be calculated.
 #  min.base.data.fraction.present: minimum fraction of data required for a quantile to be calculated for a particular day.
 #  outputdir: directory where index files will be created.
+#  time_format: if the time variable in tsminfile, tsmaxfile and precfile are not in "units since YYYY-MM-DD" then this parameter must be passed specifying the date format. Uses standard notations as specified in
+#	http://stat.ethz.ch/R-manual/R-devel/library/base/html/strptime.html
 #  ... additional parameters: any parameters that are defined for specific indices (see the manual) can be specified by 
 #      prefixing the index name followed by an underscore. For example, the spells.can.span.years parameter for the climdex index wsdi can be specified by passing wsdi_spells.can.span.years.
 #
