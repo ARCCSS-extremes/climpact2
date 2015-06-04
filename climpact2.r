@@ -14,7 +14,7 @@
 
 # Nullify some objects to suppress spurious warning messages
 nc_tsmin <<- nc_tsmax <<- nc_prec <<- yeardate <<- origin <<- latstr <<- latdim <<- londim <<- j <<- tsmin <<- tsmax <<- prec <<- tsmintime <<- tsmaxtime <<- prectime <<- missingval <<- cicompile <<- tminqtiles_array <<- tmaxqtiles_array <<-  
-tminqtiles <<- tnames <<- tmaxqtiles <<- tavgqtiles <<- precipqtiles <<- pnames <<- tavgqtileshw <<- tminqtileshw <<- tmaxqtileshw <<- tminraw <<- tmaxraw <<- precraw <<- northern.hemisphere <<- tavgqtiles_array <<- precipqtiles_array <<- NULL
+tminqtiles <<- tnames <<- tmaxqtiles <<- tavgqtiles <<- precipqtiles <<- pnames <<- tavgqtileshw <<- tminqtileshw <<- tmaxqtileshw <<- tminraw <<- tmaxraw <<- precraw <<- timeraw <<- northern.hemisphere <<- tavgqtiles_array <<- precipqtiles_array <<- NULL
 
 # Load global libraries and enable compilation.
 library(climdex.pcic)
@@ -101,12 +101,12 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 #	write.table(z,file=log.file,append=F,quote=F,sep=", ",row.names=F)
 
 # Convert Kelvin or Fahrenheit to Celcius. And m or cm to mm. This is the only unit conversion done.
-	if(exists("nc_tsmin")) if (ncatt_get(nc_tsmin,tsminname,"units")[2] == "K") tsmin <<- tsmin-273.15
-        if(exists("nc_tsmax")) if (ncatt_get(nc_tsmax,tsmaxname,"units")[2] == "K") tsmax <<- tsmax-273.15
-        if(exists("nc_tsmin")) if (ncatt_get(nc_tsmin,tsminname,"units")[2] == "F") tsmin <<- (tsmin-32)/1.8
-        if(exists("nc_tsmax")) if (ncatt_get(nc_tsmax,tsmaxname,"units")[2] == "F") tsmax <<- (tsmax-32)/1.8
-        if(exists("nc_prec")) if (ncatt_get(nc_tsmax,tsmaxname,"units")[2] == "m") prec <<- prec*1000
-        if(exists("nc_prec")) if (ncatt_get(nc_tsmax,tsmaxname,"units")[2] == "cm") prec <<- prec*10
+	if(!is.null(nc_tsmin)) if (ncatt_get(nc_tsmin,tsminname,"units")[2] == "K") tsmin <<- tsmin-273.15
+        if(!is.null(nc_tsmax)) if (ncatt_get(nc_tsmax,tsmaxname,"units")[2] == "K") tsmax <<- tsmax-273.15
+        if(!is.null(nc_tsmin)) if (ncatt_get(nc_tsmin,tsminname,"units")[2] == "F") tsmin <<- (tsmin-32)/1.8
+        if(!is.null(nc_tsmax)) if (ncatt_get(nc_tsmax,tsmaxname,"units")[2] == "F") tsmax <<- (tsmax-32)/1.8
+        if(!is.null(nc_prec)) if (ncatt_get(nc_prec,precname,"units")[2] == "m") prec <<- prec*1000
+        if(!is.null(nc_prec)) if (ncatt_get(nc_prec,precname,"units")[2] == "cm") prec <<- prec*10
 
 # Perform basic temp and prec checks
         basic.qc(tsmin,tsmax,prec)
@@ -342,9 +342,9 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 				# Call index function and store in different variable if hw, or spei or spi.
 				if(indices[a] == "hw") { if(exists("tavgqtileshw")) { tavg90p = tavgqtileshw[i,j,] ; tn90p = tminqtileshw[i,j,] ; tx90p = tmaxqtileshw[i,j,] } else { tavg90p = NULL ; tx90p = NULL ; tn90p = NULL}
 					test[,,i,] = eval(parse(text=indexparam)) }
-				else if(indices[a] == "spei") { if(exists("precraw")) { tnraw <- tminraw[i,j,] ; txraw <- tmaxraw[i,j,] ; praw <- precraw[i,j,] ; btime <- timeraw } else { tnraw <- txraw <- praw <- btime <- NULL }
+				else if(indices[a] == "spei") { if(!is.null(precraw)) { tnraw <- tminraw[i,j,] ; txraw <- tmaxraw[i,j,] ; praw <- precraw[i,j,] ; btime <- timeraw ;print(btime) } else { tnraw <- txraw <- praw <- btime <- NULL }
 					test[,i,] = eval(parse(text=indexparam)) }
-                                else if(indices[a] == "spi") { if(exists("precraw")) { praw <- precraw[i,j,] ; btime <- timeraw ; tnraw <- txraw <- NULL } else { tnraw <- txraw <- praw <- timeraw <- btime <- NULL }
+                                else if(indices[a] == "spi") { if(!is.null(precraw)) { praw <- precraw[i,j,] ; btime <- timeraw ; tnraw <- txraw <- NULL;print(btime) } else { tnraw <- txraw <- praw <- btime <- NULL }
                                         test[,i,] = eval(parse(text=indexparam)) }
 				else if(indices[a] == "gsl") { if(eval(parse(text=latstr)) <= 0) { cio@northern.hemisphere<<-FALSE} else cio@northern.hemisphere<<-TRUE ;test[i,] = eval(parse(text=indexparam))}
 				else { test[i,] = eval(parse(text=indexparam)) }
