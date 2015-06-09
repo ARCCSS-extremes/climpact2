@@ -20,7 +20,7 @@
   Where can I get it?
   -------------------
   
-  ClimPACT2 is available on github @ https://github.com/heroldn/climpact2
+  ClimPACT2 is available on github @ https://github.com/unsw-extremes/climpact2
   
   
   How do I use it?
