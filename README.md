@@ -23,6 +23,16 @@
   ClimPACT2 is available on github @ https://github.com/heroldn/climpact2
   
   
+  How do I use it?
+  ----------------
+
+  To calculate indices for from gridded netCDF files, use climpact2.wrapper.r to call 
+  the climpact.loader function in climpact2.r. Calculating all 51 indices for a 20 year
+  record with horizontal resolution of 144 x 215 takes approximately 12 hours on 2 
+  cores. To calculate indices from a time-series of station data stored in ASCII 
+  format, source climpact2.GUI.r.
+
+
   Documentation
   -------------
   
