@@ -48,7 +48,7 @@ software_id = "0.1"
 #  precqtiles: precipitation percentiles to calculate.
 #  max.missing.days: maximum missing days under which indices will still be calculated.
 #  min.base.data.fraction.present: minimum fraction of data required for a quantile to be calculated for a particular day.
-#  outputdir: directory where index files will be created.
+#  output_dir: directory where index files will be created.
 #  time_format: if the time variable in tsminfile, tsmaxfile and precfile are not in "units since YYYY-MM-DD" then this parameter must be passed specifying the date format. Uses standard notations as specified in
 #	http://stat.ethz.ch/R-manual/R-devel/library/base/html/strptime.html
 #  ... additional parameters: any parameters that are defined for specific indices (see the manual) can be specified by 
@@ -471,7 +471,7 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 			names(globatt)[i] == "creation_date") {} else {ncatt_put(tmpout,0,names(globatt)[i],globatt[[i]])} }
 
 	# write out coordinate variable attributes from input file. Assumes all input files have the same attributes for their coordinate variables
-		attcopy <- c(latname,lonname,timename)
+		attcopy <- c(latname,lonname)#,timename)
 		for (j in 1:length(attcopy)) {
 			tmpatt <- ncatt_get(refnc,attcopy[j])
 			for(i in 1:length(tmpatt))  { if(names(tmpatt)[i] == "_FillValue") print("NOT OVERWRITING _FillValue ATTRIBUTE") else ncatt_put(tmpout,attcopy[j],names(tmpatt)[i],tmpatt[[i]]) }
