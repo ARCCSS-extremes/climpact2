@@ -23,12 +23,12 @@ if(length(new.packages)) {
 	print(paste("Installing the following required packages...",new.packages,sep=""))
 	install.packages(new.packages,repos='http://cran.us.r-project.org') }
 
-# If climdex.pcic not installed and the .tar.gz file is not in current directory, then download modified copy from climpact2 github and install.
-if(!("climdex.pcic" %in% installed.packages()[,"Package"])) {
-        system(paste("if [ ! -e climdex.pcic.tar.gz ]; then wget https://github.com/heroldn/climpact2/blob/master/climdex.pcic.tar.gz; fi"))
-        print("******************************")
-        print(paste("Installing climdex.pcic...",new.packages,sep=""))
-        install.packages("climdex.pcic.tar.gz",repos=NULL,type="source") }
+# Remove any currently installed version of climdex.pcic, then if the .tar.gz file is not in current directory, download from climpact2 github and install.
+if("climdex.pcic" %in% installed.packages()[,"Package"]) { remove.packages("climdex.pcic") }
+system(paste("if [ ! -e climdex.pcic.tar.gz ]; then wget https://github.com/ARCCSS-extremes/climpact2/blob/master/climdex.pcic.tar.gz; fi"))
+print("******************************")
+print(paste("Installing climdex.pcic...",new.packages,sep=""))
+install.packages("climdex.pcic.tar.gz",repos=NULL,type="source")
 
 print("******************************")
 print(paste("R version ",as.character(getRversion())," detected.",sep=""))
