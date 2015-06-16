@@ -13,7 +13,7 @@ list.of.packages <- c(  "ncdf4",
 print("******************************")
 print("***** INSTALLED PACKAGES *****")
 print("******************************")
-print(installed.packages())
+print(installed.packages()[,"Package"])
 
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 
@@ -21,7 +21,7 @@ new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"
 if(length(new.packages)) {
 	print("******************************")
 	print(paste("Installing the following required packages...",new.packages,sep=""))
-	install.packages(new.packages) }
+	install.packages(new.packages,repos='http://cran.us.r-project.org') }
 
 # If climdex.pcic not installed and the .tar.gz file is not in current directory, then download modified copy from climpact2 github and install.
 if(!("climdex.pcic" %in% installed.packages()[,"Package"])) {
