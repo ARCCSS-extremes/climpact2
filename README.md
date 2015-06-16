@@ -62,10 +62,9 @@
 
     1) Create a new directory
 
-    2) cd to above directory and run "git clone https://github.com/heroldn/climpact2.git"
+    2) cd to above directory and run "git clone https://github.com/ARCCSS-extremes/climpact2.git"
     
-    3) Install the required R packages listed above. This can be done with 
-       climpact2.checker.r
+    3) Run 'Rscript climpact2.checker.r'
   
     4) To calculate indices from gridded netCDF datasets source the climpact2.r file and 
        call the climpact.loader function (see climpact2.wrapper.r for an example). 
