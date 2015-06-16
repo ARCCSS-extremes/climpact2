@@ -48,7 +48,7 @@
     	-R
     
     The following R packages need to be installed. For the GUI only the first
-    4 packages are required.
+    4 packages are required. climpact2.checker.r will install these.
     	-climdex.pcic (there is a custom version of this package to be installed which
            	contains minor fixes and is downloaded automatically with the rest of the
      	        ClimPACT2 software)
@@ -64,7 +64,8 @@
 
     2) cd to above directory and run "git clone https://github.com/ARCCSS-extremes/climpact2.git"
     
-    3) Run 'Rscript climpact2.checker.r'
+    3) Run 'Rscript climpact2.checker.r'. This will make sure the required R
+       packages are installed.
   
     4) To calculate indices from gridded netCDF datasets source the climpact2.r file and 
        call the climpact.loader function (see climpact2.wrapper.r for an example). 
