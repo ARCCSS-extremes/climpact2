@@ -340,7 +340,10 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 				# Calculate climdex input object
 				cio <<- cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=prec[i,j,],tmin.dates=tsmintime,tmax.dates=tsmaxtime,prec.dates=prectime,prec.qtiles=precqtiles_tmp,
 					temp.qtiles=tempqtiles_tmp,quantiles=quantiles,base.range=baserange)
-
+#print(cio@date.factors$annual)
+#print(cio@data$prec)
+#print(cio@data$tmin)
+#exit
 				# Call index function and store in different variable if hw, or spei or spi.
 				if(indices[a] == "hw") { if(exists("tavgqtileshw")) { tavg90p = tavgqtileshw[i,j,] ; tn90p = tminqtileshw[i,j,] ; tx90p = tmaxqtileshw[i,j,] } else { tavg90p = NULL ; tx90p = NULL ; tn90p = NULL}
 					test[,,i,] = eval(parse(text=indexparam)) }
@@ -667,9 +670,11 @@ get.time <- function(nc=NULL,timename=NULL,time_format=NULL)
 		time_format = paste(split[1],split[2],split[3],sep="-")
 	        return(as.PCICt(ftime,cal="gregorian",format=time_format))
 	} else {
-	        if(grepl("hours",time_att)) {print("Time coordinate in hours, converting to seconds...") ; ftime = ftime*60*60}
-        	if(grepl("days",time_att)) {print("Time coordinate in days, converting to seconds...") ; ftime = ftime*24*60*60}
-		return(as.PCICt(ftime,cal="gregorian",origin=get.origin(time_att=time_att[[1]])))
+#	        if(grepl("hours",time_att)) {print("Time coordinate in hours, converting to seconds...") ; ftime = ftime*60*60}
+#        	if(grepl("days",time_att)) {print("Time coordinate in days, converting to seconds...") ; ftime = ftime*24*60*60}
+#		return(as.PCICt(ftime,cal="gregorian",origin=get.origin(time_att=time_att[[1]])))
+		dates.tmp = as.Date(ftime/24,origin=get.origin(time_att=time_att[[1]]))
+                return(as.PCICt(as.character(dates.tmp),cal="gregorian"))#,origin=get.origin(time_att=time_att[[1]])))
 	}
 }
 
