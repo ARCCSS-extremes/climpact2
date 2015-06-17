@@ -45,9 +45,9 @@
   ------------
   
     Software you will need:
-        -netCDF
-    	-R (you will also need the following R packages, which are installed
-         for you by the climpact2.checker.r script)
+        -netCDF (only required if working with three dimensional datasets)
+    	-R. You will also need the following R packages, which are installed
+         for you by the climpact2.checker.r script:
 	    	-climdex.pcic (there is a custom version of this package to be installed which
 			contains minor fixes and is downloaded automatically with the rest of the
 			ClimPACT2 software)
@@ -61,16 +61,17 @@
 
     1) Create a new directory
 
-    2) cd to above directory and run "git clone https://github.com/ARCCSS-extremes/climpact2.git"
+    2) cd to above directory and download and extract the following file:
+       https://github.com/ARCCSS-extremes/climpact2/archive/master.zip 
     
-    3) Run 'Rscript climpact2.checker.r'. This will make sure the required R
-       packages are installed.
-  
-    4) To calculate indices from gridded netCDF datasets source the climpact2.r file and 
-       call the climpact.loader function (see climpact2.wrapper.r for an example, to use
-       this script run 'Rscript climpact2.wrapper.r'). 
-       Alternatively, to load time-series from ASCII files source climpact2.GUI.r to use
-       the graphical user interface. Refer to the user manual for more detailed instructions.
+    3) To process time-series data from ASCII files enter R and type 'source("climpact2.GUI.r")' 
+       to open the graphical user interface. Refer to the user manual for more detailed 
+       instructions.
+
+       To calculate indices from gridded netCDF datasets run 'Rscript climpact2.checker.r' from 
+       the command line. This will make sure the required R packages are installed. Then source 
+       the climpact2.r file and call the climpact.loader function (use climpact2.wrapper.r as a 
+       template, to execute this script on the sample data type 'Rscript climpact2.wrapper.r'). 
   
   
   Licensing
