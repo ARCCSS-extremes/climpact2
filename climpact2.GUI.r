@@ -2299,7 +2299,8 @@ host institutions take any responsibility for the accuracy of the data produced 
 # package.check
 # Check for required packages and installs if necessary
 package.check <- function() {
-	list.of.packages <- c(  "Rcpp",
+	list.of.packages <- c(  "bitops",
+				"Rcpp",
 				"caTools",
 				"PCICt",
 	                        "SPEI")
