@@ -1535,7 +1535,8 @@ index.calc2<-function(){
                 cat(file=trend_file,paste(latitude,longitude,indices[6],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
 		if (cbv[7]==1) { print(paste("calculating",indices[7])) ; index.store <- climdex.tr(cio) ; write.index.csv(index.store,index.name=indices[7]) ; plot.call(index.store,index.name=indices[7],index.units=units[7],x.label="Years") 
                 cat(file=trend_file,paste(latitude,longitude,indices[7],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[8]==1) { print(paste("calculating",indices[8])) ; index.store <- climdex.gsl(cio) ; write.index.csv(index.store,index.name=indices[8]) ; plot.call(index.store,index.name=indices[8],index.units=units[8],x.label="Years") 
+		if (cbv[8]==1) { print(paste("calculating",indices[8])) ; if(latitude < 0) cio@northern.hemisphere <<- FALSE ; 
+			index.store <- climdex.gsl(cio) ; write.index.csv(index.store,index.name=indices[8]) ; plot.call(index.store,index.name=indices[8],index.units=units[8],x.label="Years") 
                 cat(file=trend_file,paste(latitude,longitude,indices[8],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
 		if (cbv[9]==1) { print(paste("calculating",indices[9])) ; index.store <- climdex.txx(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[9]) ; plot.call(index.store,index.name=indices[9],index.units=units[9],x.label="Years") 
                 cat(file=trend_file,paste(latitude,longitude,indices[9],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
@@ -1642,7 +1643,6 @@ index.calc2<-function(){
 			# Code related to creating spi* variables aren't needed when relying on climpact2.r. However, due to ostensible issues with CRAN SPEI, this code needs to be rolled into this file in order to call our own SPEI code.
 		        if(computefuture){
 			                # construct dates
-print("COMPUTE FUTURE")
                                 beg = as.Date(btime[1])
                                 end = dates[length(dates)]      #as.Date(paste(base.year.end,"12","31",sep="-"))
                                 dat.seq = seq(beg,end,by = "1 day")
@@ -1687,6 +1687,10 @@ print("COMPUTE FUTURE")
 		#    to be manually removed. The first 2, 5 and 11 values for each final time series needs NA'ing, corresponding to 3, 6 and 12 months calculation periods.
 		        if(computefuture) {
 		                index.store <- index.store[,(length(index.store[1,])-length(unique(cio@date.factors$monthly))+1):length(index.store[1,])]
+				# remove spurious values that shouldn't exist (but exist anyway due to the synthetic time series we've fed the spei/spi function).
+				index.store[1,1:2] <- NA
+                                index.store[2,1:5] <- NA
+                                index.store[3,1:11] <- NA
                                 spifactor <- spifactor[(length(spifactor)-length((cio@date.factors$monthly))+1):length(spifactor)]
 		        }
 			write.precindex.csv(index.store,index.name=indices[50],spifactor)
@@ -1737,6 +1741,10 @@ print("COMPUTE FUTURE")
 		#    to be manually removed. The first 2, 5 and 11 values for each final time series needs NA'ing, corresponding to 3, 6 and 12 months calculation periods.
                         if(computefuture) {
                                 index.store <- index.store[,(length(index.store[1,])-length(unique(cio@date.factors$monthly))+1):length(index.store[1,])]
+                                # remove spurious values that shouldn't exist (but exist anyway due to the synthetic time series we've fed the spei/spi function).
+                                index.store[1,1:2] <- NA
+                                index.store[2,1:5] <- NA
+                                index.store[3,1:11] <- NA
                                 spifactor <- spifactor[(length(spifactor)-length((cio@date.factors$monthly))+1):length(spifactor)]
                         }
 			write.precindex.csv(index.store,index.name=indices[51],spifactor)
@@ -1837,10 +1845,10 @@ plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) {
 		        dev0 = dev.cur()
 
 			if(definitions[def]=="EHF" && any(aspects[asp]=="HWM",aspects[asp]=="HWA")) unit = "degC^2" else unit = units[asp]
-		        plotx(as.numeric(date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label)
+		        plotx(as.numeric(date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label,index.name=index.name)
 
 	                dev.set(which = pdf.dev)
-        	        plotx(as.numeric(date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label)
+        	        plotx(as.numeric(date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label,index.name=index.name)
 			dev.copy()
                         dev.off(dev0)
 
@@ -1885,11 +1893,13 @@ plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=N
 	        plot.title <- paste(title.station," ",index.name,", ",scales[time]," month",sep="")
 	        namp <- paste(outjpgdir, paste(ofilename, "_",scales[time],"month_",index.name,".jpg", sep = ""), sep = "/")
 	        jpeg(file = namp, width = 1024, height = 768)
+#                namp <- paste(outjpgdir, paste(ofilename, "_",scales[time],"month_",index.name,".pdf", sep = ""), sep = "/")
+#		pdf(file=namp)
 	        dev0 = dev.cur()
-	        plotx(unique(as.character(spifactor)), index[time,], main = gsub('\\*', index.units, plot.title),ylab = index.units,xlab = x.label)
-	
+	        plotx(unique(as.character(spifactor)), index[time,], main = gsub('\\*', index.units, plot.title),ylab = index.units,xlab = x.label,index.name=index.name)
+
                 dev.set(which = pdf.dev)
-                plotx(unique(as.character(spifactor)), index[time,], main = gsub('\\*', index.units, plot.title),ylab = index.units,xlab = x.label)
+                plotx(unique(as.character(spifactor)), index[time,], main = gsub('\\*', index.units, plot.title),ylab = index.units,xlab = x.label,index.name=index.name)
                 dev.copy()
                 dev.off(dev0)
 
@@ -1903,27 +1913,27 @@ plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=N
 plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) {
         if(is.null(index.name) | is.null(index) | is.null(index.units)) stop("Need index data, index.name, index units and an x label in order to plot data.")
 
-#	if (sum(is.na(tclext[, i + 1]) == F) >= min_data) {
-		plot.title <- paste(title.station,index.name,sep=", ")
-		namp <- paste(outjpgdir, paste(ofilename, "_", index.name, ".jpg", sep = ""), sep = "/")
-		jpeg(file = namp, width = 1024, height = 768)
-		dev0 = dev.cur()
-		if(index.name=="tx95t") xdata <- 1:length(index)
-		else xdata <- names(index)
-		plotx(xdata, index, main = gsub('\\*', index.units, plot.title),
-		  ylab = index.units,xlab = x.label)
+	plot.title <- paste(title.station,index.name,sep=", ")
+	namp <- paste(outjpgdir, paste(ofilename, "_", index.name, ".jpg", sep = ""), sep = "/")
+	jpeg(file = namp, width = 1024, height = 768)
 
-		dev.set(which = pdf.dev)
-		plotx(xdata, index, main = gsub('\\*', index.units, plot.title),
-		  ylab = index.units, xlab = x.label)
-		dev.copy()
-		dev.off(dev0)
-#	}
+	dev0 = dev.cur()
+	if(index.name=="tx95t") { xdata <- 1:length(index) }
+	else xdata <- names(index)
+
+	plotx(xdata, index, main = gsub('\\*', index.units, plot.title),
+	  ylab = index.units,xlab = x.label,index.name=index.name)
+
+	dev.set(which = pdf.dev)
+	plotx(xdata, index, main = gsub('\\*', index.units, plot.title),
+	  ylab = index.units, xlab = x.label,index.name=index.name)
+	dev.copy()
+	dev.off(dev0)
 }
 
 # plotx
 # make plots, this is called twice to make jpg and pdf files. 
-plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0)
+plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=NULL)
 {
 	if(all(is.na(y0))) { print("NO DATA TO PLOT") ; return() }
 
@@ -1953,7 +1963,11 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0)
 
 	if(barplot_flag)  # if true, we're doing a barplot
 	{
-		bp <- barplot(y, main = main, cex.main = 2,ylim = range(y, na.rm = TRUE),xlab = xlab, ylab = ylab,cex.lab = 1.5, cex.axis = 1.5,xpd = FALSE)
+		if(index.name=="spei" | index.name=="spi") 
+			bp <- barplot(y, main = main, cex.main = 2,ylim = range(y, na.rm = TRUE),xlab = xlab, ylab = ylab,cex.lab = 1.5, cex.axis = 1.5,xpd = FALSE,col=ifelse(y>0,"blue","red"),border=NA,space=c(0,0))
+		else 
+			bp <- barplot(y, main = main, cex.main = 2,ylim = range(y, na.rm = TRUE),xlab = xlab, ylab = ylab,cex.lab = 1.5, cex.axis = 1.5,xpd = FALSE)
+
 		# NA points
 		na.x <- bp
 		na.y <- rep(NA, length(na.x))
@@ -1962,8 +1976,15 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0)
 		box()
 	} else            # if false, we're doing a regular (line) plot
 	{
-		plot(x, y, main = main, cex.main = 2,ylim = range(y, na.rm = TRUE), xlab = xlab, ylab = ylab,type = "b", cex.lab = 1.5, cex.axis = 1.5)
-
+#print(x)
+#print(unname(y))
+#print(typeof(y))
+#print(class(y))
+#print(str(y))
+#print("MIN")
+#print(min(y,na.rm=TRUE))
+#print(min(unname(y),na.rm=TRUE))
+		plot(x, unname(y), main = main, cex.main = 2,ylim = range(unname(y), na.rm = TRUE), xlab = xlab, ylab = ylab,type = "b", cex.lab = 1.5, cex.axis = 1.5)
 		# NA points
 		na.x <- x
 		na.y <- rep(NA, length(na.x))
@@ -2009,47 +2030,6 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0)
 	}
 }
 # end of plotx
-
-
-#pargam <-function(lmom,checklmom=TRUE) {
-#    para <- vector(mode="numeric", length=2)
-#    names(para) <- c("alpha","beta")
-#    # METHOD: RATIONAL APPROXIMATION IS USED TO EXPRESS ALPHA AS A FUNCTION
-#    # OF L-CV. RELATIVE ACCURACY OF THE  APPROXIMATION IS BETTER THAN 5E-5.
-#    #
-#    #  CONSTANTS USED IN MINIMAX APPROXIMATIONS
-#    #
-#    A1 <- -0.3080; A2 <- -0.05812; A3 <-  0.01765
-#    B1 <-  0.7213; B2 <- -0.5947;  B3 <- -2.1817; B4 <- 1.2113
-#
-#    if(length(lmom$L1) == 0) { # convert to named L-moments
-#      lmom <- lmorph(lmom)     # nondestructive conversion!
-#    }    
-#    if(checklmom & ! are.lmom.valid(lmom)) {
-#      warning("L-moments are invalid")
-#      return()
-#    }
-#    if(lmom$LCV >= 0.5) { 
-#      T <- 1-lmom$LCV
-#      ALPHA <- T*(B1+T*B2)/(1+T*(B3+T*B4))
-#    }
-#    else {
-#      T <- pi*lmom$LCV^2
-#      ALPHA <- (1+A1*T)/(T*(1+T*(A2+T*A3)))
-#    }  
-#    para[1] <- ALPHA
-#    para[2] <- lmom$L1/ALPHA
-#    print(para)
-#    z <- list(type = 'gam', para = para, source=pargam)
-#    if(are.pargam.valid(z)) {
-#      return(z)
-#    }
-#    else {
-#      warning("Parameters can not be computed likely because L1 <= L2 or L2 <= 0")
-#      return()
-#    }
-#}
-
 
 # Computation of the Standardized Precipitation-Evapotranspiration Index (SPEI).
 # Generic function
