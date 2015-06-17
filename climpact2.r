@@ -470,14 +470,15 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 
 	# write out global attributes from input file. Assumes all input files have the same global attributes.
 	        globatt <- ncatt_get(refnc,0)
+		if(length(globatt)>0) {
 		for(i in 1:length(globatt)) { if(names(globatt)[i] == "date" || names(globatt)[i] == "author" || names(globatt)[i] == "contact" || 
-			names(globatt)[i] == "creation_date") {} else {ncatt_put(tmpout,0,names(globatt)[i],globatt[[i]])} }
+			names(globatt)[i] == "creation_date") {} else {ncatt_put(tmpout,0,names(globatt)[i],globatt[[i]])} } }
 
 	# write out coordinate variable attributes from input file. Assumes all input files have the same attributes for their coordinate variables
 		attcopy <- c(latname,lonname)#,timename)
 		for (j in 1:length(attcopy)) {
 			tmpatt <- ncatt_get(refnc,attcopy[j])
-			for(i in 1:length(tmpatt))  { if(names(tmpatt)[i] == "_FillValue") print("NOT OVERWRITING _FillValue ATTRIBUTE") else ncatt_put(tmpout,attcopy[j],names(tmpatt)[i],tmpatt[[i]]) }
+			if(length(tmpatt)>0) { for(i in 1:length(tmpatt)) { if(names(tmpatt)[i] == "_FillValue") print("NOT OVERWRITING _FillValue ATTRIBUTE") else ncatt_put(tmpout,attcopy[j],names(tmpatt)[i],tmpatt[[i]]) } }
 		}
 
 	        nc_close(tmpout)
