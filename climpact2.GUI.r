@@ -2305,11 +2305,10 @@ package.check <- function() {
 	
 	# If climdex.pcic not installed and the .tar.gz file is not in current directory, then download modified copy from climpact2 github and install.
 	if(!("climdex.pcic" %in% installed.packages()[,"Package"])) {
-	        system(paste("if [ ! -e climdex.pcic.tar.gz ]; then wget https://github.com/heroldn/climpact2/blob/master/climdex.pcic.tar.gz; fi"))
-		print("******************************")
-		print(paste("Installing climdex.pcic...",new.packages,sep=""))
-	        install.packages("climdex.pcic.tar.gz",repos=NULL,type="source") }
-	
+	        if(.Platform$OS.type == "unix") { install.packages("climdex.pcic.tar.gz",repos=NULL,type="source") 
+		} else { install.packages("climdex.pcic_1.1-5.1.zip",repos=NULL,type="win.binary") }
+	}
+
 	# If any other packages not installed download and install from CRAN.
 	if(length(new.packages)) {
 	        print("******************************")
