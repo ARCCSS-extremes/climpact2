@@ -2,10 +2,10 @@
 # nherold, May 2015
 
 list.of.packages <- c(  "ncdf4",
+                        "Rcpp",
+                        "caTools",
 			"PCICt",
 			"foreach",
-			"caTools",
-			"Rcpp",
 			"doParallel",
 			"abind",
 			"SPEI")
