@@ -5,18 +5,18 @@
  
 source("climpact2.r")
 
-indices=c("fd")
-minfilename = "file.with.tmin.nc"
-maxfilename = "file.with.tmax.nc"
-precfilename = "file.with.precip.nc"
+indices=c("all")
+minfilename = "climpact2.sampledata.gridded.1991-2010.nc"	# file with tmin data
+maxfilename = "climpact2.sampledata.gridded.1991-2010.nc"	# file with tmax data
+precfilename = "climpact2.sampledata.gridded.1991-2010.nc"	# file with precip data
 
 climpact.loader(
   precfile=precfilename,
   tsminfile=minfilename,
   tsmaxfile=maxfilename,
-  precname="pracc_fl",
-  tsminname="tasmin",
-  tsmaxname="tasmax",
+  precname="precip",
+  tsminname="tmin",
+  tsmaxname="tmax",
   tempqtiles=c(0.1,0.9,0.95),
   precqtiles=c(0.1,0.9,0.95,0.99),
   write_quantiles=FALSE,
@@ -25,7 +25,7 @@ climpact.loader(
   ntxbntnb_n=6,
   wsdin_n=6,
   indices=indices,
-  baserange=c(1961,1990),
+  baserange=c(1991,2000),
   #time_format="%Y%m%d",
   #cores=4,
   identifier="ClimPACT2_test")
