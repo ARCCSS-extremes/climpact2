@@ -45,6 +45,7 @@
   ------------
   
     Software you will need:
+	-netCDF
     	-R (you will also need the following R packages, which are installed
          for you by the climpact2.checker.r script)
 	    	-climdex.pcic (there is a custom version of this package to be installed which
