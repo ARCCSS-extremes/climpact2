@@ -45,20 +45,18 @@
   ------------
   
     Software you will need:
-    	-R
-    
-    The following R packages need to be installed. For the GUI only the first
-    4 packages are required. climpact2.checker.r will install these.
-    	-climdex.pcic (there is a custom version of this package to be installed which
-           	contains minor fixes and is downloaded automatically with the rest of the
-     	        ClimPACT2 software)
-        -tcltk
-        -PCICt
-    	-SPEI
-    	-foreach
-    	-doParallel
-    	-abind
-        -ncdf4
+    	-R (you will also need the following R packages, which are installed
+         for you by the climpact2.checker.r script)
+	    	-climdex.pcic (there is a custom version of this package to be installed which
+			contains minor fixes and is downloaded automatically with the rest of the
+			ClimPACT2 software)
+	        -tcltk
+	        -PCICt
+	    	-SPEI
+	    	-foreach
+	    	-doParallel
+	    	-abind
+	        -ncdf4
 
     1) Create a new directory
 
@@ -68,7 +66,8 @@
        packages are installed.
   
     4) To calculate indices from gridded netCDF datasets source the climpact2.r file and 
-       call the climpact.loader function (see climpact2.wrapper.r for an example). 
+       call the climpact.loader function (see climpact2.wrapper.r for an example, to use
+       this script run 'Rscript climpact2.wrapper.r'). 
        Alternatively, to load time-series from ASCII files source climpact2.GUI.r to use
        the graphical user interface. Refer to the user manual for more detailed instructions.
   
