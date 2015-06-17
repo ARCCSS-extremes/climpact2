@@ -1890,16 +1890,16 @@ plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=N
         for (time in 1:3) {
 		if(all(is.na(index[time,]))) { warning(paste("All NA values detected, not plotting ",scales[time]," month ",index.name,".",sep="")) ; next }
 
-	        plot.title <- paste(title.station," ",index.name,", ",scales[time]," month",sep="")
+#	        plot.title <- paste(title.station," ",index.name,", ",scales[time]," month",sep="")
 	        namp <- paste(outjpgdir, paste(ofilename, "_",scales[time],"month_",index.name,".jpg", sep = ""), sep = "/")
 	        jpeg(file = namp, width = 1024, height = 768)
 #                namp <- paste(outjpgdir, paste(ofilename, "_",scales[time],"month_",index.name,".pdf", sep = ""), sep = "/")
 #		pdf(file=namp)
 	        dev0 = dev.cur()
-	        plotx(unique(as.character(spifactor)), index[time,], main = gsub('\\*', index.units, plot.title),ylab = index.units,xlab = x.label,index.name=index.name)
+	        plotx(unique(as.character(spifactor)), index[time,], main = gsub('\\*', index.name, plot.title),ylab = index.units,xlab = x.label,index.name=index.name)
 
                 dev.set(which = pdf.dev)
-                plotx(unique(as.character(spifactor)), index[time,], main = gsub('\\*', index.units, plot.title),ylab = index.units,xlab = x.label,index.name=index.name)
+                plotx(unique(as.character(spifactor)), index[time,], main = gsub('\\*', index.name, plot.title),ylab = index.units,xlab = x.label,index.name=index.name)
                 dev.copy()
                 dev.off(dev0)
 
@@ -1913,7 +1913,7 @@ plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=N
 plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) {
         if(is.null(index.name) | is.null(index) | is.null(index.units)) stop("Need index data, index.name, index units and an x label in order to plot data.")
 
-	plot.title <- paste(title.station,index.name,sep=", ")
+#	plot.title <- paste(title.station,index.name,sep=", ")
 	namp <- paste(outjpgdir, paste(ofilename, "_", index.name, ".jpg", sep = ""), sep = "/")
 	jpeg(file = namp, width = 1024, height = 768)
 
@@ -1921,11 +1921,11 @@ plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) 
 	if(index.name=="tx95t") { xdata <- 1:length(index) }
 	else xdata <- names(index)
 
-	plotx(xdata, index, main = gsub('\\*', index.units, plot.title),
+	plotx(xdata, index, main = gsub('\\*', index.name, plot.title),
 	  ylab = index.units,xlab = x.label,index.name=index.name)
 
 	dev.set(which = pdf.dev)
-	plotx(xdata, index, main = gsub('\\*', index.units, plot.title),
+	plotx(xdata, index, main = gsub('\\*', index.name, plot.title),
 	  ylab = index.units, xlab = x.label,index.name=index.name)
 	dev.copy()
 	dev.off(dev0)
@@ -1963,17 +1963,25 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 
 	if(barplot_flag)  # if true, we're doing a barplot
 	{
-		if(index.name=="spei" | index.name=="spi") 
-			bp <- barplot(y, main = main, cex.main = 2,ylim = range(y, na.rm = TRUE),xlab = xlab, ylab = ylab,cex.lab = 1.5, cex.axis = 1.5,xpd = FALSE,col=ifelse(y>0,"blue","red"),border=NA,space=c(0,0))
-		else 
-			bp <- barplot(y, main = main, cex.main = 2,ylim = range(y, na.rm = TRUE),xlab = xlab, ylab = ylab,cex.lab = 1.5, cex.axis = 1.5,xpd = FALSE)
-
-		# NA points
-		na.x <- bp
-		na.y <- rep(NA, length(na.x))
-		na.y[is.na(y)] <- par("usr")[3]
-		points(na.x, na.y, pch = 17, col = "blue", cex = 1.5)
-		box()
+		if(index.name=="spei" | index.name=="spi" | index.name=="rxnday") {
+			bp <- barplot(y, main = main, cex.main = 2,ylim = range(y, na.rm = TRUE),xlab = NULL, ylab = ylab,cex.lab = 1.5, cex.axis = 1.5,xpd = FALSE,col=ifelse(y>0,"blue","red"),border=NA,space=c(0,0))
+	                # NA points
+	                na.x <- bp
+	                na.y <- rep(NA, length(na.x))
+	                na.y[is.na(y)] <- par("usr")[3]
+	                points(na.x, na.y, pch = 17, col = "grey", cex = 1.5)
+	                box()
+			xy <- cbind(bp,y)
+		} else {
+#			bp <- barplot(y, main = main, cex.main = 2,ylim = range(y, na.rm = TRUE),xlab = NULL, ylab = ylab,cex.lab = 1.5, cex.axis = 1.5,xpd = FALSE)
+	                plot(x, unname(y), main = main, cex.main = 2,ylim = range(unname(y), na.rm = TRUE), xlab = "", ylab = ylab,type = "b", cex.lab = 1.5, cex.axis = 1.5)
+	                # NA points
+	                na.x <- x
+	                na.y <- rep(NA, length(na.x))
+	                na.y[is.na(y)] <- min(y, na.rm = TRUE)
+	                points(na.x, na.y, pch = 17, col = "grey", cex = 1.5)
+			xy <- cbind(x, y)
+		}
 	} else            # if false, we're doing a regular (line) plot
 	{
 #print(x)
@@ -1989,7 +1997,7 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 		na.x <- x
 		na.y <- rep(NA, length(na.x))
 		na.y[is.na(y)] <- min(y, na.rm = TRUE)
-		points(na.x, na.y, pch = 17, col = "blue", cex = 1.5)
+		points(na.x, na.y, pch = 17, col = "grey", cex = 1.5)
 	}
 
 	if (opt == 1) return()  # no need to plot trend/fitting curve.
@@ -2006,10 +2014,10 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 	beta <- round(as.numeric(out$coef.table[[1]][2, 1]), 3)
 	betaerr <- round(as.numeric(out$coef.table[[1]][2, 2]), 3)
 	
-	xy <- cbind(x, y)                      # for regular plots
-	if (barplot_flag) xy <- cbind(bp,y)    # for barplots
+#	xy <- cbind(x, y)                      # for regular plots
+#	if (barplot_flag) xy <- cbind(bp,y)    # for barplots
 	xy <- na.omit(xy)
-	lines(lowess(xy[, 1], xy[, 2]), lwd = 3, lty = 2, col = "red")  # add fitting curve
+	lines(lowess(xy[, 1], xy[, 2]), lwd = 3, lty = 2, col = "black")  # add fitting curve
 	
 	if (sum(is.na(y) == FALSE) >= min_trend)
 	{
@@ -2021,12 +2029,12 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 	title(sub = subtit, cex.sub = 1.5)
 	if (abs(max(y, na.rm = TRUE) - min(y, na.rm = TRUE)) < 1.e-3)
 	{
-		legend("bottomleft", "locally weighted scatterplot smoothing", col = "red", lty = 2, lwd = 3, bty = "n")
+		legend("bottomleft", "locally weighted scatterplot smoothing", col = "black", lty = 2, lwd = 3, bty = "n")
 	} else
 	{  
 #	  legend(x[1],
 #	    min(y, na.rm = TRUE) - (max(y, na.rm = TRUE) - min(y, na.rm = TRUE)) / 10,
-		legend("bottomleft","locally weighted scatterplot smoothing",col = "red", lty = 2, lwd = 3, bty = "n")
+		legend("bottomleft","locally weighted scatterplot smoothing",col = "black", lty = 2, lwd = 3, bty = "n")
 	}
 }
 # end of plotx
