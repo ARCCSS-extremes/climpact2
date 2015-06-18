@@ -64,14 +64,18 @@
     2) cd to above directory and download and extract the following file:
        https://github.com/ARCCSS-extremes/climpact2/archive/master.zip 
     
-    3) To process time-series data from ASCII files enter R and type 'source("climpact2.GUI.r")' 
-       to open the graphical user interface. Refer to the user manual for more detailed 
-       instructions.
+    3) If you wish to only process time-series data from ASCII files, in the same 
+       directory enter R and run 'source("climpact2.GUI.checker.r")'. If,
+       however, you wish to process gridded netCDF datasets, enter R and run 
+       'source("climpact2.checker.r")'. Note that running the latter script
+       will also allow you to use the GUI. These scripts install the required
+       packages.
 
-       To calculate indices from gridded netCDF datasets run 'Rscript climpact2.checker.r' from 
-       the command line. This will make sure the required R packages are installed. Then source 
-       the climpact2.r file and call the climpact.loader function (use climpact2.wrapper.r as a 
-       template, to execute this script on the sample data type 'Rscript climpact2.wrapper.r'). 
+    4) Installation is complete. To run the GUI, open R and run 'source("climpact2.GUI.r")'.
+
+       To calculate indices from gridded netCDF datasets, source the climpact2.r file 
+       and call the climpact.loader function. Use climpact2.wrapper.r as a template for 
+       doing this, to execute this script on the sample data run 'source("climpact2.wrapper.r")'.
   
   
   Licensing
