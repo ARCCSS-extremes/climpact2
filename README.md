@@ -22,15 +22,44 @@
   
   ClimPACT2 is available on github @ https://github.com/ARCCSS-extremes/climpact2
   
-  
+
+  How do I install it?
+  --------------------
+
+    Software you will need:
+        -netCDF (only required if working with three dimensional datasets)
+        -R. You will also need several R packages, which are installed
+         for you by the checker scripts, see below.
+
+    1) Create a new directory
+
+    2) cd to above directory and download and extract the following file:
+       https://github.com/ARCCSS-extremes/climpact2/archive/master.zip
+
+    3) If you wish to only process time-series data via the GUI, in the same 
+       directory enter R and run 'source("climpact2.GUI.checker.r")'. 
+       If, however, you wish to process three-dimensional netCDF datasets, in the
+       same directory enter R and run 'source("climpact2.checker.r")'. Note that 
+       running the latter script will also allow you to use the GUI. These 
+       scripts install the packages required by ClimPACT2. Note that processing
+       gridded datasets is only supported on Unix based systems.
+ 
+    4) Installation is complete.
+
+
   How do I use it?
   ----------------
 
-  To calculate indices for from gridded netCDF files, use climpact2.wrapper.r to call 
-  the climpact.loader function in climpact2.r. Calculating all 51 indices for a 20 year
-  record with horizontal resolution of 144 x 215 takes approximately 12 hours on 2 
-  cores. To calculate indices from a time-series of station data stored in ASCII 
-  format, source climpact2.GUI.r.
+  To run the GUI, cd to the directory where the ClimPACT2 files have been
+  extracted, then open R and run 'source("climpact2.GUI.r")'.
+
+  To calculate indices from gridded netCDF datasets, source the climpact2.r 
+  file and call the climpact.loader function. Use climpact2.wrapper.r as a
+  template for doing this, to execute this script on the sample data, from the
+  terminal command line run 'Rscript climpact2.wrapper.r'.
+
+  Calculating all 51 indices for a 20 year record with horizontal resolution 
+  of 144 x 215 takes approximately 12 hours on 2 cores. 
 
 
   Documentation
@@ -39,44 +68,7 @@
   Documentation exists in the form of this README file, the official ClimPACT2
   manual (available with this software on github) as well as the source code
   itself.
-  
-  
-  Installation
-  ------------
-  
-    Software you will need:
-        -netCDF (only required if working with three dimensional datasets)
-    	-R. You will also need the following R packages, which are installed
-         for you by the climpact2.checker.r script:
-	    	-climdex.pcic (there is a custom version of this package to be installed which
-			contains minor fixes and is downloaded automatically with the rest of the
-			ClimPACT2 software)
-	        -tcltk
-	        -PCICt
-	    	-SPEI
-	    	-foreach
-	    	-doParallel
-	    	-abind
-	        -ncdf4
 
-    1) Create a new directory
-
-    2) cd to above directory and download and extract the following file:
-       https://github.com/ARCCSS-extremes/climpact2/archive/master.zip 
-    
-    3) If you wish to only process time-series data from ASCII files, in the same 
-       directory enter R and run 'source("climpact2.GUI.checker.r")'. If,
-       however, you wish to process gridded netCDF datasets, enter R and run 
-       'source("climpact2.checker.r")'. Note that running the latter script
-       will also allow you to use the GUI. These scripts install the required
-       packages.
-
-    4) Installation is complete. To run the GUI, open R and run 'source("climpact2.GUI.r")'.
-
-       To calculate indices from gridded netCDF datasets, source the climpact2.r file 
-       and call the climpact.loader function. Use climpact2.wrapper.r as a template for 
-       doing this, to execute this script on the sample data run 'source("climpact2.wrapper.r")'.
-  
   
   Licensing
   ---------
