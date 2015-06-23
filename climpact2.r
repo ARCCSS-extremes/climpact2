@@ -72,14 +72,18 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
         enableJIT(3)
 
 # Read in climate index data. Do indices check.
-	indexfile = "index.master.list"
+	indexfile <- "index.master.list"
+	usr.indices <- indices
 	indexlist <- read.table(indexfile,sep="\t")
         if(is.null(indices)) stop(paste("Must provide a list of indices to calculate. See ",indexfile," for list of valid indices.",sep=""))
-        if(all("all" %in% indices,any(is.null(tsminfile),is.null(tsmaxfile),is.null(precfile)))) stop("You have requested all indices to be calculated. To calculate all indices please provide tmin, tmax and precip netCDF files.")
-        if(indices[1] == "all") indices = as.character(indexlist[,1])
-        if(any(!indices %in% indexlist[,1])) stop(paste("One or more indices are unknown. See ",indexfile," for list of valid indices.",sep=""))
-        units <- as.character(indexlist[match(indices,indexlist[,1]),2]) 
-        desc <- as.character(indexlist[match(indices,indexlist[,1]),3]) 
+        if(all(!indices %in% indexlist[,1],!indices[1]=="all")) stop(paste("One or more indices are unknown. See ",indexfile," for list of valid indices.",sep=""))
+
+	tmin.ind <- c("fd","fd2","fdm2","tr","tnn","tnx","csdi","csdin","tn10p","tn90p")
+	tmax.ind <- c("id","su","txx","txn","wsdi","wsdin","tx50p","tx95t","tx10p","tx90p","su30","su35")
+	prec.ind <- c("cdd","cwd","r10mm","r20mm","rx1day","rx5day","prcptot","sdii","r95p","r99p","r95ptot","r99ptot","rxnday","rnnmm","spi")
+	tmin.tmax.ind <- c("dtr","ntxntn","ntxbntnb","hw","gsl","tm5a","tm5b","tm10a","tm10b","hddheat","cddcold","gddgrow","hw")
+	tmin.tmax.prec.ind <- c("spei")
+
 
 # File and other checks
 	if(all(is.null(tsminfile),is.null(tsmaxfile),is.null(precfile))) stop("Must provide at least one filename for tmin, tmax or precip.")
@@ -95,16 +99,19 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
         exportlist <- c("get.na.mask","dual.threshold.exceedance.duration.index","get.hw.aspects","tapply.fast","indexcompile")
 
 # Load tmin, tmax and prec files and variables. Assumedly this is a memory intensive step for large variables. Way to improve this? Read incrementally?
-        if(!is.null(tsminfile)) { nc_tsmin<<-nc_open(tsminfile); tsmin <<- ncvar_get(nc_tsmin,tsminname) ; refnc<-nc_tsmin}
-        if(!is.null(tsmaxfile)) { nc_tsmax<<-nc_open(tsmaxfile); tsmax <<- ncvar_get(nc_tsmax,tsmaxname) ; refnc<-nc_tsmax}
-        if(!is.null(precfile)) { nc_prec<<-nc_open(precfile); prec <<- ncvar_get(nc_prec,precname) ; refnc<-nc_prec}
-
-#	log.file = paste(identifier,"_logfile.txt",sep="")
-#	write.table(z,file=log.file,append=F,quote=F,sep=", ",row.names=F)
+# Retrieve index information.
+	if(usr.indices[1] == "all") indices <- character(0) # && all(!is.null(tsminfile),!is.null(tsmaxfile),!is.null(precfile))) { indices <- as.character(indexlist[,1]) }
+        if(!is.null(tsminfile)) { nc_tsmin<<-nc_open(tsminfile); tsmin <<- ncvar_get(nc_tsmin,tsminname) ; refnc<-nc_tsmin ; if(usr.indices[1] == "all") indices <- c(indices,tmin.ind) }
+        if(!is.null(tsmaxfile)) { nc_tsmax<<-nc_open(tsmaxfile); tsmax <<- ncvar_get(nc_tsmax,tsmaxname) ; refnc<-nc_tsmax ; if(usr.indices[1] == "all") indices <- c(indices,tmax.ind) }
+        if(!is.null(precfile)) { nc_prec<<-nc_open(precfile); prec <<- ncvar_get(nc_prec,precname) ; refnc<-nc_prec ; if(usr.indices[1] == "all") indices <- c(indices,prec.ind) }
+	if(all(!is.null(tsminfile),!is.null(tsmaxfile),usr.indices[1] == "all")) indices <- c(indices,tmin.tmax.ind)
+	if(all(!is.null(tsminfile),!is.null(tsmaxfile),!is.null(precfile),usr.indices[1] == "all")) indices <- c(indices,tmin.tmax.prec.ind)
+        units <- as.character(indexlist[match(indices,indexlist[,1]),2])
+        desc <- as.character(indexlist[match(indices,indexlist[,1]),3])
 
 # Convert Kelvin or Fahrenheit to Celcius. And m or cm to mm. This is the only unit conversion done.
-	if(!is.null(nc_tsmin)) if (ncatt_get(nc_tsmin,tsminname,"units")[2] == "K") tsmin <<- tsmin-273.15
-        if(!is.null(nc_tsmax)) if (ncatt_get(nc_tsmax,tsmaxname,"units")[2] == "K") tsmax <<- tsmax-273.15
+	if(!is.null(nc_tsmin)) if (ncatt_get(nc_tsmin,tsminname,"units")[2] == "K" || ncatt_get(nc_tsmin,tsminname,"units")[2] == "degK") tsmin <<- tsmin-273.15
+        if(!is.null(nc_tsmax)) if (ncatt_get(nc_tsmax,tsmaxname,"units")[2] == "K" || ncatt_get(nc_tsmax,tsmaxname,"units")[2] == "degK") tsmax <<- tsmax-273.15
         if(!is.null(nc_tsmin)) if (ncatt_get(nc_tsmin,tsminname,"units")[2] == "F") tsmin <<- (tsmin-32)/1.8
         if(!is.null(nc_tsmax)) if (ncatt_get(nc_tsmax,tsmaxname,"units")[2] == "F") tsmax <<- (tsmax-32)/1.8
         if(!is.null(nc_prec)) if (ncatt_get(nc_prec,precname,"units")[2] == "m") prec <<- prec*1000
@@ -262,7 +269,7 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 			hw={	indexparam = paste("array(indexcompile(",indexparam,",base.range=c(",baserange[1],",",baserange[2],"),pwindow=",hwn_n,",min.base.data.fraction.present=",
                                 min.base.data.fraction.present,",lat=",latstr,",tavg90p=tavg90p",",tn90p=tn90p",",tx90p=tx90p","))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1,0.9) ; precqtiles_tmp = NULL } },
 		{ indexparam = paste("array(indexcompile(",indexparam,"))",sep="") ; tempqtiles_tmp <- precqtiles_tmp <- NULL } )
-		print(paste("diag: index call: ",eval(indexparam)),sep="")
+		print(paste("diag: index call: ",(eval(indexparam)),sep=""))
 
 	# Determine whether index to be calculated will be daily (currently only for tx95t), monthly or annual
 		if(indices[a] == "tx95t") {period = "DAY"} else if (indices[a] == "rxnday" || indices[a] == "spei" || indices[a] == "spi") { period = "MON" } else {
@@ -340,16 +347,13 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 				# Calculate climdex input object
 				cio <<- cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=prec[i,j,],tmin.dates=tsmintime,tmax.dates=tsmaxtime,prec.dates=prectime,prec.qtiles=precqtiles_tmp,
 					temp.qtiles=tempqtiles_tmp,quantiles=quantiles,base.range=baserange)
-#print(cio@date.factors$annual)
-#print(cio@data$prec)
-#print(cio@data$tmin)
-#exit
+
 				# Call index function and store in different variable if hw, or spei or spi.
 				if(indices[a] == "hw") { if(exists("tavgqtileshw")) { tavg90p = tavgqtileshw[i,j,] ; tn90p = tminqtileshw[i,j,] ; tx90p = tmaxqtileshw[i,j,] } else { tavg90p = NULL ; tx90p = NULL ; tn90p = NULL}
 					test[,,i,] = eval(parse(text=indexparam)) }
-				else if(indices[a] == "spei") { if(!is.null(precraw)) { tnraw <- tminraw[i,j,] ; txraw <- tmaxraw[i,j,] ; praw <- precraw[i,j,] ; btime <- timeraw ;print(btime) } else { tnraw <- txraw <- praw <- btime <- NULL }
+				else if(indices[a] == "spei") { if(!is.null(precraw)) { tnraw <- tminraw[i,j,] ; txraw <- tmaxraw[i,j,] ; praw <- precraw[i,j,] ; btime <- timeraw } else { tnraw <- txraw <- praw <- btime <- NULL }
 					test[,i,] = eval(parse(text=indexparam)) }
-                                else if(indices[a] == "spi") { if(!is.null(precraw)) { praw <- precraw[i,j,] ; btime <- timeraw ; tnraw <- txraw <- NULL;print(btime) } else { tnraw <- txraw <- praw <- btime <- NULL }
+                                else if(indices[a] == "spi") { if(!is.null(precraw)) { praw <- precraw[i,j,] ; btime <- timeraw ; tnraw <- txraw <- NULL } else { tnraw <- txraw <- praw <- btime <- NULL }
                                         test[,i,] = eval(parse(text=indexparam)) }
 				else if(indices[a] == "gsl") { if(eval(parse(text=latstr)) <= 0) { cio@northern.hemisphere<<-FALSE} else cio@northern.hemisphere<<-TRUE ;test[i,] = eval(parse(text=indexparam))}
 				else { test[i,] = eval(parse(text=indexparam)) }
@@ -478,7 +482,7 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 		attcopy <- c(latname,lonname)#,timename)
 		for (j in 1:length(attcopy)) {
 			tmpatt <- ncatt_get(refnc,attcopy[j])
-			if(length(tmpatt)>0) { for(i in 1:length(tmpatt)) { if(names(tmpatt)[i] == "_FillValue") print("NOT OVERWRITING _FillValue ATTRIBUTE") else ncatt_put(tmpout,attcopy[j],names(tmpatt)[i],tmpatt[[i]]) } }
+			if(length(tmpatt)>0) { for(i in 1:length(tmpatt)) { if(names(tmpatt)[i] == "_FillValue") {} else ncatt_put(tmpout,attcopy[j],names(tmpatt)[i],tmpatt[[i]]) } }
 		}
 
 	        nc_close(tmpout)
@@ -674,7 +678,8 @@ get.time <- function(nc=NULL,timename=NULL,time_format=NULL)
 #	        if(grepl("hours",time_att)) {print("Time coordinate in hours, converting to seconds...") ; ftime = ftime*60*60}
 #        	if(grepl("days",time_att)) {print("Time coordinate in days, converting to seconds...") ; ftime = ftime*24*60*60}
 #		return(as.PCICt(ftime,cal="gregorian",origin=get.origin(time_att=time_att[[1]])))
-		dates.tmp = as.Date(ftime/24,origin=get.origin(time_att=time_att[[1]]))
+                if(grepl("hours",time_att)) { dates.tmp = as.Date(ftime/24,origin=get.origin(time_att=time_att[[1]])) }
+                if(grepl("days",time_att)) { dates.tmp = as.Date(ftime,origin=get.origin(time_att=time_att[[1]])) }
                 return(as.PCICt(as.character(dates.tmp),cal="gregorian"))#,origin=get.origin(time_att=time_att[[1]])))
 	}
 }
