@@ -937,7 +937,9 @@ climdex.spei <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift
 
         # remove NA, -Inf and Inf values which most likely occur due to unrealistic values in P or PET. This almost entirely occurs in ocean regions and varies depending on the fitting distribution used.
                 tmpvar[is.na(tmpvar)] <- NaN
-                tmpvar <- ifelse(tmpvar=="-Inf" | tmpvar=="Inf" | tmpvar=="NaNf",NaN,tmpvar)
+                tmpvar <- ifelse(tmpvar=="-Inf",-2.33,tmpvar)
+                tmpvar <- ifelse(tmpvar=="Inf",2.33,tmpvar)
+                tmpvar <- ifelse(tmpvar=="NaNf",NaN,tmpvar) #if(any(tmpvar=="-Inf",tmpvar=="Inf")) 
                 x[i,] <- tmpvar
         }
         rm(tmpvar)
@@ -1016,7 +1018,9 @@ climdex.spi <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift=
 
         # remove NA, -Inf and Inf values which most likely occur due to unrealistic values in P. This almost entirely occurs in ocean regions and varies depending on the fitting distribution used.
                 tmpvar[is.na(tmpvar)] = NaN
-                tmpvar <- ifelse(tmpvar=="-Inf" | tmpvar=="Inf" | tmpvar=="NaNf",NaN,tmpvar) #if(any(tmpvar=="-Inf",tmpvar=="Inf")) 
+                tmpvar <- ifelse(tmpvar=="-Inf",-2.33,tmpvar)
+                tmpvar <- ifelse(tmpvar=="Inf",2.33,tmpvar)
+                tmpvar <- ifelse(tmpvar=="NaNf",NaN,tmpvar) #if(any(tmpvar=="-Inf",tmpvar=="Inf")) 
                 x[i,] <- tmpvar
         }
         rm(tmpvar)
