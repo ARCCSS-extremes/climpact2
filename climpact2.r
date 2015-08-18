@@ -165,21 +165,21 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 	}
 
 # Create time_bnds for monthly and yearly indices
-	month_time_bnds <- array(NA,c(length(monthdate),2))
-	days_in_months <- c(31,28,31,30,31,30,31,31,30,31,30,31)
-	for (i in 1:length(monthdate)) {
-		whatmonth <- as.numeric(substr(monthdate[i],6,7))
-		add_days <- days_in_months[whatmonth]
-		if(leapdays(as.numeric(substr(monthdate[i],1,4))) == 1 & whatmonth == 2) { add_days <- as.numeric(add_days) + 1 }
-		month_time_bnds[i,1] <- months_as_hours[i] - (difftime(as.Date(paste(monthdate[i],"15",sep="-")),as.Date(paste(monthdate[i],"01",sep="-")),units="hours"))
-		month_time_bnds[i,2] <- months_as_hours[i] + (difftime(as.Date(paste(monthdate[i],add_days,sep="-")),as.Date(paste(monthdate[i],"15",sep="-")),units="hours") + 24) # need to add a day to account for 00:00:00 timing.
-	}
-
-	year_time_bnds <- array(NA,c(length(yeardate),2))
-        for (i in 1:length(yeardate)) {
-                year_time_bnds[i,1] <- years_as_hours[i] - (difftime(as.Date(paste(yeardate[i],"07","01",sep="-")),as.Date(paste(yeardate[i],"01","01",sep="-")),units="hours"))
-		year_time_bnds[i,2] <- years_as_hours[i] + (difftime(as.Date(paste(yeardate[i],"12","31",sep="-")),as.Date(paste(yeardate[i],"07","01",sep="-")),units="hours") + 24) # need to add a day to account for 00:00:00 timing.
-	}
+#	month_time_bnds <- array(NA,c(length(monthdate),2))
+#	days_in_months <- c(31,28,31,30,31,30,31,31,30,31,30,31)
+#	for (i in 1:length(monthdate)) {
+#		whatmonth <- as.numeric(substr(monthdate[i],6,7))
+#		add_days <- days_in_months[whatmonth]
+#		if(leapdays(as.numeric(substr(monthdate[i],1,4))) == 1 & whatmonth == 2) { add_days <- as.numeric(add_days) + 1 }
+#		month_time_bnds[i,1] <- months_as_hours[i] - (difftime(as.Date(paste(monthdate[i],"15",sep="-")),as.Date(paste(monthdate[i],"01",sep="-")),units="hours"))
+#		month_time_bnds[i,2] <- months_as_hours[i] + (difftime(as.Date(paste(monthdate[i],add_days,sep="-")),as.Date(paste(monthdate[i],"15",sep="-")),units="hours") + 24) # need to add a day to account for 00:00:00 timing.
+#	}
+#
+#	year_time_bnds <- array(NA,c(length(yeardate),2))
+#        for (i in 1:length(yeardate)) {
+#                year_time_bnds[i,1] <- years_as_hours[i] - (difftime(as.Date(paste(yeardate[i],"07","01",sep="-")),as.Date(paste(yeardate[i],"01","01",sep="-")),units="hours"))
+#		year_time_bnds[i,2] <- years_as_hours[i] + (difftime(as.Date(paste(yeardate[i],"12","31",sep="-")),as.Date(paste(yeardate[i],"07","01",sep="-")),units="hours") + 24) # need to add a day to account for 00:00:00 timing.
+#	}
 
 	if(!is.null(tsminfile)) { tsmintime <<- time }; if(!is.null(tsmaxfile)) { tsmaxtime <<- time }; if(!is.null(precfile)) { prectime <<- time }
 
@@ -422,9 +422,9 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 		} else { indexcdf <- ncvar_def(indices[a],units[a],list(londim,latdim,timedim),missingval,longname=desc[a],prec="float") ; varlist <- list(indexcdf) }
 
 	# create time_bnds ncdf object
-                bndsdim <- ncdim_def("bnds","none",1:2)
-                time_bndscdf <- ncvar_def("time_bnds",paste("hours since ",origin," 00:00:00",sep=""),list(bndsdim,timedim),missingval,prec="double")
-		varlist[[length(varlist)+1]] <- time_bndscdf
+#                bndsdim <- ncdim_def("bnds","none",1:2)
+#                time_bndscdf <- ncvar_def("time_bnds",paste("hours since ",origin," 00:00:00",sep=""),list(bndsdim,timedim),missingval,prec="double")
+#		varlist[[length(varlist)+1]] <- time_bndscdf
 
 	# remove any previous file
 	        system(paste("rm -f ",outfile,sep=""))
@@ -456,9 +456,9 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
                 } else { ncvar_put(tmpout,indexcdf,index3d_trans) ; if (irregular) ncatt_put(tmpout,indexcdf,"coordinates","lon lat") ; ncatt_put(tmpout,indices[a],"cell_method","time point values 3600.0 seconds") }
 
 	# write out time_bnds variable
-		if(period=="MON") ncvar_put(tmpout,time_bndscdf,aperm(month_time_bnds,c(2,1)))
-		else if(period=="ANN") ncvar_put(tmpout,time_bndscdf,aperm(year_time_bnds,c(2,1)))
-		ncatt_put(tmpout,time_bndscdf,"calendar","standard")
+#		if(period=="MON") ncvar_put(tmpout,time_bndscdf,aperm(month_time_bnds,c(2,1)))
+#		else if(period=="ANN") ncvar_put(tmpout,time_bndscdf,aperm(year_time_bnds,c(2,1)))
+#		ncatt_put(tmpout,time_bndscdf,"calendar","standard")
 
 	# -----------------------#
 	# METADATA
@@ -479,11 +479,11 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 			names(globatt)[i] == "creation_date") {} else {ncatt_put(tmpout,0,names(globatt)[i],globatt[[i]])} } }
 
 	# write out coordinate variable attributes from input file. Assumes all input files have the same attributes for their coordinate variables
-		attcopy <- c(latname,lonname)#,timename)
-		for (j in 1:length(attcopy)) {
-			tmpatt <- ncatt_get(refnc,attcopy[j])
-			if(length(tmpatt)>0) { for(i in 1:length(tmpatt)) { if(names(tmpatt)[i] == "_FillValue") {} else ncatt_put(tmpout,attcopy[j],names(tmpatt)[i],tmpatt[[i]]) } }
-		}
+#		attcopy <- c(latname,lonname)#,timename)
+#		for (j in 1:length(attcopy)) {
+#			tmpatt <- ncatt_get(refnc,attcopy[j])
+#			if(length(tmpatt)>0) { for(i in 1:length(tmpatt)) { if(names(tmpatt)[i] == "_FillValue") {} else ncatt_put(tmpout,attcopy[j],names(tmpatt)[i],tmpatt[[i]]) } }
+#		}
 
 	        nc_close(tmpout)
 
@@ -664,23 +664,23 @@ get.time <- function(nc=NULL,timename=NULL,time_format=NULL)
 {
 	ftime = ncvar_get(nc,timename)
 	time_att = ncatt_get(nc,timename,"units")[2]
+	caltype = ncatt_get(nc,timename,"calendar")[2]
 
 	# Bit of a hack for non-model datasets. Requires user to specify "time_format" in climpact.loader
 	if(!is.null(time_format)) {
-		string = (apply(ftime,1,toString))
-		dates = (as.Date(string,time_format))
-		rm(ftime) ; ftime = array(1,length(dates)) ; ftime = (as.character(dates))
+                string = (apply(ftime,1,toString))
+                dates = (as.Date(string,time_format))
+                rm(ftime) ; ftime = array(1,length(dates)) ; ftime = (as.character(dates))
 
-		split = substring(time_format, seq(1,nchar(time_format),2), seq(2,nchar(time_format),2))
-		time_format = paste(split[1],split[2],split[3],sep="-")
-	        return(as.PCICt(ftime,cal="gregorian",format=time_format))
+                split = substring(time_format, seq(1,nchar(time_format),2), seq(2,nchar(time_format),2))
+                time_format = paste(split[1],split[2],split[3],sep="-")
+                return(as.PCICt(ftime,cal=caltype[[1]],format=time_format))
 	} else {
-#	        if(grepl("hours",time_att)) {print("Time coordinate in hours, converting to seconds...") ; ftime = ftime*60*60}
-#        	if(grepl("days",time_att)) {print("Time coordinate in days, converting to seconds...") ; ftime = ftime*24*60*60}
-#		return(as.PCICt(ftime,cal="gregorian",origin=get.origin(time_att=time_att[[1]])))
-                if(grepl("hours",time_att)) { dates.tmp = as.Date(ftime/24,origin=get.origin(time_att=time_att[[1]])) }
-                if(grepl("days",time_att)) { dates.tmp = as.Date(ftime,origin=get.origin(time_att=time_att[[1]])) }
-                return(as.PCICt(as.character(dates.tmp),cal="gregorian"))#,origin=get.origin(time_att=time_att[[1]])))
+                if(grepl("hours",time_att)) { ftime=ftime*60*60 } # dates.tmp = as.Date(ftime/24,origin=get.origin(time_att=time_att[[1]])) }
+                if(grepl("days",time_att)) { ftime=ftime*86400 } #dates.tmp = as.Date(ftime,origin=get.origin(time_att=time_att[[1]])) }
+                origin.pcict <- as.PCICt(get.origin(time_att=time_att[[1]]),cal=caltype[[1]])
+                dat <- origin.pcict+(ftime)
+                return(dat)
 	}
 }
 
@@ -937,9 +937,12 @@ climdex.spei <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift
 
         # remove NA, -Inf and Inf values which most likely occur due to unrealistic values in P or PET. This almost entirely occurs in ocean regions and varies depending on the fitting distribution used.
                 tmpvar[is.na(tmpvar)] <- NaN
-                tmpvar <- ifelse(tmpvar=="-Inf",-2.33,tmpvar)
-                tmpvar <- ifelse(tmpvar=="Inf",2.33,tmpvar)
-                tmpvar <- ifelse(tmpvar=="NaNf",NaN,tmpvar) #if(any(tmpvar=="-Inf",tmpvar=="Inf")) 
+#                tmpvar <- ifelse(tmpvar=="-Inf",-2.33,tmpvar)
+#                tmpvar <- ifelse(tmpvar=="Inf",2.33,tmpvar)
+                tmpvar <- ifelse(tmpvar=="-Inf",NA,tmpvar)
+                tmpvar <- ifelse(tmpvar=="Inf",NA,tmpvar)
+
+                tmpvar <- ifelse(tmpvar=="NaNf",NA,tmpvar) #if(any(tmpvar=="-Inf",tmpvar=="Inf")) 
                 x[i,] <- tmpvar
         }
         rm(tmpvar)
@@ -1018,9 +1021,12 @@ climdex.spi <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift=
 
         # remove NA, -Inf and Inf values which most likely occur due to unrealistic values in P. This almost entirely occurs in ocean regions and varies depending on the fitting distribution used.
                 tmpvar[is.na(tmpvar)] = NaN
-                tmpvar <- ifelse(tmpvar=="-Inf",-2.33,tmpvar)
-                tmpvar <- ifelse(tmpvar=="Inf",2.33,tmpvar)
-                tmpvar <- ifelse(tmpvar=="NaNf",NaN,tmpvar) #if(any(tmpvar=="-Inf",tmpvar=="Inf")) 
+#                tmpvar <- ifelse(tmpvar=="-Inf",-2.33,tmpvar)
+#                tmpvar <- ifelse(tmpvar=="Inf",2.33,tmpvar)
+                tmpvar <- ifelse(tmpvar=="-Inf",NA,tmpvar)
+                tmpvar <- ifelse(tmpvar=="Inf",NA,tmpvar)
+
+                tmpvar <- ifelse(tmpvar=="NaNf",NA,tmpvar) #if(any(tmpvar=="-Inf",tmpvar=="Inf")) 
                 x[i,] <- tmpvar
         }
         rm(tmpvar)
@@ -1064,7 +1070,7 @@ climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fract
 # step 1. Get data needed for the three definitions of a heat wave. 
         # recalculate tavg here to ensure it is based on tmax/tmin. Then get 15 day moving windows of percentiles.
         tavg = (ci@data$tmax + ci@data$tmin)/2
-        if(any(is.null(tavg90p),is.null(tx90p),is.null(tn90p))) { print("CALCULATING OWN HW THRESHOLDS")
+        if(any(is.null(tavg90p),is.null(tx90p),is.null(tn90p))) { 
                 # need to reference 'tmax' data slot in tavg90p because of naming convention in get.outofbase.quantiles
                 tavg90p <- suppressWarnings(get.outofbase.quantiles(tavg,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=15,temp.qtiles=0.9,prec.qtiles=0.9,
                                                                 min.base.data.fraction.present=min.base.data.fraction.present))
@@ -1169,9 +1175,11 @@ get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.
 		boolean.str2 <- array(NA,length(boolean.str))
 		ind1 <- length(daily.data)-179
 
-	# step2. Move data time-series and boolean array forward around 6 months. Don't need to be exact as data just needs to be in the right year.
-		daily.data2[180:length(daily.data)] <- daily.data[1:ind1]
-		boolean.str2[180:length(boolean.str)] <- boolean.str[1:ind1]
+	# step2. Move data time-series and boolean array backward around 6 months. Don't need to be exact as data just needs to be in the right year.
+#		daily.data2[180:length(daily.data)] <- daily.data[1:ind1]
+#		boolean.str2[180:length(boolean.str)] <- boolean.str[1:ind1]
+                daily.data2[1:ind1] <- daily.data[180:length(daily.data)]
+                boolean.str2[1:ind1] <- boolean.str[180:length(daily.data)]
 
 	# step3. Remove data from first year since it has only a partial summer.
 		daily.data2[1:366] <- NA
