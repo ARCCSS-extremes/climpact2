@@ -943,6 +943,8 @@ climdex.spei <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift
                 tmpvar <- ifelse(tmpvar=="Inf",NA,tmpvar)
 
                 tmpvar <- ifelse(tmpvar=="NaNf",NA,tmpvar) #if(any(tmpvar=="-Inf",tmpvar=="Inf")) 
+                tmpvar <- ifelse(tmpvar=="NaN",NA,tmpvar)
+
                 x[i,] <- tmpvar
         }
         rm(tmpvar)
@@ -1027,6 +1029,8 @@ climdex.spi <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift=
                 tmpvar <- ifelse(tmpvar=="Inf",NA,tmpvar)
 
                 tmpvar <- ifelse(tmpvar=="NaNf",NA,tmpvar) #if(any(tmpvar=="-Inf",tmpvar=="Inf")) 
+                tmpvar <- ifelse(tmpvar=="NaN",NA,tmpvar)
+
                 x[i,] <- tmpvar
         }
         rm(tmpvar)
