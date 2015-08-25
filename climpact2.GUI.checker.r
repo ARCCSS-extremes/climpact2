@@ -14,7 +14,7 @@ print("******************************")
 print(installed.packages()[,"Package"])
 
 # If any other packages not installed download and install from CRAN.
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+new.packages <- list.of.packages	#[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) {
 	print("******************************")
 	print(paste("Installing the following required packages...",new.packages,sep=""))
