@@ -1,7 +1,7 @@
 
 
 				ClimPACT2
-			Last updated: 10/6/2015
+			Last updated: 26/8/2015
 
 
   What is it?
@@ -10,11 +10,13 @@
   ClimPACT2 is an R software package that calculates the ETSCI indices, ETCCDI 
   indices, and the heatwave indices from Perkins and Alexander (2013). It directly 
   incorporates the R climdex.pcic package (available on CRAN) to perform most 
-  of the calculations. It was developed at the University of New South Wales and
-  has several dependencies on other R packages. Two separate files allow the
-  indices to be calculated in different ways. The climpact.loader function in 
-  climpact2.r allows power users to process gridded netCDF data, while climpact2.GUI.r 
-  provides a basic graphical user interface for processing ASCII time-series data.
+  of the calculations, which is available thanks to the efforts of the Pacific 
+  Climate Impacts Consortium (PCIC). ClimPACT2 was developed at the University of 
+  New South Wales and has several dependencies on other R packages. Two separate 
+  files allow the indices to be calculated in different ways. The climpact.loader 
+  function in climpact2.r allows power users to process gridded netCDF data, while
+  climpact2.GUI.r provides a basic graphical user interface for processing ASCII 
+  time-series data.
   
   
   Where can I get it?
@@ -54,9 +56,9 @@
   extracted, then open R and run 'source("climpact2.GUI.r")'.
 
   To calculate indices from gridded netCDF datasets, source the climpact2.r 
-  file and call the climpact.loader function. Use climpact2.wrapper.r as a
-  template for doing this, to execute this script on the sample data, from the
-  terminal command line run 'Rscript climpact2.wrapper.r'.
+  file and call the climpact.loader function. See climpact2.wrapper.r as an
+  example of doing this, to execute this script on the sample data, run 
+  'Rscript climpact2.wrapper.r' from the terminal command line.
 
   Calculating all 51 indices for a 20 year record with horizontal resolution 
   of 144 x 215 takes approximately 12 hours on 2 cores. 
