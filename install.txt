@@ -31,23 +31,21 @@
     Software you will need:
         -netCDF (only required if working with three dimensional datasets)
         -R. You will also need several R packages, which are installed
-         for you by the checker scripts, see below.
+         for you by the checker script, see below.
 
     1) Create a new directory
 
     2) cd to above directory and download and extract the following file:
        https://github.com/ARCCSS-extremes/climpact2/archive/master.zip
 
-    3) If you wish to only process time-series data via the GUI, in the same 
-       directory enter R and run 'source("climpact2.GUI.checker.r")'. 
-       If, however, you wish to process three-dimensional netCDF datasets, in the
-       same directory enter R and run 'source("climpact2.checker.r")'. Note that 
-       running the latter script will also allow you to use the GUI. These 
-       scripts install the packages required by ClimPACT2. Note that processing
-       gridded datasets is only supported on Unix based systems.
+    3) In R, type "source('climpact2.checker.r')" to install the appropriate
+       R packages needed by ClimPACT2. 
  
     4) Installation is complete.
 
+  ** Note that if you are running a Windows operating system you will only 
+     be able to use the GUI. In a Unix-based operating system you can use 
+     the GUI as well as operate on gridded data.
 
   How do I use it?
   ----------------
