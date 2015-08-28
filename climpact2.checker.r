@@ -12,7 +12,7 @@ print(installed.packages()[,"Package"])
 # Install/update packages needed for ClimPACT2 GUI.
 if(length(gui.packages)) {
 	print("******************************")
-	print(paste("Installing the following required packages...",new.packages,sep=""))
+	print(paste("Installing the following required packages...",gui.packages,sep=""))
 	install.packages(gui.packages) }
 
 # Install Linux-specific packages
