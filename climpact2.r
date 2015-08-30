@@ -470,7 +470,7 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
                 ncatt_put(tmpout,0,"Climpact2_version",software_id)
                 ncatt_put(tmpout,0,"Climpact2_R_version",as.character(getRversion()))
                 ncatt_put(tmpout,0,"Climpact2_base_period",paste(baserange[1],"-",baserange[2],sep=""))
-                ncatt_put(tmpout,0,"Climpact2_github","https://github.com/heroldn/climpact2")
+                ncatt_put(tmpout,0,"Climpact2_github","https://github.com/ARCCSS-extremes/climpact2")
 
 	# write out global attributes from input file. Assumes all input files have the same global attributes.
 	        globatt <- ncatt_get(refnc,0)
