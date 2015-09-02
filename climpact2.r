@@ -290,7 +290,7 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 				precipqtiles_array <<- array(NA,c(length(lon),length(lat),365,length(precqtiles),2)) }
 
         # If quantiles are requested, record and write quantiles. This will only happen once.
-                if (write_quantiles == TRUE) { record.quantiles(tempqtiles,precqtiles,lat,lon,baserange,identifier,period,londim,latdim,output_dir,time) ; write_quantiles = FALSE }
+                if (write_quantiles == TRUE) { record.quantiles(refnc,timename,time_format,tempqtiles,precqtiles,lat,lon,baserange,identifier,period,londim,latdim,output_dir,time) ; write_quantiles = FALSE }
 
         # Set up parallel options if required. acomb puts index arrays back together after multiple processors have done their stuff.
                 acomb <- function(...) { if(indices[a] == "hw") { abind(..., along=5) } 
@@ -521,7 +521,7 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 # Records standard ETCCDI percentiles calculated by climdex.pcic.
 # Also records 15 day running window quantiles for heatwave indices.
 # Also records tmax, tmin and prec for the base period as these are required for future spei/spi calculations.
-record.quantiles <- function(tempqtiles,precqtiles,lat,lon,baserange,identifier,period,londim,latdim,output_dir,time) {
+record.quantiles <- function(nc=NULL,timename=NULL,time_format=NULL,tempqtiles,precqtiles,lat,lon,baserange,identifier,period,londim,latdim,output_dir,time) {
         print("CALCULATING QUANTILES")
 # If temp variables exist, prepare arrays to store heat wave quantiles
 	if(!is.null(tsmin) && !is.null(tsmax)) { tminqtiles_arrayhw = tminqtiles_array ; tmaxqtiles_arrayhw = tmaxqtiles_array ; tavgqtiles_arrayhw = tavgqtiles_array }
@@ -583,10 +583,6 @@ record.quantiles <- function(tempqtiles,precqtiles,lat,lon,baserange,identifier,
                 rm(qtilefetch,tmp,innerthw)
         }
 
-# Recrod tmin, tmax and precip for future spei/spi calcs. Only do if precip exists since SPEI/SPI are not possible without it.
-        if(!is.null(prec)) { base.tmin.tmax.prec = abind(tsmin[,,which(yeardate2 >= baserange[1] & yeardate2 <= baserange[2])],
-				tsmax[,,which(yeardate2 >= baserange[1] & yeardate2 <= baserange[2])],prec[,,which(yeardate2 >= baserange[1] & yeardate2 <= baserange[2])],along = 4) }
-
         if(exists("cl")) {
                 stopCluster(cl)
                 cl <- makeCluster(cores)
@@ -620,10 +616,13 @@ record.quantiles <- function(tempqtiles,precqtiles,lat,lon,baserange,identifier,
         timedim <- ncdim_def("time","days",1:365) ; tqdim <- ncdim_def("tqtile","unitless",tqnames) ; pqdim <- ncdim_def("pqtile","unitless",pqnames)
 
         # create another time dimension for the base period
+        time <- get.time(nc,timename,time_format)
+        yeardate <<- unique(format(time,format="%Y"))           # get unique years
+	daydate <- unique(format(time,format="%Y-%m-%d"))
+	days_as_hours = as.numeric(as.Date(daydate[which(yeardate2 >= baserange[1] & yeardate2 <= baserange[2])]) - as.Date(origin))*24
+
         base.years <- yeardate[as.character(yeardate) >= as.character(baserange[1]) & as.character(yeardate) <= as.character(baserange[2])]
-        yeardate2 <- format(time,format="%Y")
-        base.time <- time[which(yeardate2 >= baserange[1] & yeardate2 <= baserange[2])]
-        base.time.hours <- as.numeric(base.time - as.PCICt(origin,cal="gregorian"))/3600
+        base.time.hours <- days_as_hours
         basetimedim <- ncdim_def("base_time",paste("hours since ",origin," 00:00:00",sep=""),base.time.hours)
 
         # create variable ncdf objects
@@ -644,8 +643,10 @@ record.quantiles <- function(tempqtiles,precqtiles,lat,lon,baserange,identifier,
 
         # write out data
         ncvar_put(qout,tmincdf,tminqtiles_array) ; ncvar_put(qout,tmaxcdf,tmaxqtiles_array) ; ncvar_put(qout,tavgcdf,tavgqtiles_array) ; ncvar_put(qout,preccdf,precipqtiles_array)
-	ncvar_put(qout,tmincdfhw,tminqtiles_arrayhw) ; ncvar_put(qout,tmaxcdfhw,tmaxqtiles_arrayhw) ; ncvar_put(qout,tavgcdfhw,tavgqtiles_arrayhw)
-	ncvar_put(qout,tminrawcdf,base.tmin.tmax.prec[,,,1]) ; ncvar_put(qout,tmaxrawcdf,base.tmin.tmax.prec[,,,2]) ; ncvar_put(qout,precrawcdf,base.tmin.tmax.prec[,,,3])
+	if(exists("tminqtiles_arrayhw")) { ncvar_put(qout,tmincdfhw,tminqtiles_arrayhw) ; ncvar_put(qout,tmaxcdfhw,tmaxqtiles_arrayhw) ; ncvar_put(qout,tavgcdfhw,tavgqtiles_arrayhw) } # if HW variables exist, write them out.
+	if(!is.null(prec)) { ncvar_put(qout,precrawcdf,prec[,,which(yeardate2 >= baserange[1] & yeardate2 <= baserange[2])]) }
+	if(!is.null(tsmin)) { ncvar_put(qout,tminrawcdf,tsmin[,,which(yeardate2 >= baserange[1] & yeardate2 <= baserange[2])]) }
+	if(!is.null(tsmax)) { ncvar_put(qout,tmaxrawcdf,tsmax[,,which(yeardate2 >= baserange[1] & yeardate2 <= baserange[2])]) }
 
 	nc_close(qout)
 	print(paste(qfile," created.",sep=""))
