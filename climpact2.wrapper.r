@@ -17,7 +17,7 @@ climpact.loader(
   precname="precip",
   tsminname="tmin",
   tsmaxname="tmax",
-  tempqtiles=c(0.1,0.9,0.95),
+  tempqtiles=c(0.1,0.5,0.9,0.95),
   precqtiles=c(0.1,0.9,0.95,0.99),
   write_quantiles=FALSE,
   rxnday_n=7,
