@@ -679,8 +679,12 @@ get.time <- function(nc=NULL,timename=NULL,time_format=NULL)
 	} else {
                 if(grepl("hours",time_att)) { ftime=ftime*60*60 } # dates.tmp = as.Date(ftime/24,origin=get.origin(time_att=time_att[[1]])) }
                 if(grepl("days",time_att)) { ftime=ftime*86400 } #dates.tmp = as.Date(ftime,origin=get.origin(time_att=time_att[[1]])) }
-                origin.pcict <- as.PCICt(get.origin(time_att=time_att[[1]]),cal=caltype[[1]])
-                dat <- origin.pcict+(ftime)
+
+#                origin.pcict <- as.PCICt(get.origin(time_att=time_att[[1]]),cal=caltype[[1]])
+#                dat <- origin.pcict+(ftime)
+                dates.tmp = as.Date(ftime/86400,origin=get.origin(time_att=time_att[[1]]),format="%Y-%m-%d")
+                dat <- as.PCICt(as.character(dates.tmp),cal=caltype[[1]])
+
                 return(dat)
 	}
 }
