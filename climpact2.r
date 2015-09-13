@@ -366,7 +366,7 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 	# Transpose dimensions to time,lat,lon
 	        if( indices[a] == "hw") { index3d_trans = aperm(index,c(3,5,4,2,1)) }
 		else if (indices[a] == "spi" | indices[a] == "spei") { index3d_trans = aperm(index,c(2,4,3,1)) }
-		else { index3d_trans = aperm(index,c(1,3,2)) }
+		else { index <- ifelse(index=="NaN",NA,index) ; index3d_trans = aperm(index,c(1,3,2)) }
 
 # WRITE DATA TO FILE
 # NOTE: ncdf4 seems to only support numeric types for dimensions.
