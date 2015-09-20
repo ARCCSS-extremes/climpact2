@@ -13,7 +13,7 @@
 # nherold, May 2015.
 
 # Nullify some objects to suppress spurious warning messages
-nc_tsmin <<- nc_tsmax <<- nc_prec <<- yeardate <<- origin <<- latstr <<- latdim <<- londim <<- j <<- tsmin <<- tsmax <<- prec <<- tsmintime <<- tsmaxtime <<- prectime <<- missingval <<- cicompile <<- tminqtiles_array <<- tmaxqtiles_array <<-  
+caltype <<- nc_tsmin <<- nc_tsmax <<- nc_prec <<- yeardate <<- origin <<- latstr <<- latdim <<- londim <<- j <<- tsmin <<- tsmax <<- prec <<- tsmintime <<- tsmaxtime <<- prectime <<- missingval <<- cicompile <<- tminqtiles_array <<- tmaxqtiles_array <<-  
 tminqtiles <<- tnames <<- tmaxqtiles <<- tavgqtiles <<- precipqtiles <<- pnames <<- tavgqtileshw <<- tminqtileshw <<- tmaxqtileshw <<- tminraw <<- tmaxraw <<- precraw <<- timeraw <<- northern.hemisphere <<- tavgqtiles_array <<- precipqtiles_array <<- NULL
 
 # Load global libraries and enable compilation.
@@ -140,6 +140,7 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 
 # Get the time
         time <- get.time(refnc,timename,time_format)
+        time <- trunc(time,"days")      # truncate dates to only %Y-%m-%d so that last day is not cut off inadvertantly
         yeardate <<- unique(format(time,format="%Y"))		# get unique years
 	tmp.seq = seq(as.Date(paste(yeardate[1],"01","01",sep="-")),as.Date(paste(yeardate[length(yeardate)],"12","31",sep="-")),by = "1 day")
 	monthdate = unique(format(tmp.seq,format="%Y-%m"))
@@ -665,7 +666,7 @@ get.time <- function(nc=NULL,timename=NULL,time_format=NULL)
 {
 	ftime = ncvar_get(nc,timename)
 	time_att = ncatt_get(nc,timename,"units")[2]
-	caltype = ncatt_get(nc,timename,"calendar")[2]
+	caltype <<- ncatt_get(nc,timename,"calendar")[2]
 
 	# Bit of a hack for non-model datasets. Requires user to specify "time_format" in climpact.loader
 	if(!is.null(time_format)) {
@@ -680,10 +681,10 @@ get.time <- function(nc=NULL,timename=NULL,time_format=NULL)
                 if(grepl("hours",time_att)) { ftime=ftime*60*60 } # dates.tmp = as.Date(ftime/24,origin=get.origin(time_att=time_att[[1]])) }
                 if(grepl("days",time_att)) { ftime=ftime*86400 } #dates.tmp = as.Date(ftime,origin=get.origin(time_att=time_att[[1]])) }
 
-#                origin.pcict <- as.PCICt(get.origin(time_att=time_att[[1]]),cal=caltype[[1]])
-#                dat <- origin.pcict+(ftime)
-                dates.tmp = as.Date(ftime/86400,origin=get.origin(time_att=time_att[[1]]),format="%Y-%m-%d")
-                dat <- as.PCICt(as.character(dates.tmp),cal=caltype[[1]])
+                origin.pcict <- as.PCICt(get.origin(time_att=time_att[[1]]),cal=caltype[[1]])
+                dat <- origin.pcict+(ftime)
+#                dates.tmp = as.Date(ftime/86400,origin=get.origin(time_att=time_att[[1]]),format="%Y-%m-%d")
+#                dat <- as.PCICt(as.character(dates.tmp),cal=caltype[[1]])
 
                 return(dat)
 	}
@@ -1105,6 +1106,7 @@ climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fract
         end2 = as.Date(paste(ci@date.factors$annual[length(ci@date.factors$annual)],"12","31",sep="-"))
         dat.seq2 = seq(beg2,end2,by = "1 day")
         fact2 = factor(format(dat.seq2,format="%m-%d"))
+        if (all(caltype!="gregorian",caltype!="standard")) { fact2 <- fact2[fact2!="02-29"] }
 
         # assign the 365 percentiles to the entire time series based on date factors (so as to account for leap years) - February 29 days will be NA.
         annualrepeat_tavg90 = array(NA,length(tavg))
@@ -1182,19 +1184,24 @@ get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.
 		boolean.str[!month %in% c("11","12","01","02","03")] <- NA
 		daily.data2 <- array(NA,length(daily.data))
 		boolean.str2 <- array(NA,length(boolean.str))
-		ind1 <- length(daily.data)-179
+
+                if(sum(month[1:366]=="02") == 29) {     # then this is a leap year
+                        dayshift = 182
+                } else { dayshift = 181 }
+		ind1 <- length(daily.data)-dayshift
 
 	# step2. Move data time-series and boolean array backward around 6 months. Don't need to be exact as data just needs to be in the right year.
 #		daily.data2[180:length(daily.data)] <- daily.data[1:ind1]
 #		boolean.str2[180:length(boolean.str)] <- boolean.str[1:ind1]
-                daily.data2[1:ind1] <- daily.data[180:length(daily.data)]
-                boolean.str2[1:ind1] <- boolean.str[180:length(daily.data)]
+                daily.data2[1:ind1] <- daily.data[(dayshift+1):length(daily.data)]
+                boolean.str2[1:ind1] <- boolean.str[(dayshift+1):length(daily.data)]
 
 	# step3. Remove data from first year since it has only a partial summer.
-		daily.data2[1:366] <- NA
-		daily.data <- daily.data2
-		boolean.str2[1:366] <- NA
-		boolean.str <- boolean.str2
+        # while the last year may be a leap and thus have 366 days, this doesn't matter as a heatwave will only be classified for >= 3 days of warmth
+                daily.data2[(length(daily.data)-365):length(daily.data)] <- NA
+                daily.data <- daily.data2
+                boolean.str2[(length(daily.data)-365):length(daily.data)] <- NA
+                boolean.str <- boolean.str2
 	} else { daily.data[!month %in% c("05","06","07","08","09")] <- NA ; boolean.str[!month %in% c("05","06","07","08","09")] <- NA }
 
 	aspect.array[1,] <- tapply.fast(daily.data,yearly.date.factors,function(idx) { mean(idx,na.rm=TRUE) } )
