@@ -8,7 +8,7 @@
 # the indices through the climpact.loader function contained in this file. This function accepts gridded netCDF files of tmin, tmax and precip and produces gridded datasets of the requested indices. 
 # Conversely, non-specialists are able to use the GUI (accessed by sourcing climpact2.GUI.r) to calculate point data from ASCII files.
 #
-# This package is available on github https://github.com/heroldn/climpact2.
+# This package is available on github https://github.com/ARCCSS-extremes/climpact2
 # 
 # nherold, May 2015.
 
@@ -942,13 +942,13 @@ climdex.spei <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift
                 tmpvar <- spei_col$fitted
 
         # remove NA, -Inf and Inf values which most likely occur due to unrealistic values in P or PET. This almost entirely occurs in ocean regions and varies depending on the fitting distribution used.
-                tmpvar[is.na(tmpvar)] <- NaN
+#                tmpvar[is.na(tmpvar)] <- NaN
 #                tmpvar <- ifelse(tmpvar=="-Inf",-2.33,tmpvar)
 #                tmpvar <- ifelse(tmpvar=="Inf",2.33,tmpvar)
                 tmpvar <- ifelse(tmpvar=="-Inf",NA,tmpvar)
                 tmpvar <- ifelse(tmpvar=="Inf",NA,tmpvar)
 
-                tmpvar <- ifelse(tmpvar=="NaNf",NA,tmpvar) #if(any(tmpvar=="-Inf",tmpvar=="Inf")) 
+                tmpvar <- ifelse(tmpvar=="NaNf",NA,tmpvar)
                 tmpvar <- ifelse(tmpvar=="NaN",NA,tmpvar)
 
                 x[i,] <- tmpvar
@@ -1028,13 +1028,13 @@ climdex.spi <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift=
                 tmpvar <- (spi_col$fitted)
 
         # remove NA, -Inf and Inf values which most likely occur due to unrealistic values in P. This almost entirely occurs in ocean regions and varies depending on the fitting distribution used.
-                tmpvar[is.na(tmpvar)] = NaN
+#                tmpvar[is.na(tmpvar)] = NaN
 #                tmpvar <- ifelse(tmpvar=="-Inf",-2.33,tmpvar)
 #                tmpvar <- ifelse(tmpvar=="Inf",2.33,tmpvar)
                 tmpvar <- ifelse(tmpvar=="-Inf",NA,tmpvar)
                 tmpvar <- ifelse(tmpvar=="Inf",NA,tmpvar)
 
-                tmpvar <- ifelse(tmpvar=="NaNf",NA,tmpvar) #if(any(tmpvar=="-Inf",tmpvar=="Inf")) 
+                tmpvar <- ifelse(tmpvar=="NaNf",NA,tmpvar)
                 tmpvar <- ifelse(tmpvar=="NaN",NA,tmpvar)
 
                 x[i,] <- tmpvar
@@ -1175,7 +1175,7 @@ leapdays <- function(year) { if(!is.numeric(year)) stop("year must be of type nu
 # OUTPUT:
 #    - aspect.array: filled with calculated aspects.
 get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.date.factors,daily.data,lat) {
-	month <- substr(monthly.date.factors,6,7)
+	month <- substr(monthly.date.factors,nchar(as.character(levels(monthly.date.factors)[1]))-1,nchar(as.character(levels(monthly.date.factors)[1])))
 	daily.data = ifelse(boolean.str=="TRUE",daily.data,NA)			# remove daily data that is not considered a heat wave.
 
 	if(lat < 0) {
@@ -1188,7 +1188,7 @@ get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.
                 if(sum(month[1:366]=="02") == 29) {     # then this is a leap year
                         dayshift = 182
                 } else { dayshift = 181 }
-		ind1 <- length(daily.data)-dayshift
+		ind1 <- length(daily.data)-dayshift # index of June 30 of last year #dayshift
 
 	# step2. Move data time-series and boolean array backward around 6 months. Don't need to be exact as data just needs to be in the right year.
 #		daily.data2[180:length(daily.data)] <- daily.data[1:ind1]
@@ -1196,11 +1196,11 @@ get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.
                 daily.data2[1:ind1] <- daily.data[(dayshift+1):length(daily.data)]
                 boolean.str2[1:ind1] <- boolean.str[(dayshift+1):length(daily.data)]
 
-	# step3. Remove data from first year since it has only a partial summer.
+	# step3. Remove data from last year since it has only a partial summer.
         # while the last year may be a leap and thus have 366 days, this doesn't matter as a heatwave will only be classified for >= 3 days of warmth
-                daily.data2[(length(daily.data)-365):length(daily.data)] <- NA
+                daily.data2[(length(daily.data)-366):length(daily.data)] <- NA
                 daily.data <- daily.data2
-                boolean.str2[(length(daily.data)-365):length(daily.data)] <- NA
+                boolean.str2[(length(daily.data)-366):length(daily.data)] <- NA
                 boolean.str <- boolean.str2
 	} else { daily.data[!month %in% c("05","06","07","08","09")] <- NA ; boolean.str[!month %in% c("05","06","07","08","09")] <- NA }
 
@@ -1209,8 +1209,8 @@ get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.
         aspect.array[3,] <- tapply.fast(boolean.str,yearly.date.factors,function(idx) { runlength = rle(as.logical(idx)) ; return(length(runlength$lengths[!is.na(runlength$values) & runlength$values=="TRUE"])) } )
         aspect.array[4,] <- tapply.fast(boolean.str,yearly.date.factors,function(idx) { runlength = rle(as.logical(idx)) ; return(suppressWarnings(max(runlength$lengths[runlength$values=="TRUE"],na.rm=TRUE))) } )
         aspect.array[5,] <- tapply.fast(boolean.str,yearly.date.factors,function(idx) { runlength = rle(as.logical(idx)) ; return(sum(runlength$lengths[runlength$values=="TRUE"],na.rm=TRUE)) } )
-	aspect.array[2,] <- ifelse(aspect.array[2,]=="-Inf",NaN,aspect.array[2,])
-	aspect.array[4,] <- ifelse(aspect.array[4,]=="-Inf",NaN,aspect.array[4,])
+	aspect.array[2,] <- ifelse(aspect.array[2,]=="-Inf",NA,aspect.array[2,])
+	aspect.array[4,] <- ifelse(aspect.array[4,]=="-Inf",NA,aspect.array[4,])
 	return(aspect.array)
 }
 
