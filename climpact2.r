@@ -373,13 +373,13 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 # NOTE: ncdf4 seems to only support numeric types for dimensions.
 	# create time dimension according to time format
 		if(is.null(time_format)) {	# IF no time format supplied, work with hours since some date.
-	                if(period == "MON") { timedim <- ncdim_def("time",paste("hours since ",origin," 00:00:00",sep=""),months_as_hours) } 
-			else if(period == "ANN") { timedim <- ncdim_def("time",paste("hours since ",origin," 00:00:00",sep=""),years_as_hours) } 
-			else { timedim <- ncdim_def("time","days since 0001-01-01",1:365,calendar=caltype) }
+	                if(period == "MON") { timedim <- ncdim_def("time",paste("hours since ",origin," 00:00:00",sep=""),months_as_hours,calendar=toString(caltype)) } 
+			else if(period == "ANN") { timedim <- ncdim_def("time",paste("hours since ",origin," 00:00:00",sep=""),years_as_hours,calendar=toString(caltype)) } 
+			else { timedim <- ncdim_def("time","days since 0001-01-01",1:365,calendar=toString(caltype)) }
 		} else {			# ELSE use number of months or years since first time step.
-			if(period == "MON") { timedim <- ncdim_def("time",paste("months since ",yeardate[1],"-01-01",sep=""),0.5:(nmonths-0.5)) } 
-			else if(period == "ANN"){ timedim <- ncdim_def("time",paste("years since ",yeardate[1],"-01-01",sep=""),0.5:(nyears-0.5)) } 
-			else { timedim <- ncdim_def("time","days since 0001-01-01",1:365,calendar=caltype) }
+			if(period == "MON") { timedim <- ncdim_def("time",paste("months since ",yeardate[1],"-01-01",sep=""),0.5:(nmonths-0.5),calendar=toString(caltype)) } 
+			else if(period == "ANN"){ timedim <- ncdim_def("time",paste("years since ",yeardate[1],"-01-01",sep=""),0.5:(nyears-0.5),calendar=toString(caltype)) } 
+			else { timedim <- ncdim_def("time","days since 0001-01-01",1:365,calendar=toString(caltype)) }
 		}
 
 	# create output directory and file name customised for 'n' indices if needed
