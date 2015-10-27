@@ -506,17 +506,17 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
         # copy arbitrary variables stored in 'varcopy' from input file to output file
 	# Not necessary for data and was included for the NARCliM project.
                 varcopy <- c("Rotated_pole")
-                for (j in 1:length(varcopy)) {
-                        if(any(names(refnc$var)==varcopy[j])) {
-                                system(paste("module load nco; ncks -A -v",varcopy[j],refnc$filename,outfile,sep=" "))
+#                for (j in 1:length(varcopy)) {
+#                        if(any(names(refnc$var)==varcopy[j])) {
+#                                system(paste("module load nco; ncks -A -v",varcopy[j],refnc$filename,outfile,sep=" "))
 #                               tmpnc2 <- ncvar_get(refnc,"Rotated_pole")
 #                               tmpvarcdf <- ncvar_def(varcopy[j],"",list(),prec="char")
 #                               tmpvarput <- ncvar_put(tmpout,tmpvarcdf,tmpnc2)
 #                               tmpatt <- ncatt_get(refnc,varcopy[j])
 #                               for(i in 1:length(tmpatt)) { ncatt_put(tmpout,varcopy[j],names(tmpatt)[i],tmpatt[[i]]) }
 #                               rm(tmpatt)
-                        }
-                }
+#                        }
+#                }
 
         # Report back
                 print(paste(outfile," completed.",sep=""))
