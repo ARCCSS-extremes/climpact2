@@ -1102,9 +1102,9 @@ climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fract
                 tx90p <- TxTn90p$tmax$outbase$q90 }
 
         # get shells for the following three variables
-        EHIaccl = array(NA,length(tavg))
-        EHIsig = array(NA,length(tavg))
-        EHF = array(NA,length(tavg))
+#        EHIaccl = array(NA,length(tavg))
+#        EHIsig = array(NA,length(tavg))
+#        EHF = array(NA,length(tavg))
 
         # take any non leap year to create 365 month-day factors
         beg = as.Date("2001-01-01",format="%Y-%m-%d")
@@ -1123,10 +1123,17 @@ climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fract
 	tmax <- ci@data$tmax[!fact2 %in% as.factor("02-29")]
 	tmin <- ci@data$tmin[!fact2 %in% as.factor("02-29")]
 	tavg <- tavg[!fact2 %in% as.factor("02-29")]
+	monthly.factors <- ci@date.factors$monthly[!fact2 %in% as.factor("02-29")]
+	annual.factors <- ci@date.factors$annual[!fact2 %in% as.factor("02-29")]
+
+#print(length(annual.factors))
+#exit
 	fact2 <- fact2[!fact2 %in% as.factor("02-29")]
-#print(length(fact2))
-#print("length of tmax")
-#print(length(tmax))
+
+        # get shells for the following three variables
+        EHIaccl = array(NA,length(tavg))
+        EHIsig = array(NA,length(tavg))
+        EHF = array(NA,length(tavg))
 
         # assign the 365 percentiles to the entire time series based on date factors (so as to account for leap years) - February 29 days will be NA.
         annualrepeat_tavg90 = array(NA,length(tavg))
@@ -1141,15 +1148,10 @@ climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fract
 
 # step 2. Determine if tx90p, tn90p or EHF conditions have persisted for >= 3 days. If so, count number of summer heat waves.
         # assign the 365 percentiles to the entire time series based on date factors (so as to account for leap years) - February 29 days will be NA.
-        tx90p_arr <- array(NA,length(ci@data$tmax))
+        tx90p_arr <- array(NA,length(tmax))
         tx90p_arr <- tx90p[match(fact2,fact)]
-        tn90p_arr <- array(NA,length(ci@data$tmin))
+        tn90p_arr <- array(NA,length(tmin))
         tn90p_arr <- tn90p[match(fact2,fact)]
-
-        # create an array of booleans for each definition identifying runs 3 days or longer where conditions are met. i.e. for TX90p, TN90p, EHF.
-        tx90p_boolean = array(FALSE,length(tx90p))
-        tn90p_boolean = array(FALSE,length(tn90p))
-        EHF_boolean = array(FALSE,length(EHF))
 
         # Record which days had temperatures higher than 90p or where EHF > 0 
         tx90p_boolean <- (tmax > tx90p_arr)
@@ -1162,14 +1164,14 @@ climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fract
         EHF_boolean <- select.blocks.gt.length(EHF_boolean,2)
 
 # Step 3. Calculate aspects for each definition.
-	hw_index <- array(NA,c(3,5,length(levels(ci@date.factors$annual))))
-        hw1_index <- array(NA,c(5,length(levels(ci@date.factors$annual))))
-        hw2_index <- array(NA,c(5,length(levels(ci@date.factors$annual))))
-        hw3_index <- array(NA,c(5,length(levels(ci@date.factors$annual))))
+	hw_index <- array(NA,c(3,5,length(levels(annual.factors))))
+        hw1_index <- array(NA,c(5,length(levels(annual.factors))))
+        hw2_index <- array(NA,c(5,length(levels(annual.factors))))
+        hw3_index <- array(NA,c(5,length(levels(annual.factors))))
 
-        hw_index[1,,] <- get.hw.aspects(hw1_index,tx90p_boolean,ci@date.factors$annual,ci@date.factors$monthly,ci@data$tmax,lat)
-        hw_index[2,,] <- get.hw.aspects(hw2_index,tn90p_boolean,ci@date.factors$annual,ci@date.factors$monthly,ci@data$tmin,lat)
-        hw_index[3,,] <- get.hw.aspects(hw3_index,EHF_boolean,ci@date.factors$annual,ci@date.factors$monthly,EHF,lat)
+        hw_index[1,,] <- get.hw.aspects(hw1_index,tx90p_boolean,annual.factors,monthly.factors,tmax,lat)
+        hw_index[2,,] <- get.hw.aspects(hw2_index,tn90p_boolean,annual.factors,monthly.factors,tmin,lat)
+        hw_index[3,,] <- get.hw.aspects(hw3_index,EHF_boolean,annual.factors,monthly.factors,EHF,lat)
 
         rm(tavg,tavg90p,EHIaccl,EHIsig,EHF,tx90p_boolean,tn90p_boolean,EHF_boolean,tx90p_arr,tn90p_arr,hw1_index,hw2_index,hw3_index,tn90p,tx90p,beg,end,beg2,end2,dat.seq,dat.seq2,fact,fact2)
 	return(hw_index)
@@ -1196,82 +1198,79 @@ leapdays <- function(year) { if(!is.numeric(year)) stop("year must be of type nu
 #    - aspect.array: filled with calculated aspects.
 get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.date.factors,daily.data,lat) {
 	month <- substr(monthly.date.factors,nchar(as.character(levels(monthly.date.factors)[1]))-1,nchar(as.character(levels(monthly.date.factors)[1])))
-	daily.data = ifelse(boolean.str=="TRUE",daily.data,NA)			# remove daily data that is not considered a heat wave.
 
-	if(lat < 0) {
-	# step1. Remove NDJFM months from daily data and boolean array
-		daily.data[!month %in% c("11","12","01","02","03")] <- NA
-		boolean.str[!month %in% c("11","12","01","02","03")] <- NA
-		daily.data2 <- array(NA,length(daily.data))
-		boolean.str2 <- array(NA,length(boolean.str))
+	daily.data.full = daily.data # make a copy of all daily data
+	boolean.str.full = boolean.str # make a copy of all boolean data
 
-                if(sum(month[1:366]=="02") == 29) {     # then this is a leap year
-                        dayshift = 182
-                } else { dayshift = 181 }
-		ind1 <- length(daily.data)-dayshift # index of June 30 of last year #dayshift
+	nyears = length(levels(yearly.date.factors))
+	extended_window = 90
+	aspect_ind = 1 # keep track of the index of the aspect array to store data in
 
-	# step2. Move data time-series and boolean array backward around 6 months. Don't need to be exact as data just needs to be in the right year.
-#		daily.data2[180:length(daily.data)] <- daily.data[1:ind1]
-#		boolean.str2[180:length(boolean.str)] <- boolean.str[1:ind1]
-                daily.data2[1:ind1] <- daily.data[(dayshift+1):length(daily.data)]
-                boolean.str2[1:ind1] <- boolean.str[(dayshift+1):length(daily.data)]
+	for (year in levels(yearly.date.factors)[1]:levels(yearly.date.factors)[nyears]) {
+	#print(year)
+		if(lat < 0) {
+			summer_indices = which(monthly.date.factors %in% as.factor(paste(year,"-11",sep="")) | monthly.date.factors %in% as.factor(paste(year,"-12",sep="")) | monthly.date.factors %in% as.factor(paste(year+1,"-01",sep="")) |
+	        	        monthly.date.factors %in% as.factor(paste(year+1,"-02",sep="")) | monthly.date.factors %in% as.factor(paste(year+1,"-03",sep="")))
+		} else {
+	                summer_indices = which(monthly.date.factors %in% as.factor(paste(year,"-05",sep="")) | monthly.date.factors %in% as.factor(paste(year,"-06",sep="")) | monthly.date.factors %in% as.factor(paste(year,"-07",sep="")) |
+	                        monthly.date.factors %in% as.factor(paste(year,"-08",sep="")) | monthly.date.factors %in% as.factor(paste(year,"-09",sep="")))
+		}
 
-	# step3. Remove data from last year since it has only a partial summer.
-        # while the last year may be a leap and thus have 366 days, this doesn't matter as a heatwave will only be classified for >= 3 days of warmth
-                daily.data2[(length(daily.data)-366):length(daily.data)] <- NA
-                daily.data <- daily.data2
-                boolean.str2[(length(daily.data)-366):length(daily.data)] <- NA
-                boolean.str <- boolean.str2
-	} else { daily.data[!month %in% c("05","06","07","08","09")] <- NA ; boolean.str[!month %in% c("05","06","07","08","09")] <- NA }
+	        extended_indices = seq((summer_indices[1]),(summer_indices[length(summer_indices)]+extended_window),1)
+	        extended_data = daily.data.full[extended_indices]
+	        extended_boolean = boolean.str.full[extended_indices]
+	        rle_extended_boolean = rle(as.logical(extended_boolean))
+		last_day_of_hw_season = (length(extended_boolean)-extended_window)
+	
+	        # indices of extended_data that include heatwaves that start during season and end before end of season.
+	        truevals = which((rle_extended_boolean$lengths)>=3 & cumsum(rle_extended_boolean$lengths)<=last_day_of_hw_season & rle_extended_boolean$values==TRUE)
+	
+	        # if the first heatwave exists on the first day of season, but is part of a heatwave from the previous season, then remove this heatwave since we don't want to count that in this season.
+	        if(all(extended_boolean[1:3]==TRUE) && length(truevals)>0 && boolean.str.full[(summer_indices[1])-1]==TRUE) { truevals = truevals[-1] }
+	
+		# indices of heatwave(s) that end after season.
+		extvals = which((rle_extended_boolean$lengths)>=3 & cumsum(rle_extended_boolean$lengths)>last_day_of_hw_season & rle_extended_boolean$values==TRUE)
+	
+		# check for heatwaves that started near end of season and continued afterward.
+		if(length(extvals)>0 && cumsum(rle_extended_boolean$lengths)[extvals[1]-1]<last_day_of_hw_season) 
+	                # then the next heatwave actually started in summer and should be counted
+	        {
+	                truevals = c(truevals,extvals[1]) 
+	        }
+	
+	        nhw = length(truevals)  # number of heatwaves
+	        hwm = array(NA,nhw)  # array to store heatwave mean temperature
+		hwa = array(NA,nhw)
+	        if(nhw>0){
+	                for (i in 1:nhw) { #length(runlength$values)) { # over each run
+					if(truevals[i]==1) { i1 = 1 } else { i1 = cumsum(rle_extended_boolean$lengths)[truevals[i]-1] + 1 }      # "+1" to begin on day 1 of heat wave - not the last day of the non-heatwave
+	                                i2 = cumsum(rle_extended_boolean$lengths)[truevals[i]]
+	                                hwm[i] = mean(extended_data[i1:i2],na.rm=TRUE)
+					hwa[i] = max(extended_data[i1:i2],na.rm=TRUE)
+	                }
+	        }
+	
+	        hwm2 = mean(hwm,na.rm=TRUE)
+		hwn = nhw
+	
+		# HWM
+	        if(is.nan(hwm2)) { aspect.array[1,aspect_ind] = NA } else { aspect.array[1,aspect_ind] = hwm2 }
+		# HWA
+		if(is.nan(hwm2)) { aspect.array[2,aspect_ind] = NA } else { aspect.array[2,aspect_ind] = hwa[which.max(hwm)] }
+		# HWN
+		aspect.array[3,aspect_ind] = hwn
+		# HWD
+		if(is.nan(hwm2)) { aspect.array[4,aspect_ind] = NA } else { aspect.array[4,aspect_ind] = max(rle_extended_boolean$lengths[truevals],na.rm=TRUE) }
+		# HWF
+		aspect.array[5,aspect_ind] = sum(rle_extended_boolean$lengths[truevals],na.rm=TRUE)
+	
+	        aspect_ind = aspect_ind + 1
+	}
 
-#	aspect.array[1,] <- tapply.fast(daily.data,yearly.date.factors,function(idx) { mean(idx,na.rm=TRUE) } )
-#        aspect.array[2,] <- tapply.fast(daily.data,yearly.date.factors,function(idx) { suppressWarnings(max(idx,na.rm=TRUE)) } )
+	rm(summer_indices,extended_indices,extended_data,extended_boolean,rle_extended_boolean,truevals,nhw,hwm,hwa,hwm2,last_day_of_hw_season,extvals,daily.data.full,boolean.str.full)
 
-        counter <<- 0
-        aspect.array[1,] <- tapply.fast(boolean.str,yearly.date.factors,function(idx) {		# HWM
-                runlength = rle(as.logical(idx))
-                rtruevals = runlength$values[runlength$values==TRUE]
-                nhw = length(rtruevals)  # number of heatwaves
-                hwstat = array(NA,nhw)
-                i2 = 1
-                for (i1 in 1:length(runlength$values)) { # over each run
-                        if(!is.na(runlength$values[i1]) && runlength$values[i1]==TRUE){ # if TRUE (i.e. is a HW) then find it's mean
-                                if(i1==length(runlength$values)) { j = counter+length(idx) } else { j = counter+sum(runlength$lengths[1:i1]) }
-                                if(i1==1) { i = counter+1 } else { i = counter+1+sum(runlength$lengths[1:(i1-1)]) }
-                                hwstat[i2] = mean(daily.data[i:j],na.rm=TRUE)
-                                i2 = i2+1
-                        } }
-                counter <<- counter+length(idx)   # record number of indices gone through by tapply so far
-                retval = mean(hwstat,na.rm=TRUE)
-                if(is.nan(retval)) { return(NA) } else { return(retval) }
-        })
-
-        counter <<- 0
-        aspect.array[2,] <- tapply.fast(boolean.str,yearly.date.factors,function(idx) {		# HWA
-                runlength = rle(as.logical(idx))
-                rtruevals = runlength$values[runlength$values==TRUE]
-                nhw = length(rtruevals)  # number of heatwaves
-                hwmean = array(NA,nhw)
-                hwmax = array(NA,nhw)
-                i2 = 1
-                for (i1 in 1:length(runlength$values)) { # over each run
-                        if(!is.na(runlength$values[i1]) && runlength$values[i1]==TRUE){ # if TRUE (i.e. is a HW) then find it's mean
-                                if(i1==length(runlength$values)) { j = counter+length(idx) } else { j = counter+sum(runlength$lengths[1:i1]) }
-                                if(i1==1) { i = counter+1 } else { i = counter+1+sum(runlength$lengths[1:(i1-1)]) }
-                                hwmean[i2] = mean(daily.data[i:j],na.rm=TRUE)
-                                hwmax[i2] = max(daily.data[i:j],na.rm=TRUE)
-                                i2 = i2+1
-                        } }
-                counter <<- counter+length(idx)   # record number of indices gone through by tapply so far
-                if(length(which.max(hwmean)) == 0 || is.nan(hwmax[which.max(hwmean)])) { return(NA) } else { return(hwmax[which.max(hwmean)]) }
-        })
-
-        aspect.array[3,] <- tapply.fast(boolean.str,yearly.date.factors,function(idx) { runlength = rle(as.logical(idx)) ; return(length(runlength$lengths[!is.na(runlength$values) & runlength$values=="TRUE"])) } )
-        aspect.array[4,] <- tapply.fast(boolean.str,yearly.date.factors,function(idx) { runlength = rle(as.logical(idx)) ; return(suppressWarnings(max(runlength$lengths[runlength$values=="TRUE"],na.rm=TRUE))) } )
-        aspect.array[5,] <- tapply.fast(boolean.str,yearly.date.factors,function(idx) { runlength = rle(as.logical(idx)) ; return(sum(runlength$lengths[runlength$values=="TRUE"],na.rm=TRUE)) } )
 	aspect.array[2,] <- ifelse(aspect.array[2,]=="-Inf",NA,aspect.array[2,])
 	aspect.array[4,] <- ifelse(aspect.array[4,]=="-Inf",NA,aspect.array[4,])
-
 	if (lat<0) { aspect.array[,length(aspect.array[1,])] <- NA }	# If in southern hemisphere, remove last year since there is only half a summer (can risk removing 366 days since it won't infringe on the previous summer)
 	return(aspect.array)
 }
