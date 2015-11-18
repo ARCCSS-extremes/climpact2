@@ -3,13 +3,19 @@
 # University of New South Wales
 # ------------------------------------------------ #
 #
-# This file constitutes the graphical user interface for ClimPACT2.
+# This file constitutes the graphical user interface for ClimPACT2. It also contains code that plots graphs, writes out data
+# and calculates SPEI/SPI indices.
 #
-# This package is available on github https://github.com/heroldn/climpact2.
+# This package is available on github https://github.com/ARCCSS-extremes/climpact2.
 #
-# nherold, May 2015.
+# nherold, November 2015.
 #
 #
+#
+# BUGS
+#   - Currently SPEI/SPI are calculated via the old ClimPACT code. This is because the CRAN package for SPEI/SPI does not
+#     ostenisbly support large runs of NA values. When this occurs real numbers are included in the output where NA values
+#     should occur.
 #
 #
 # TECHNICAL NOTES
@@ -28,7 +34,7 @@
 #   Programmed by Yujun Ouyang,Mar,2004
 #   rewritten by Yang Feng, July 2004
 #   version 1.0, 2004-10-14
-#   modified, 2006-01-24,
+#   modified, 2006-01-24
 #   modified, 2007-03-23
 #   modified, 2007-11-26
 #   modified, 2008-05-05
@@ -574,8 +580,8 @@ load.data.qc <- function() {
 
 			# write to file
 	                thres <- c(cio@quantiles$tmax$outbase,cio@quantiles$tmin$outbase,cio@quantiles$tavg$outbase,cio@quantiles$prec,as.list(tn90p),as.list(tx90p),as.list(tavg90p))#,cio@dates,cio@data)#$tmin,cio@data$tmax,cio@data$prec)
-			write.table(as.data.frame(thres), file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "NA", col.names = c(paste("tmax",names(cio@quantiles$tmax$outbase)),paste("tmin",names(cio@quantiles$tmin$outbase)),
-				paste("tavg",names(cio@quantiles$tavg$outbase)),paste("prec",names(cio@quantiles$prec)),"HW TN90","HW TX90","HW TAVG90"),row.names=FALSE) 
+			write.table(as.data.frame(thres), file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "NA", col.names = c(paste("tmax",names(cio@quantiles$tmax$outbase),sep="_"),paste("tmin",names(cio@quantiles$tmin$outbase),sep="_"),
+				paste("tavg",names(cio@quantiles$tavg$outbase),sep="_"),paste("prec",names(cio@quantiles$prec),sep="_"),"HW_TN90","HW_TX90","HW_TAVG90"),row.names=FALSE) 
 	
 	        	# write raw tmin, tmax and prec data for future SPEI/SPI calcs
 		        yeardate2 <<- format(dates,format="%Y")
@@ -583,7 +589,7 @@ load.data.qc <- function() {
 			thres2 <- list(dates=base.dates,tmin=cio@data$tmin[which(yeardate2 >= base.year.start & yeardate2 <= base.year.end)],tmax=cio@data$tmax[which(yeardate2 >= base.year.start & yeardate2 <= base.year.end)],
 				prec=cio@data$prec[which(yeardate2 >= base.year.start & yeardate2 <= base.year.end)])
 			nam2 <- paste(outthresdir, paste(ofilename, "_thres_spei.csv", sep = ""),sep="/")
-	                write.table(as.data.frame(thres2), file = nam2, append = FALSE, quote = FALSE, sep = ", ", na = "NA", col.names = c("Base period dates","Base period tmin","Base period tmax","Base period prec"),row.names=FALSE)
+	                write.table(as.data.frame(thres2), file = nam2, append = FALSE, quote = FALSE, sep = ", ", na = "NA", col.names = c("Base_period_dates","Base_period_tmin","Base_period_tmax","Base_period_prec"),row.names=FALSE)
 		} else { 
                         tn90p <<- hwlist[[2]]
                         tx90p <<- hwlist[[1]]
@@ -636,9 +642,9 @@ load.data.qc <- function() {
 		names(tminlist) <- c("q95","q90","q50","q10","q5")
                 names(tmaxlist) <- c("q95","q90","q50","q10","q5")
                 names(tavglist) <- c("q95","q90","q50","q10","q5")
-		for (l in 1:length(tminlist)) { tminlist[[l]]=(eval(parse(text=paste("(prev.qtiles$tmin.",names(tminlist)[l],")",sep="")))) }
-                for (l in 1:length(tmaxlist)) { tmaxlist[[l]]=(eval(parse(text=paste("(prev.qtiles$tmax.",names(tmaxlist)[l],")",sep="")))) }
-                for (l in 1:length(tavglist)) { tavglist[[l]]=(eval(parse(text=paste("(prev.qtiles$tavg.",names(tavglist)[l],")",sep="")))) }
+		for (l in 1:length(tminlist)) { tminlist[[l]]=(eval(parse(text=paste("(prev.qtiles$tmin_",names(tminlist)[l],")",sep="")))) }
+                for (l in 1:length(tmaxlist)) { tmaxlist[[l]]=(eval(parse(text=paste("(prev.qtiles$tmax_",names(tmaxlist)[l],")",sep="")))) }
+                for (l in 1:length(tavglist)) { tavglist[[l]]=(eval(parse(text=paste("(prev.qtiles$tavg_",names(tavglist)[l],")",sep="")))) }
 		quantiles$tmin$outbase <<- (tminlist)
                 quantiles$tmax$outbase <<- (tmaxlist)
                 quantiles$tavg$outbase <<- (tavglist)
@@ -648,12 +654,12 @@ load.data.qc <- function() {
 
                 preclist=vector("list",6)
 		names(preclist) <- c("q99","q95","q90","q50","q10","q5")
-                for (l in 1:length(preclist)) { preclist[[l]]=(eval(parse(text=paste("(prev.qtiles$prec.",names(preclist)[l],"[1])",sep="")))) }	# Only read the first element since precip quantiles are the same for each day.
+                for (l in 1:length(preclist)) { preclist[[l]]=(eval(parse(text=paste("(prev.qtiles$prec_",names(preclist)[l],"[1])",sep="")))) }	# Only read the first element since precip quantiles are the same for each day.
 		quantiles$prec <<- (preclist)
 
 		# read in heat wave related thresholds
 		hwlist<<-vector("list",3)
-		names(hwlist) <<- c("HW.TX90","HW.TN90","HW.TAVG90")
+		names(hwlist) <<- c("HW_TX90","HW_TN90","HW_TAVG90")
                 for (l in 1:length(hwlist)) { hwlist[[l]]<<-eval(parse(text=paste("(prev.qtiles$",names(hwlist)[l],")",sep=""))) }
 
                 # Auto-read SPEI .csv file without the user's knowledge. Clunky and risks breaking if SPEI file doesn't exist?
@@ -732,7 +738,9 @@ load.data.qc <- function() {
 
 		assign("latitude",  latitude, envir = .GlobalEnv)
 		assign("longitude", longitude, envir = .GlobalEnv)
-		title.station <- paste(ofilename, " [", latitude, ", ", longitude, "]", sep = "")
+		if(latitude<0) lat_text = "°S" else lat_text = "°N"
+		if(longitude<0) lon_text = "°W" else lon_text = "°E"
+		title.station <- paste(ofilename, " [", latitude,lat_text, ", ", longitude,lon_text, "]", sep = "")
 		assign("title.station", title.station, envir = .GlobalEnv)
 		assign("ofilename", ofilename, envir = .GlobalEnv)
 		
@@ -1341,7 +1349,7 @@ index.calc1 <- function() {
 	}
 	
 	tt1=tkframe(infor,bg='white')   # add a "?" to the current window.
-	textEntry3<-tclVar('station: #, index: *')
+	textEntry3<-tclVar('Station: #. Index: *')
 	textEntryWidget3<-tkentry(tt1,width=30,textvariable=textEntry3,bg='white')
 	help1=tkbutton(tt1,text=' ? ',command=help.title,bg='white')
 	
@@ -1663,28 +1671,53 @@ index.calc2<-function(){
 		                spiprec = cio@data$prec
 		                spifactor = cio@date.factors$monthly
 		        }
+		        
+######################################
+# Calculate SPEI via old climpact code
 
-	                # get monthly means of tmin and tmax. And monthly total precip.
-	                tmax_monthly <- as.numeric(tapply.fast(spitmax,spifactor,mean,na.rm=TRUE))
-	                tmin_monthly <- as.numeric(tapply.fast(spitmin,spifactor,mean,na.rm=TRUE))
-	                prec_sum <- as.numeric(tapply.fast(spiprec,spifactor,sum,na.rm=FALSE))
-	                tmax_monthly[tmax_monthly=="NaN"] <- NA
-	                tmin_monthly[tmin_monthly=="NaN"] <- NA
+		        # get monthly means of tmin and tmax. And monthly total precip.
+		        tmax_monthly <- as.numeric(tapply.fast(spitmax,spifactor,mean,na.rm=TRUE))
+		        tmin_monthly <- as.numeric(tapply.fast(spitmin,spifactor,mean,na.rm=TRUE))
+		        prec_sum <- as.numeric(tapply.fast(spiprec,spifactor,function(x) { if(all(is.na(x))) { return(NA) } else { return(sum(x,na.rm=TRUE)) } } )) # Needed this function since summing a series of NA with na.rm = TRUE results in zero instead of NA.
+		        tmax_monthly[tmax_monthly=="NaN"] <- NA
+		        tmin_monthly[tmin_monthly=="NaN"] <- NA
 
 			# Caclulate evapotranspiration estimate and create time-series object.
 			pet = as.numeric(hargreaves(tmin_monthly,tmax_monthly,lat=latitude,Pre=prec_sum,na.rm=TRUE))
 			dat = ts(prec_sum-pet,freq=12,start=ts.start,end=ts.end)
+			index.store <- array(c(cspei(dat,na.rm=T,scale=c(3),ref.start=c(base.year.start,1),ref.end=c(base.year.end,12),basetmin=tnraw,basetmax=txraw,baseprec=praw,basetime=btime)$fitted,
+						cspei(dat,na.rm=T,scale=c(6),ref.start=c(base.year.start,1),ref.end=c(base.year.end,12))$fitted,
+						cspei(dat,na.rm=T,scale=c(12),ref.start=c(base.year.start,1),ref.end=c(base.year.end,12))$fitted),
+						c(length((cspei(dat,na.rm=T,scale=c(3))$fitted)),3))
+                        index.store <- aperm(index.store,c(2,1))
 
-			index.store <- array(c(cspei(dat,na.rm=T,scale=c(3),ref.start=c(base.year.start,1),ref.end=c(base.year.end,1),basetmin=tnraw,basetmax=txraw,baseprec=praw,basetime=btime)$fitted,
-				cspei(dat,na.rm=T,scale=c(6),ref.start=c(base.year.start,1),ref.end=c(base.year.end,1))$fitted,cspei(dat,na.rm=T,scale=c(12),ref.start=c(base.year.start,1),ref.end=c(base.year.end,1))$fitted),
-				c(length((cspei(dat,na.rm=T,scale=c(3))$fitted)),3))
-			index.store <- aperm(index.store,c(2,1))
+# End calculating SPEI via old climpact code
+######################################
+
+######################################
+# Calculate SPEI via CRAN SPEI package housed in climpact2.r
+#			index.store <- climdex.spei(cio,ref.start=c(base.year.start,1),ref.end=c(base.year.end,12),lat=latitude,basetmin=tnraw,basetmax=txraw,baseprec=praw,basetime=btime)
+
+# Temporary SPEI to mask out values that should be NA
+#			spiprec = cio@data$prec
+#        	        spitmin = cio@data$tmin
+#	                spitmax = cio@data$tmax
+#                        prec_sum <- as.numeric(tapply.fast(spiprec,cio@date.factors$monthly,function(x) { if(all(is.na(x))) { return(NA) } else { return(sum(x,na.rm=TRUE)) } } ))
+#        		tmax_monthly <- as.numeric(tapply.fast(spitmax,cio@date.factors$monthly,mean,na.rm=TRUE))
+#		        tmin_monthly <- as.numeric(tapply.fast(spitmin,cio@date.factors$monthly,mean,na.rm=TRUE))
+#			pet <- hargreaves(tmin_monthly,tmax_monthly,lat=latitude,Pre=prec_sum,na.rm=TRUE)
+#			tmpspei = spei(ts(prec_sum-pet,freq=12,start=ts.start,end=ts.end),scale=1,ref.start=c(base.year.start,1),ref.end=c(base.year.end,12),na.rm=TRUE)$fitted
+#			index.store[,which(is.na(tmpspei))] = NA
+
+# End calculating SPEI via CRAN SPEI package housed in climpact2.r
+######################################
+
 			index.store <- ifelse(index.store=="Inf" | index.store=="-Inf" | index.store=="NaN",NA,index.store)
 
 		# - Strip back off all data not part of the original time series.
 		# - Another kludge here relates to an ostensible bug in the SPEI function. When SPEI is fed a series of NA values followed by valid data, it returns values of SPEI/SPI for those NA values, when it shouldn't.
 		#    The author has been alerted to this problem. But this means that when a synthetic time series has been made for scenarios using reference data from a different dataset, the initial SPEI/SPI values need
-		#    to be manually removed. The first 2, 5 and 11 values for each final time series needs NA'ing, corresponding to 3, 6 and 12 months calculation periods.
+		#    to be manually removed. The first 2, 5 and 11 values for each final time series needs NA'ing, corresponding to 3, 6 and 12 month calculation periods.
 		        if(computefuture) {
 		                index.store <- index.store[,(length(index.store[1,])-length(unique(cio@date.factors$monthly))+1):length(index.store[1,])]
 				# remove spurious values that shouldn't exist (but exist anyway due to the synthetic time series we've fed the spei/spi function).
@@ -1725,14 +1758,23 @@ index.calc2<-function(){
                                 spifactor = cio@date.factors$monthly
                         }
 
+######################################
+# Calculate SPI via old climpact code
+
 			# get monthly total precip.
-                        prec_sum <- as.numeric(tapply.fast(spiprec,spifactor,sum,na.rm=FALSE))
+			prec_sum <- as.numeric(tapply.fast(spiprec,spifactor,function(x) { if(all(is.na(x))) { return(NA) } else { return(sum(x,na.rm=TRUE)) } } )) # Needed this function since summing a series of NA with na.rm = TRUE results in zero instead of NA.
 
 			# Create time-series object.
 			dat <- ts(prec_sum,freq=12,start=ts.start,end=ts.end)
-                        index.store <- array(c(cspi(dat,na.rm=T,scale=3,ref.start=c(base.year.start,1),ref.end=c(base.year.end,1))$fitted,cspi(dat,na.rm=T,scale=6,ref.start=c(base.year.start,1),ref.end=c(base.year.end,1))$fitted,
-				cspi(dat,na.rm=T,scale=12,ref.start=c(base.year.start,1),ref.end=c(base.year.end,1))$fitted),c(length((cspi(prec_sum,na.rm=T,scale=c(3))$fitted)),3))
+                        index.store <- array(c(cspi(dat,na.rm=T,scale=3,ref.start=c(base.year.start,1),ref.end=c(base.year.end,12))$fitted,
+						cspi(dat,na.rm=T,scale=6,ref.start=c(base.year.start,1),ref.end=c(base.year.end,12))$fitted,
+						cspi(dat,na.rm=T,scale=12,ref.start=c(base.year.start,1),ref.end=c(base.year.end,1))$fitted),
+						c(length((cspi(prec_sum,na.rm=T,scale=c(3))$fitted)),3))
                         index.store <- aperm(index.store,c(2,1))
+
+# End calculating SPI via old climpact code
+######################################
+
                         index.store <- ifelse(index.store=="Inf" | index.store=="-Inf" | index.store=="NaN",NA,index.store)
 
 		# - Strip back off all data not part of the original time series.
@@ -1834,17 +1876,17 @@ plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) {
 
 	definitions <- c("Tx90","Tn90","EHF")
 	aspects <- c("HWM","HWA","HWN","HWD","HWF")
-	units <- c("degC","degC","heat waves","days","days")
+	units <- c("°C","°C","heat waves","days","days")
 
 	for (def in 1:length(definitions)) {
 		for (asp in 1:length(aspects)) {
 	                if(all(is.na(index[def,asp,]))) { warning(paste("All NA values detected, not plotting ",definitions[def],", ",aspects[asp],".",sep="")) ; next }
-			plot.title <- paste(title.station,definitions[def],aspects[asp],sep=", ")
+			plot.title <- paste("Station: ",title.station,". Index: ",definitions[def],"-",aspects[asp],sep="")
 	        	namp <- paste(outjpgdir, paste(ofilename, "_", definitions[def],"_",aspects[asp], ".jpg", sep = ""), sep = "/")
 	        	jpeg(file = namp, width = 1024, height = 768)
 		        dev0 = dev.cur()
 
-			if(definitions[def]=="EHF" && any(aspects[asp]=="HWM",aspects[asp]=="HWA")) unit = "degC^2" else unit = units[asp]
+			if(definitions[def]=="EHF" && any(aspects[asp]=="HWM",aspects[asp]=="HWA")) unit = "°C^2" else unit = units[asp]
 		        plotx(as.numeric(date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label,index.name=index.name)
 
 	                dev.set(which = pdf.dev)
@@ -1946,7 +1988,7 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 	# james: i'm turning xpd off for barplots, so that i can clip the range w/o the bars
 	# running off the page. is this required?
 	par(oma = c(1, 1, 1, 1), xpd = FALSE) #to enable things to be drawn outside the plot region
-	names(y) <- c(x)
+	names(y) <- c(strtrim(x,4))
 	
 	# calculate range to limit the plots to (otherwise barplots are useless... they're in
 	# any non-barplots for consistency). also to allow for overlays like marking na points
@@ -1969,35 +2011,30 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 	                na.x <- bp
 	                na.y <- rep(NA, length(na.x))
 	                na.y[is.na(y)] <- par("usr")[3]
-	                points(na.x, na.y, pch = 17, col = "grey", cex = 1.5)
+	                points(na.x, na.y, pch = 17, col = "blue", cex = 1.5)
+			at_tick <- seq(from=1,to=length(x),by=12) #seq_len((length(x)/12) + 1)
+			axis(side=1,labels=FALSE,at=at_tick,tcl=-0.3,cex.axis=1.5)
+
 	                box()
 			xy <- cbind(bp,y)
 		} else {
 #			bp <- barplot(y, main = main, cex.main = 2,ylim = range(y, na.rm = TRUE),xlab = NULL, ylab = ylab,cex.lab = 1.5, cex.axis = 1.5,xpd = FALSE)
-	                plot(x, unname(y), main = main, cex.main = 2,ylim = range(unname(y), na.rm = TRUE), xlab = "", ylab = ylab,type = "b", cex.lab = 1.5, cex.axis = 1.5)
+	                plot(x, unname(y), main = main, cex.main = 2,ylim = range(unname(y), na.rm = TRUE), xlab = "", ylab = ylab,type = "b", cex.lab = 1.5, cex.axis = 1.5,col="black")
 	                # NA points
 	                na.x <- x
 	                na.y <- rep(NA, length(na.x))
 	                na.y[is.na(y)] <- min(y, na.rm = TRUE)
-	                points(na.x, na.y, pch = 17, col = "grey", cex = 1.5)
+	                points(na.x, na.y, pch = 17, col = "blue", cex = 1.5)
 			xy <- cbind(x, y)
 		}
 	} else            # if false, we're doing a regular (line) plot
 	{
-#print(x)
-#print(unname(y))
-#print(typeof(y))
-#print(class(y))
-#print(str(y))
-#print("MIN")
-#print(min(y,na.rm=TRUE))
-#print(min(unname(y),na.rm=TRUE))
-		plot(x, unname(y), main = main, cex.main = 2,ylim = range(unname(y), na.rm = TRUE), xlab = xlab, ylab = ylab,type = "b", cex.lab = 1.5, cex.axis = 1.5)
+		plot(x, unname(y), main = main, cex.main = 2,ylim = range(unname(y), na.rm = TRUE), xlab = xlab, ylab = ylab,type = "b", cex.lab = 1.5, cex.axis = 1.5,col="black")
 		# NA points
 		na.x <- x
 		na.y <- rep(NA, length(na.x))
 		na.y[is.na(y)] <- min(y, na.rm = TRUE)
-		points(na.x, na.y, pch = 17, col = "grey", cex = 1.5)
+		points(na.x, na.y, pch = 17, col = "blue", cex = 1.5)
 	}
 
 	if (opt == 1) return()  # no need to plot trend/fitting curve.
@@ -2045,9 +2082,8 @@ cspei <- function(x, y,...) UseMethod('cspei')
 
 # Fit SPEI.
 cspei <- function(data, scale, kernel=list(type='rectangular',shift=0),
-	distribution='log-Logistic', fit='ub-pwm', na.rm=TRUE, 
+	distribution='log-Logistic', fit='ub-pwm', na.rm=FALSE, 
 	ref.start=NULL, ref.end=NULL, x=FALSE, ...) {
-
 	scale <- as.numeric(scale)
 	na.rm <- as.logical(na.rm)
 	x <- as.logical(x)
@@ -2299,28 +2335,28 @@ host institutions take any responsibility for the accuracy of the data produced 
 # package.check
 # Check for required packages and installs if necessary
 package.check <- function() {
-	list.of.packages <- c(  "bitops",
-				"Rcpp",
-				"caTools",
-				"PCICt",
-	                        "SPEI")
-	new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-	
-	# If climdex.pcic not installed and the .tar.gz file is not in current directory, then download modified copy from climpact2 github and install.
-	if(!("climdex.pcic" %in% installed.packages()[,"Package"])) {
-	        if(.Platform$OS.type == "unix") { install.packages("climdex.pcic.tar.gz",repos=NULL,type="source") 
-		} else { install.packages("climdex.pcic_1.1-5.1.zip",repos=NULL,type="win.binary") }
-	}
+	gui.packages <- c("bitops","Rcpp","caTools","PCICt","SPEI","climdex.pcic")
+	new.packages <- gui.packages[!(gui.packages %in% installed.packages()[,"Package"])]
 
-	# If any other packages not installed download and install from CRAN.
+	# Install/update packages needed for ClimPACT2 GUI.
 	if(length(new.packages)) {
 	        print("******************************")
 	        print(paste("Installing the following required packages...",new.packages,sep=""))
-	        install.packages(new.packages)
+	        install.packages(new.packages) 
 	}
-	
+
+	# Install Linux-specific packages
+	if(.Platform$OS.type == "unix") {
+                linux.packages <- c("ncdf4","foreach","doParallel","abind")
+                new.linux.packages <- linux.packages[!(linux.packages %in% installed.packages()[,"Package"])]
+
+		if(length(new.linux.packages)) {
+	                print("******************************")
+        	        print(paste("Installing the following required packages...",new.packages,sep=""))
+			install.packages(new.linux.packages) } 
+	}
+
 	print(paste("R version ",as.character(getRversion())," detected.",sep=""))
-	print("Required packages installed.")
 }
 
 # startss

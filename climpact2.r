@@ -938,7 +938,7 @@ climdex.spei <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift
 # get monthly means of tmin and tmax. And monthly total precip.
         tmax_monthly <- as.numeric(tapply.fast(spitmax,spifactor,mean,na.rm=TRUE))
         tmin_monthly <- as.numeric(tapply.fast(spitmin,spifactor,mean,na.rm=TRUE))
-        prec_sum <- as.numeric(tapply.fast(spiprec,spifactor,sum,na.rm=FALSE))
+        prec_sum <- as.numeric(tapply.fast(spiprec,spifactor,function(x) { if(all(is.na(x))) { return(NA) } else { return(sum(x,na.rm=TRUE)) } } ))	# Needed this function since summing a series of NA with na.rm = TRUE results in zero instead of NA.
 
 	tmax_monthly[tmax_monthly=="NaN"] <- NA
 	tmin_monthly[tmin_monthly=="NaN"] <- NA

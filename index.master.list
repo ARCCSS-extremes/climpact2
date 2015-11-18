@@ -1,35 +1,35 @@
-fd	days	Annual number of days when TN < 0 degC
-fd2	days	Annual number of days when TN < 2 degC
-fdm2	days	Annual number of days when TN < -2 degC
-fdm20	days	Annual number of days when TN < -20 degC
-id	days	Annual number of days when TX < 0 degC
-su	days	Annual number of days when TX > 25 degC
-tr	days	Annual number of days when TN > 20 degC
-gsl	days	Annual number of days between the first occurrence of 6 consecutive days with TM > 5 degC and the first occurrence of 6 consecutive days with TM < 5 degC
-txx	degC	Warmest daily TX
-tnn	degC	Coldest daily TN
-tnx	degC	Warmest daily TN
-txn	degC	Coldest daily TX
-dtr	degC	Mean difference between daily TX and daily TN
+fd	days	Annual number of days when TN < 0 °C
+fd2	days	Annual number of days when TN < 2 °C
+fdm2	days	Annual number of days when TN < -2 °C
+fdm20	days	Annual number of days when TN < -20 °C
+id	days	Annual number of days when TX < 0 °C
+su	days	Annual number of days when TX > 25 °C
+tr	days	Annual number of days when TN > 20 °C
+gsl	days	Annual number of days between the first occurrence of 6 consecutive days with TM > 5 °C and the first occurrence of 6 consecutive days with TM < 5 °C
+txx	°C	Warmest daily TX
+tnn	°C	Coldest daily TN
+tnx	°C	Warmest daily TN
+txn	°C	Coldest daily TX
+dtr	°C	Mean difference between daily TX and daily TN
 wsdi	days	Annual number of days with at least 6 consecutive days when TX > 90th percentile
 wsdin	days	Annual number of days with at least n consecutive days when TX > 90th percentile
 csdi	days	Annual number of days with at least 6 consecutive days when TN < 10th percentile
 csdin	days	Annual number of days with at least n consecutive days when TN < 10th percentile
 tx50p	%	Percentage of days of days where TX > 50th percentile 
-tx95t	degC	Value of 95th percentile of TX
+tx95t	°C	Value of 95th percentile of TX
 tx10p	%	Percentage of days when TX < 10th percentile
 tx90p	%	Percentage of days when TX > 90th percentile
 tn10p	%	Percentage of days when TN < 10th percentile
 tn90p	%	Percentage of days when TN > 90th percentile
-tm5a	days	Annual number of days when TM >= 5 degC
-tm5b	days	Annual number of days when TM < 5 degC
-tm10a	days	Annual number of days when TM >= 10 degC
-tm10b	days	Annual number of days when TM < 10 degC
-su30	days	Annual number of days when TX >= 30 degC
-su35	days	Annual number of days when TX >= 35 degC
-hddheat	degC	Annual sum of Tb - TM (where Tb is a user-defined location-specific base temperature and TM < Tb)
-cddcold	degC	Annual sum of TM - Tb (where Tb is a user-defined location-specific base temperature and TM > Tb)
-gddgrow	degC	Annual sum of TM - Tb (where Tb is a user-defined location-specific base temperature and TM > Tb)
+tm5a	days	Annual number of days when TM >= 5 °C
+tm5b	days	Annual number of days when TM < 5 °C
+tm10a	days	Annual number of days when TM >= 10 °C
+tm10b	days	Annual number of days when TM < 10 °C
+su30	days	Annual number of days when TX >= 30 °C
+su35	days	Annual number of days when TX >= 35 °C
+hddheat	°C	Annual sum of Tb - TM (where Tb is a user-defined location-specific base temperature and TM < Tb)
+cddcold	°C	Annual sum of TM - Tb (where Tb is a user-defined location-specific base temperature and TM > Tb)
+gddgrow	°C	Annual sum of TM - Tb (where Tb is a user-defined location-specific base temperature and TM > Tb)
 cdd	days	Maximum annual number of consecutive dry days (when precipitation < 1.0 mm)
 cwd	days	Maximum annual number of consecutive wet days (when precipitation >= 1.0 mm)
 r10mm	days	Annual number of days when precipitation >= 10 mm
