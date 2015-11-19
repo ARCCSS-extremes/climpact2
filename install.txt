@@ -1,7 +1,7 @@
 
 
 				ClimPACT2
-			Last updated: 26/8/2015
+			Last updated: 17/11/2015
 
 
   What is it?
@@ -25,41 +25,45 @@
   ClimPACT2 is available on github @ https://github.com/ARCCSS-extremes/climpact2
   
 
-  How do I install it?
-  --------------------
+  How do I use the GUI?
+  ---------------------
 
     Software you will need:
-        -netCDF (only required if working with three dimensional datasets)
-        -R. You will also need several R packages, which are installed
-         for you by the checker script, see below.
+        -R
 
     1) Create a new directory
 
-    2) cd to above directory and download and extract the following file:
+    2) cd to new directory, and download and extract the following file:
        https://github.com/ARCCSS-extremes/climpact2/archive/master.zip
 
-    3) In R, type "source('climpact2.checker.r')" to install the appropriate
-       R packages needed by ClimPACT2. 
+    3) In R, type "source('climpact2.GUI.r')"
+       The first time this is run ClimPACT2 will install required packages.
+       This will likely require you to select a mirror to download from.
  
-    4) Installation is complete.
-
   ** Note that if you are running a Windows operating system you will only 
      be able to use the GUI. In a Unix-based operating system you can use 
      the GUI as well as operate on gridded data.
 
-  How do I use it?
-  ----------------
+  What if I want to calculate the indices on a netCDF dataset?**
+  ------------------------------------------------------------
 
-  To run the GUI, cd to the directory where the ClimPACT2 files have been
-  extracted, then open R and run 'source("climpact2.GUI.r")'.
+    Software you will need:
+        -R
+        -netCDF
 
-  To calculate indices from gridded netCDF datasets, source the climpact2.r 
-  file and call the climpact.loader function. See climpact2.wrapper.r as an
-  example of doing this, to execute this script on the sample data, run 
-  'Rscript climpact2.wrapper.r' from the terminal command line.
+    1) Create a new directory
 
-  Calculating all 51 indices for a 20 year record with horizontal resolution 
-  of 144 x 215 takes approximately 12 hours on 2 cores. 
+    2) cd to new directory, and download and extract the following file:
+       https://github.com/ARCCSS-extremes/climpact2/archive/master.zip
+
+    3) Modify the climpact2.wrapper.r file to suit your needs. Then execute 
+       by running 'Rscript climpact2.wrapper.r' from the Linux command line.***
+
+  ** Note that if you are running a Windows operating system you will only
+     be able to use the GUI. In a Unix-based operating system you can use
+     the GUI as well as operate on netCDF files.
+  *** Calculating all 51 indices for a 20 year record with horizontal resolution 
+      of 144 x 215 takes approximately 12 hours on 2 cores. 
 
 
   Documentation
