@@ -198,7 +198,7 @@ fourboxes <- function(station, output, save = 0, outrange)
 
 		# write precip outliers
 		write.table("pc up", file = filena, append = FALSE, quote = FALSE, row.names = FALSE, col.names = FALSE)
-		for (a in 1:length(prec$stats[1,])) #12)
+		for (a in 1:12)
 		{
 			prov <- subset(datos,datos$month == a & datos$pc > respc$stats[5, a])
 			write.table(prov, file = filena, append = TRUE, quote = FALSE, row.names = FALSE, col.names = FALSE)
@@ -551,9 +551,6 @@ load.data.qc <- function() {
                 assign('date.years',date.years,envir=.GlobalEnv)
 
 	# create a climdex input object
-#print(temp.quantiles)
-#print(prec.quantiles)
-#print(quantiles)
 		cio <- climdexInput.raw(tmin=data[,6],tmax=data[,5],prec=data[,4],tmin.dates=pcict.dates,tmax.dates=pcict.dates,prec.dates=pcict.dates,base.range=c(base.year.start,base.year.end),prec.qtiles=prec.quantiles,
 			temp.qtiles=temp.quantiles,quantiles=quantiles)
 
@@ -666,7 +663,7 @@ load.data.qc <- function() {
                 spei.file.in <- paste(substr(thres.file.in,1,(nchar(thres.file.in)-4)),"_spei.csv",sep="")
                 spei.qtiles <- read.csv(spei.file.in,header=T,sep=',',na.strings="NA",colClasses=c('character','numeric','numeric','numeric'))
 
-                speitmax <<- spei.qtiles$Base.period.tmax ; speitmin <<- spei.qtiles$Base.period.tmin ; speiprec <<- spei.qtiles$Base.period.prec ; speidates <<- spei.qtiles$Base.period.dates
+				speitmax <<- spei.qtiles$Base_period_tmax ; speitmin <<- spei.qtiles$Base_period_tmin ; speiprec <<- spei.qtiles$Base_period_prec ; speidates <<- spei.qtiles$Base_period_dates
 
 		tkfocus(infor1)
 		tkconfigure(msg,text='',font=font_small)
@@ -842,7 +839,6 @@ load.data.qc <- function() {
 		}
 		
 		# STEP. 4 check for outliers based on standard deviations
-		# NICK: re-write everything below in this function.
 		# Check for temperatures outside a user-specified number of standard deviations.
 		print("CHECKING FOR TEMPERATURE OUTLIERS...")
 		# find stddev
@@ -882,7 +878,7 @@ load.data.qc <- function() {
 		#assign("namcal", namcal, envir = .GlobalEnv)
 		#write.table(data, file = namcal, append = FALSE, quote = FALSE, sep = ",", row.names = FALSE, na = "-99.9")
 
-		allqc(master = orig.name, output = outqcdir, outrange = stddev.crit)   # extraQC is called here. NOTE the default outrange=3 in original verson.
+		allqc(master = orig.name, output = outqcdir, outrange = 3) #stddev.crit)   # extraQC is called here. NOTE the default outrange=3 in original verson.
 		tclvalue(qc.yes) <<- TRUE  # the QC step is done, so you can continue...
 
                 print("COMPLETED CHECKING FOR TEMPERATURE OUTLIERS.")
