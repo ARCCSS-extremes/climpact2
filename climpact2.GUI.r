@@ -528,30 +528,35 @@ load.data.qc <- function() {
 
 	# Check dates are all existing, in the correct order and none are NA values.
                 date.seq <- seq(dates[1],dates[length(dates)],by="day")
-		if(length(dates) != length(date.seq)) { 
-                        test <- tkmessageBox(message = "Based on the first and last dates in your input file some intermediate dates seem to be missing. Check that the dates in your input file are complete and based on the gregorian calendar.",icon = "warning", title = "ClimPACT2 - warning")
-			close(process.pb)
-                        return() }
-		if(any(is.na(dates),is.nan(dates))) {
-                        test <- tkmessageBox(message = "Some dates are registering as NA, NaN or infinite. Please check dates in your input file.",icon = "warning", title = "ClimPACT2 - warning")
-                        close(process.pb)
-                        return() }
-                if(any(dates[1:length(dates)-1] > dates[2:length(dates)])) {
-                        test <- tkmessageBox(message = "Some dates are out of order. Please check dates in your input file.",icon = "warning", title = "ClimPACT2 - warning")
-                        close(process.pb)
-                        return() }
+#		if(length(dates) != length(date.seq)) { 
+#                        test <- tkmessageBox(message = "Based on the first and last dates in your input file some intermediate dates seem to be missing. Check that the dates in your input file are complete and based on the gregorian calendar.",icon = "warning", title = "ClimPACT2 - warning")
+#			close(process.pb)
+#                        return() }
+#		if(any(is.na(dates),is.nan(dates))) {
+#                        test <- tkmessageBox(message = "Some dates are registering as NA, NaN or infinite. Please check dates in your input file.",icon = "warning", title = "ClimPACT2 - warning")
+#                        close(process.pb)
+#                        return() }
+ #               if(any(dates[1:length(dates)-1] > dates[2:length(dates)])) {
+ #                       test <- tkmessageBox(message = "Some dates are out of order. Please check dates in your input file.",icon = "warning", title = "ClimPACT2 - warning")
+ #                       close(process.pb)
+ #                       return() }
 
-		days <- dates-as.Date("1850-01-01") #dates[1] # days since first date, needed for PCICt
+		date.seq <- data.frame(list(time=seq(dates[1],dates[length(dates)],by="day")))
+		data_raw = data.frame(list(time=as.Date(yyymmdd,format="%Y-%m-%d"),prec=data[,4],tmax=data[,5],tmin=data[,6]))
+		merge_data = merge(data_raw,date.seq,all=TRUE)
+
+		days <- as.Date(as.character(merge_data[,1],format="%Y-%m-%d"))-as.Date("1850-01-01")
 		seconds <- as.numeric(days*24*60*60)
-		pcict.dates <- as.PCICt(seconds,cal="gregorian",origin=as.character("1850-01-01"))      # pass each date as number of seconds since the first date (which is used as the origin)
+		pcict.dates <- as.PCICt(seconds,cal="gregorian",origin=as.character("1850-01-01"))
 		assign('pcict.dates',pcict.dates,envir=.GlobalEnv)
-		date.months <- unique(format(as.Date(yyymmdd),format="%Y-%m"))
-		date.years <- unique(format(as.Date(yyymmdd),format="%Y"))
+
+		date.months <- unique(format(as.character((merge_data[,1]),format="%Y-%m")))
+		date.years <- unique(format(as.character((merge_data[,1]),format="%Y")))
 		assign('date.months',date.months,envir=.GlobalEnv)
                 assign('date.years',date.years,envir=.GlobalEnv)
 
 	# create a climdex input object
-		cio <- climdexInput.raw(tmin=data[,6],tmax=data[,5],prec=data[,4],tmin.dates=pcict.dates,tmax.dates=pcict.dates,prec.dates=pcict.dates,base.range=c(base.year.start,base.year.end),prec.qtiles=prec.quantiles,
+		cio <- climdexInput.raw(tmin=merge_data[,4],tmax=merge_data[,3],prec=merge_data[,2],tmin.dates=pcict.dates,tmax.dates=pcict.dates,prec.dates=pcict.dates,base.range=c(base.year.start,base.year.end),prec.qtiles=prec.quantiles,
 			temp.qtiles=temp.quantiles,quantiles=quantiles)
 
 		assign('cio',cio,envir=.GlobalEnv)
@@ -705,7 +710,6 @@ load.data.qc <- function() {
                 dates <- as.Date(yyymmdd,format="%Y-%m-%d")
                 base.year.start<<-as.numeric(tclvalue(base.year.start.tcl)) ;  assign("base.year.start",base.year.start,envir=.GlobalEnv)
                 base.year.end<<-as.numeric(tclvalue(base.year.end.tcl)) ;  assign("base.year.end",base.year.end,envir=.GlobalEnv)
-#		get_base()
 
         # Check base period is valid when no thresholds loaded
                 if(is.null(quantiles)) {
@@ -719,9 +723,6 @@ load.data.qc <- function() {
                 	tkmessageBox(message = paste("The base period of your loaded thresholds ","(",base.year.start," to ",base.year.end,") must lie outside of the current data's date range (",format(dates[1],format="%Y")," to ",
         	              format(dates[length(dates)],format="%Y"),").",sep = ""))
 	                return() 
-
-#			base.year.start <<- as.numeric(format(dates[1],format="%Y")) - 20
-#			base.year.end <<- as.numeric(format(dates[1],format="%Y")) - 10
 		}
 
                 process.pb <<- tkProgressBar("%", "Checking latitude/longitude, base period...",0, 100, 10)
@@ -729,7 +730,8 @@ load.data.qc <- function() {
                 # source climpact code and load data from ascii file into climdex object
                 source("climpact2.r")
 
-	# NICK: After this point all references to data should be made to the climdex input object 'cio'
+	# NICK: After this point all references to data should be made to the climdex input object 'cio'. One exception is the allqc function, 
+	# which still references the INPUT to the climdex.input function.
 		load.data() ; if(!thres.calc) return()
                 setTkProgressBar(process.pb,30,label="Checking precipitation data...")
 
@@ -741,24 +743,23 @@ load.data.qc <- function() {
 		assign("title.station", title.station, envir = .GlobalEnv)
 		assign("ofilename", ofilename, envir = .GlobalEnv)
 		
-		# STEP 1.
+		# QC 1.
 		# search for precip < 0 and write to file. 
-		mid <- cio@data$prec[!is.na(cio@data$prec)]
-		mid <- mid[mid < 0]
-		nam1 <- paste(outlogdir, paste(ofilename, "_prcpQC.csv", sep = ""), sep = "/")
-		write.table(mid, file = nam1, append = FALSE, quote = FALSE, sep = ", ", row.names = FALSE)
-                if (any(!is.na(cio@data$prec) && cio@data$prec < 0)) {
-                        nam1 <- paste(outlogdir, paste(ofilename, "_prcpQC.csv", sep = ""), sep = "/")
-                        tkmessageBox(message = paste("ERROR: Negative precipitation values were found and require correcting before indices can be calculated.\nView values in:\n ",nam1,sep = ""))
-			cio <<- NULL
-			tkdestroy(infor1)
-			tkfocus(start1)
-			close(process.pb)
-			return()
-		}
+#		bad.prec.ind <- which(!is.na(cio@data$prec) & cio@data$prec < 0)
+#		bad.prec = cbind.data.frame(as.character(cio@dates[bad.prec.ind]),cio@data$prec[bad.prec.ind])
+#		nam1 <- paste(outlogdir, paste(ofilename, "_prcpQC.csv", sep = ""), sep = "/")
+#		write.table(bad.prec, file = nam1, append = FALSE, quote = FALSE, sep = ", ", row.names = FALSE,col.names=c("Date","Prec"))
+##                if (any(!is.na(cio@data$prec) & cio@data$prec < 0)) {
+##                        tkmessageBox(message = paste("ERROR: Negative precipitation values were found and require correcting before indices can be calculated.\nView values in:\n ",nam1,sep = ""))
+##			cio <<- NULL
+##			tkdestroy(infor1)
+##			tkfocus(start1)
+##			close(process.pb)
+##			return()
+##		}
 		setTkProgressBar(process.pb,40,label="Creating QC plots...")
 
-		# STEP 2.
+		# QC 2.
 		# output plots for tmin, tmax, prcp and dtr
 		nam1 <- paste(outlogdir, paste(ofilename, "_prcpPLOT.pdf", sep = ""), sep = "/")
 		pdf(file = nam1)
@@ -784,61 +785,54 @@ load.data.qc <- function() {
 		pdf(file = nam1)
 		pplotts(var = "dtr", type = "l", tit = ofilename)
 		dev.off()
-		
-		# STEP 3.
+
+		# QC 3.
 		# Find where tmax < tmin or where either are >/< 70 degC, then write to file.
 		setTkProgressBar(process.pb,60,label="Checking temperature values...")
+#
+#		temiss <- which(cio@data$dtr <= 0 |
+#		                 cio@data$tmax <= -70 |
+#		                 cio@data$tmax >= 70 |
+#		                 cio@data$tmin <= -70 |
+#		                 cio@data$tmin >= 70)
+#		                 
+#		nam1 <- paste(outlogdir, paste(ofilename, "_tempQC.csv", sep = ""), sep = "/")
+#		dataout = cbind.data.frame(as.character(cio@dates[temiss]),cio@data$tmax[temiss],cio@data$tmin[temiss],cio@data$prec[temiss],cio@data$dtr[temiss])
+#		write.table(dataout, file = nam1, append = FALSE, quote = FALSE, sep = ", ", row.names = FALSE,col.names=c("Date","Tmax","Tmin","Prec","DTR"))
+#
+#		tmin.rle <- rle(cio@data$tmin[!is.na(cio@data$tmin)])
+#		tmax.rle <- rle(cio@data$tmax[!is.na(cio@data$tmax)])
+#                tmin.rle.na <- rle(cio@data$tmin)
+#                tmax.rle.na <- rle(cio@data$tmax)
+#
+#		length.arrays = any(tmin.rle$lengths[tmin.rle$values==0] > 0)
+#
+#		if(any(tmin.rle$lengths[tmin.rle$values==0] > running.zero.allowed.in.temperature)) {
+#			# Get index of beginning of anomalous zero run
+#			end.index <- sum(tmin.rle.na$lengths[1:which(tmin.rle.na$values==0 & tmin.rle.na$lengths>running.zero.allowed.in.temperature)[1]])
+#			beg.index <- end.index-tmin.rle.na$lengths[tmin.rle.na$values==0 & tmin.rle.na$lengths>running.zero.allowed.in.temperature]+1
+#
+#	                tkmessageBox(message = paste("WARNING: A series of at least ",running.zero.allowed.in.temperature," zeros were found in your minimum temperature data between ",
+#				cio@dates[beg.index[1]]," and ",cio@dates[end.index[1]],". Please check these, processing will continue.",sep=""),icon = "warning", title = "ClimPACT2 - warning")
+#			rm(beg.index,end.index)
+#		}
+#                if(any(tmax.rle$lengths[tmax.rle$values==0] > running.zero.allowed.in.temperature)) {
+#                        # Get index of beginning of anomalous zero run
+#                        end.index <- sum(tmax.rle.na$lengths[1:which(tmax.rle.na$values==0 & tmax.rle.na$lengths>running.zero.allowed.in.temperature)[1]])
+#                        beg.index <- end.index-tmax.rle.na$lengths[tmax.rle.na$values==0 & tmax.rle.na$lengths>running.zero.allowed.in.temperature]+1
+#
+#                        tkmessageBox(message = paste("WARNING: A series of at least ",running.zero.allowed.in.temperature," zeros were found in your maximum temperature data between ",
+#                                cio@dates[beg.index[1]]," and ",cio@dates[end.index[1]],". Please check these, processing will continue.",sep=""),icon = "warning", title = "ClimPACT2 - warning")
+#                        rm(beg.index,end.index)
+#                }
+#
+#		# NA temperature data at dates where tmax, tmin or dtr is suspicious.
+#		cio@data$tmax[temiss] = NA
+#		cio@data$tmin[temiss] = NA
+#		cio@data$dtr[temiss] = NA
+#		cio@data$tavg[temiss] = NA
 
-		dtr <- data[, "tmax"] - data[, "tmin"]
-		data <- cbind(data, dtr)
-		dimnames(data)[[2]][7] <- "dtr"
-		temiss <- data
-		temiss <- temiss[is.na(temiss[, "tmax"]) == FALSE & is.na(temiss[, "tmin"]) == FALSE, ]
-		temiss <- temiss[temiss[, 7] <= 0 |
-		                 temiss[, 5] <= -70 |
-		                 temiss[, 5] >= 70 |
-		                 temiss[, 6] <= -70 |
-		                 temiss[, 6] >= 70, ]
-		dimnames(temiss)[[2]][7] <- "tmax-tmin"
-		nam1 <- paste(outlogdir, paste(ofilename, "_tempQC.csv", sep = ""), sep = "/")
-		write.table(temiss, file = nam1, append = FALSE, quote = FALSE, sep = ", ", row.names = FALSE)
-
-		tmin.rle <- rle(data[!is.na(data[,5]),5])
-		tmax.rle <- rle(data[!is.na(data[,6]),6])
-                tmin.rle.na <- rle(data[,5])
-                tmax.rle.na <- rle(data[,6])
-
-		length.arrays = any(tmin.rle$lengths[tmin.rle$values==0] > 0)
-
-		if(any(tmin.rle$lengths[tmin.rle$values==0] > running.zero.allowed.in.temperature)) {
-			# Get index of beginning of anomalous zero run
-			end.index <- sum(tmin.rle.na$lengths[1:which(tmin.rle.na$values==0 & tmin.rle.na$lengths>running.zero.allowed.in.temperature)[1]])
-			beg.index <- end.index-tmin.rle.na$lengths[tmin.rle.na$values==0 & tmin.rle.na$lengths>running.zero.allowed.in.temperature]+1
-
-	                tkmessageBox(message = paste("WARNING: A series of ",running.zero.allowed.in.temperature," zeros were found in your minimum temperature data between ",
-				cio@dates[beg.index[1]]," and ",cio@dates[end.index[1]],". Please check these, processing will continue.",sep=""),icon = "warning", title = "ClimPACT2 - warning")
-			rm(beg.index,end.index)
-		}
-                if(any(tmax.rle$lengths[tmax.rle$values==0] > running.zero.allowed.in.temperature)) {
-                        # Get index of beginning of anomalous zero run
-                        end.index <- sum(tmax.rle.na$lengths[1:which(tmax.rle.na$values==0 & tmax.rle.na$lengths>running.zero.allowed.in.temperature)[1]])
-                        beg.index <- end.index-tmax.rle.na$lengths[tmax.rle.na$values==0 & tmax.rle.na$lengths>running.zero.allowed.in.temperature]+1
-
-                        tkmessageBox(message = paste("WARNING: A series of ",running.zero.allowed.in.temperature," zeros were found in your maximum temperature data between ",
-                                cio@dates[beg.index[1]]," and ",cio@dates[end.index[1]],". Please check these, processing will continue.",sep=""),icon = "warning", title = "ClimPACT2 - warning")
-                        rm(beg.index,end.index)
-                }
-
-		if (dim(temiss)[1] > 0)
-		{
-			# records with abs(tmax)>=70, abs(tmin)>=70 set to NA
-			data[is.na(data[, 5]) == FALSE & abs(data[, 5]) >= 70, 5] <- NA
-			data[is.na(data[, 6]) == FALSE & abs(data[, 6]) >= 70, 6] <- NA
-			# records with tmax < tmin are set to NA
-			data[is.na(data[, 5]) == FALSE & is.na(data[, 6]) == FALSE & data[, "dtr"] < 0, c("tmax", "tmin")] <- NA
-		}
-		
-		# STEP. 4 check for outliers based on standard deviations
+		# QC 4. Check for outliers based on standard deviations
 		# Check for temperatures outside a user-specified number of standard deviations.
 		print("CHECKING FOR TEMPERATURE OUTLIERS...")
 		# find stddev
@@ -850,22 +844,24 @@ load.data.qc <- function() {
 		tmax.stddev <- sqrt(tapply(cio@data$tmax,day.factors,var,na.rm=TRUE))
 		tmin.mean <- tapply(cio@data$tmin,day.factors,mean,na.rm=TRUE)
 		tmin.stddev <- sqrt(tapply(cio@data$tmin,day.factors,var,na.rm=TRUE))
-		rm(dtr)
 		dtr.mean <- tapply(cio@data$dtr,day.factors,mean,na.rm=TRUE)
 		dtr.stddev <- sqrt(tapply(cio@data$dtr,day.factors,var,na.rm=TRUE))
 
 		print("TESTING DATA, PLEASE WAIT...")
                 setTkProgressBar(process.pb,80,label="Checking for temperature outliers...")
 		tmax.outliers <- tapply(1:length(cio@data$tmax),all.day.factors,function(idx) {
-			if(!is.na(cio@data$tmax[idx])) { month.day <- format(as.Date(all.day.factors[idx]),format="%m-%d")
+			month.day <- format(as.Date(all.day.factors[idx]),format="%m-%d")
+			if(!is.na(cio@data$tmax[idx]) && !is.na(tmax.mean[month.day]) && !is.na(tmax.stddev[month.day])) {
 				if(abs(cio@data$tmax[idx] - tmax.mean[month.day]) > (stddev.crit*tmax.stddev[month.day])) { return(TRUE) } else { return(FALSE) } }
 			else { return(FALSE) } } )
 		tmin.outliers <- tapply(1:length(cio@data$tmin),all.day.factors,function(idx) {
-		        if(!is.na(cio@data$tmin[idx])) { month.day <- format(as.Date(all.day.factors[idx]),format="%m-%d")
+				month.day <- format(as.Date(all.day.factors[idx]),format="%m-%d")
+		        if(!is.na(cio@data$tmin[idx]) && !is.na(tmin.mean[month.day]) && !is.na(tmin.stddev[month.day])) { 
 		                if(abs(cio@data$tmin[idx] - tmin.mean[month.day]) > (stddev.crit*tmin.stddev[month.day])) { return(TRUE) } else { return(FALSE) } }
 		        else { return(FALSE) } } )
 		dtr.outliers <- tapply(1:length(cio@data$dtr),all.day.factors,function(idx) {
-		        if(!is.na(cio@data$dtr[idx])) { month.day <- format(as.Date(all.day.factors[idx]),format="%m-%d")
+				month.day <- format(as.Date(all.day.factors[idx]),format="%m-%d")
+		        if(!is.na(cio@data$dtr[idx]) && !is.na(dtr.mean[month.day]) && !is.na(dtr.stddev[month.day])) { 
 		                if(abs(cio@data$dtr[idx] - dtr.mean[month.day]) > (stddev.crit*dtr.stddev[month.day])) { return(TRUE) } else { return(FALSE) } }
 		        else { return(FALSE) } } )
                 setTkProgressBar(process.pb,90,label="Extra QC checks...")
@@ -878,20 +874,21 @@ load.data.qc <- function() {
 		#assign("namcal", namcal, envir = .GlobalEnv)
 		#write.table(data, file = namcal, append = FALSE, quote = FALSE, sep = ",", row.names = FALSE, na = "-99.9")
 
+		# QC 5. Call the ExtraQC functions.
 		allqc(master = orig.name, output = outqcdir, outrange = 3) #stddev.crit)   # extraQC is called here. NOTE the default outrange=3 in original verson.
 		tclvalue(qc.yes) <<- TRUE  # the QC step is done, so you can continue...
-
+		
                 print("COMPLETED CHECKING FOR TEMPERATURE OUTLIERS.")
 
                 # If outliers are found above, write out corresponding dates that have the suspect data.
 		# This windowing code is admittedly verbose due to poor documentation of tcltk functions and time constraints.
-                if (any(tmax.outliers==TRUE) | any(tmin.outliers==TRUE) | any(dtr.outliers==TRUE))
-                {
+#                if (any(tmax.outliers==TRUE) | any(tmin.outliers==TRUE) | any(dtr.outliers==TRUE))
+#                {
                         close(process.pb)
-                        nam1 <- paste(outlogdir, paste(ofilename, "_tepstdQC.csv", sep = ""), sep = "/")
+                        nam1 <- paste(outlogdir, paste(ofilename, "_temp_stddev_QC.csv", sep = ""), sep = "/")
                         idx <- which(tmax.outliers==TRUE | tmin.outliers==TRUE | dtr.outliers==TRUE)
-                        ofile <- cbind(as.character(cio@dates[idx]),cio@data$tmax[idx],cio@data$tmin[idx],cio@data$dtr[idx])    # TODO: write out stddev's as well?
-                        write.table(ofile, file = nam1, append = FALSE, quote = FALSE, sep = ",", row.names = FALSE,col.names=c(" DATE"," TMAX"," TMIN"," DTR"))
+                        ofile <- cbind.data.frame(as.character(cio@dates[idx]),cio@data$tmax[idx],cio@data$tmin[idx],cio@data$dtr[idx])    # TODO: write out stddev's as well?
+                        write.table(ofile, file = nam1, append = FALSE, quote = FALSE, sep = ",", row.names = FALSE,col.names=c("Date","Tmax","Tmin","DTR"))
                         tkconfigure(start.but,bg="white",text = "   LOAD AND  \n  CHECK DATA   ", command = load.data.qc, width = 15, font = fontHeading2)
                         tkconfigure(cal.but,bg="lightgreen",text = "   CALCULATE \n   INDICES  ", command = index.calc1, width = 15, font = fontHeading2)
 
@@ -904,14 +901,15 @@ load.data.qc <- function() {
                         tkwm.title(proc.complete, "\tClimPACT2\t")
                         tt2 <- tkframe(proc.complete,bg="white")
                         frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
-                        tkgrid(frame.space); tkgrid(tklabel(tt2, text = "PROCESSING COMPLETE", bg = "white", font = fontHeading2),columnspan=1);tkgrid(frame.space); tkgrid(tt2);tkpack(tt2)
+                        tkgrid(frame.space); tkgrid(tklabel(tt2, text = "QUALITY CONTROL COMPLETE", bg = "white", font = fontHeading2),columnspan=1);tkgrid(frame.space); tkgrid(tt2);tkpack(tt2)
 
                         tt2 <- tkframe(proc.complete,bg="white")
                         frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
                         tkgrid(frame.space)
                         tkgrid(tklabel(tt2,text=
-				paste("Values greater than ",stddev.crit, " standard deviations from the mean were found in your temperature data, 
-these values should be checked for validity. They can be viewed in:\n ",nam1,sep = "")
+#				paste("Values greater than ",stddev.crit, " standard deviations from the mean were found in your temperature data, 
+#these values should be checked for validity. They can be viewed in:\n ",nam1,sep = "")
+				paste("Please evaluate output in the following directories \nfor potential issues before continuing.\n\n",outlogdir,"\n",outqcdir,sep="")
 		                ,bg='white',font=font_small,width=75),sticky="nsew")
                         tkgrid(frame.space)
                         tkgrid(tt2);tkpack(tt2)
@@ -920,35 +918,35 @@ these values should be checked for validity. They can be viewed in:\n ",nam1,sep
                         tt2 <- tkframe(proc.complete,bg="white"); ok1.but<-tkbutton(tt2,text="    Done    ",command=proc.complete.done,bg='white',font=font_small);tkgrid(ok1.but);tkgrid(tt2);tkpack(tt2)
                         tt3 <- tkframe(proc.complete,bg="white");frame.space <- tklabel(tt3, text = " ", font = font_small, bg = "white");tkgrid(frame.space);tkgrid(tt3);tkpack(tt3)
                         loaded <<- TRUE
-                } else {
-                        close(process.pb)
+#                } else {
+#                        close(process.pb)
 #                        tkmessageBox(message = paste("\t\tPROCESSING COMPLETE\n\nNo quality issues were found.",sep = ""))
-			tkconfigure(start.but,bg="white",text = "   LOAD AND  \n  CHECK DATA   ", command = load.data.qc, width = 15, font = fontHeading2)
-			tkconfigure(cal.but,bg="lightgreen",text = "   CALCULATE \n   INDICES  ", command = index.calc1, width = 15, font = fontHeading2)
-
-                        proc.complete.done <- function(){
-                                tkdestroy(proc.complete)
-                                tkfocus(infor1) }
-
-                        proc.complete <<- tktoplevel(bg = "white")
-                        tkfocus(proc.complete)
-                        tkwm.title(proc.complete, "\tClimPACT2\t")
-                        tt2 <- tkframe(proc.complete,bg="white")
-                        frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
-                        tkgrid(frame.space); tkgrid(tklabel(tt2, text = "PROCESSING COMPLETE", bg = "white", font = fontHeading2),columnspan=1);tkgrid(frame.space); tkgrid(tt2);tkpack(tt2)
-
-                        tt2 <- tkframe(proc.complete,bg="white")
-                        frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
-                        tkgrid(frame.space)
-                        tkgrid(tklabel(tt2,text="No quality issues were found.",bg='white',font=font_small,width=70),sticky="nsew")
-                        tkgrid(frame.space)
-                        tkgrid(tt2);tkpack(tt2)
-
-                        tt2 <- tkframe(proc.complete,bg="white"); frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white");tkgrid(frame.space);tkgrid(tt2);tkpack(tt2)
-                        tt2 <- tkframe(proc.complete,bg="white"); ok1.but<-tkbutton(tt2,text="    Done    ",command=proc.complete.done,bg='white',font=font_small);tkgrid(ok1.but);tkgrid(tt2);tkpack(tt2)
-                        tt3 <- tkframe(proc.complete,bg="white");frame.space <- tklabel(tt3, text = " ", font = font_small, bg = "white");tkgrid(frame.space);tkgrid(tt3);tkpack(tt3)
-	                loaded <<- TRUE
-		}
+#			tkconfigure(start.but,bg="white",text = "   LOAD AND  \n  CHECK DATA   ", command = load.data.qc, width = 15, font = fontHeading2)
+#			tkconfigure(cal.but,bg="lightgreen",text = "   CALCULATE \n   INDICES  ", command = index.calc1, width = 15, font = fontHeading2)
+#
+#                       proc.complete.done <- function(){
+#                                tkdestroy(proc.complete)
+#                                tkfocus(infor1) }
+#
+#                        proc.complete <<- tktoplevel(bg = "white")
+#                        tkfocus(proc.complete)
+#                        tkwm.title(proc.complete, "\tClimPACT2\t")
+#                        tt2 <- tkframe(proc.complete,bg="white")
+#                        frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
+#                        tkgrid(frame.space); tkgrid(tklabel(tt2, text = "PROCESSING COMPLETE", bg = "white", font = fontHeading2),columnspan=1);tkgrid(frame.space); tkgrid(tt2);tkpack(tt2)
+#
+#                        tt2 <- tkframe(proc.complete,bg="white")
+#                        frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
+#                        tkgrid(frame.space)
+#                        tkgrid(tklabel(tt2,text="No quality issues were found.",bg='white',font=font_small,width=70),sticky="nsew")
+#                        tkgrid(frame.space)
+#                        tkgrid(tt2);tkpack(tt2)
+#
+#                        tt2 <- tkframe(proc.complete,bg="white"); frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white");tkgrid(frame.space);tkgrid(tt2);tkpack(tt2)
+#                        tt2 <- tkframe(proc.complete,bg="white"); ok1.but<-tkbutton(tt2,text="    Done    ",command=proc.complete.done,bg='white',font=font_small);tkgrid(ok1.but);tkgrid(tt2);tkpack(tt2)
+#                        tt3 <- tkframe(proc.complete,bg="white");frame.space <- tklabel(tt3, text = " ", font = font_small, bg = "white");tkgrid(frame.space);tkgrid(tt3);tkpack(tt3)
+#	                loaded <<- TRUE
+#		}
 	} # end of qcontrol()
 
 	# additional.data
@@ -1229,7 +1227,7 @@ these values should be checked for validity. They can be viewed in:\n ",nam1,sep
         tt1<-tkframe(infor1,bg="white")
         frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
         tkgrid(frame.space)
-	tkgrid(tklabel(tt1, text = "STANDARD DEVIATIONS FOR OUTLIERS", bg = "white", font = font_small))#, side = "left")
+	tkgrid(tklabel(tt1, text = "STANDARD DEVIATIONS FOR\nTEMPERATURE OUTLIERS", bg = "white", font = font_small))#, side = "left")
         tkgrid(tt1)
         tkpack(tt1)
         tt1<-tkframe(infor1,bg="white")
@@ -1852,17 +1850,17 @@ write.hw.csv <- function(index=NULL,index.name=NULL) {
 	# write Tx90 heatwave data
         nam1 <- paste(outinddir, paste(ofilename, "_Tx90_heatwave.csv", sep = ""), sep = "/")
 	write.table(aspect.names, file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
-        write.table(cbind(as.numeric(date.years),aperm(index[1,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
+        write.table(cbind((date.years),aperm(index[1,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 
         # write Tn90 heatwave data
         nam1 <- paste(outinddir, paste(ofilename, "_Tn90_heatwave.csv", sep = ""), sep = "/")
         write.table(aspect.names, file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
-        write.table(cbind(as.numeric(date.years),aperm(index[2,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
+        write.table(cbind((date.years),aperm(index[2,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 
         # write EHF heatwave data
         nam1 <- paste(outinddir, paste(ofilename, "_EHF_heatwave.csv", sep = ""), sep = "/")
         write.table(aspect.names, file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
-        write.table(cbind(as.numeric(date.years),aperm(index[3,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
+        write.table(cbind((date.years),aperm(index[3,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 }
 
 # plot.hw
@@ -1881,16 +1879,15 @@ plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) {
 	        	namp <- paste(outjpgdir, paste(ofilename, "_", definitions[def],"_",aspects[asp], ".jpg", sep = ""), sep = "/")
 	        	jpeg(file = namp, width = 1024, height = 768)
 		        dev0 = dev.cur()
-
 			if(definitions[def]=="EHF" && any(aspects[asp]=="HWM",aspects[asp]=="HWA")) unit = "°C^2" else unit = units[asp]
-		        plotx(as.numeric(date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label,index.name=index.name)
+		        plotx((date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label,index.name=index.name)
 
 	                dev.set(which = pdf.dev)
-        	        plotx(as.numeric(date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label,index.name=index.name)
+        	        plotx((date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label,index.name=index.name)
 			dev.copy()
                         dev.off(dev0)
 
-                        fit1<-suppressWarnings(lsfit(as.numeric(date.years),index[def,asp,]))
+                        fit1<-suppressWarnings(lsfit((date.years),index[def,asp,]))
 			out1<<-ls.print(fit1,print.it=F)
                         cat(file=trend_file,paste(latitude,longitude,paste(definitions[def],aspects[asp],sep="."),years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
 		}
