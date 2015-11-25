@@ -901,7 +901,7 @@ load.data.qc <- function() {
                         tkwm.title(proc.complete, "\tClimPACT2\t")
                         tt2 <- tkframe(proc.complete,bg="white")
                         frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
-                        tkgrid(frame.space); tkgrid(tklabel(tt2, text = "QUALITY CONTROL COMPLETE", bg = "white", font = fontHeading2),columnspan=1);tkgrid(frame.space); tkgrid(tt2);tkpack(tt2)
+                        tkgrid(frame.space); tkgrid(tklabel(tt2, text = "QUALITY CONTROL COMPLETE", bg = "white", font = fontHeading2),columnspan=1);tkgrid(frame.space); tkgrid(tt2);#tkpack(tt2)
 
                         tt2 <- tkframe(proc.complete,bg="white")
                         frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
@@ -912,11 +912,11 @@ load.data.qc <- function() {
 				paste("Please evaluate output in the following directories \nfor potential issues before continuing.\n\n",outlogdir,"\n",outqcdir,sep="")
 		                ,bg='white',font=font_small,width=75),sticky="nsew")
                         tkgrid(frame.space)
-                        tkgrid(tt2);tkpack(tt2)
+                        tkgrid(tt2);#tkpack(tt2)
 
-                        tt2 <- tkframe(proc.complete,bg="white"); frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white");tkgrid(frame.space);tkgrid(tt2);tkpack(tt2)
-                        tt2 <- tkframe(proc.complete,bg="white"); ok1.but<-tkbutton(tt2,text="    Done    ",command=proc.complete.done,bg='white',font=font_small);tkgrid(ok1.but);tkgrid(tt2);tkpack(tt2)
-                        tt3 <- tkframe(proc.complete,bg="white");frame.space <- tklabel(tt3, text = " ", font = font_small, bg = "white");tkgrid(frame.space);tkgrid(tt3);tkpack(tt3)
+                        tt2 <- tkframe(proc.complete,bg="white"); frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white");tkgrid(frame.space);tkgrid(tt2);#tkpack(tt2)
+                        tt2 <- tkframe(proc.complete,bg="white"); ok1.but<-tkbutton(tt2,text="    Done    ",command=proc.complete.done,bg='white',font=font_small);tkgrid(ok1.but);tkgrid(tt2);#tkpack(tt2)
+                        tt3 <- tkframe(proc.complete,bg="white");frame.space <- tklabel(tt3, text = " ", font = font_small, bg = "white");tkgrid(frame.space);tkgrid(tt3);#tkpack(tt3)
                         loaded <<- TRUE
 #                } else {
 #                        close(process.pb)
@@ -1180,14 +1180,14 @@ load.data.qc <- function() {
         frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
 	tkgrid(tklabel(tt1, text = paste("FILE:", orig.name.user, ""), bg = "white", font = font_small))
         tkgrid(tt1)
-        tkpack(tt1)
+#        tkpack(tt1)
 
         tt1 <- tkframe(infor1, bg = "white")
         help1<-tkbutton(tt1,text='?',command=load.help,bg='white')
 	tkgrid(tklabel(tt1, text = "ENTER RECORD INFORMATION", bg = "white", font = fontHeading2),help1)
         tkgrid(frame.space)
         tkgrid(tt1)
-        tkpack(tt1)
+#        tkpack(tt1)
 
         tt1 <- tkframe(infor1, bg = "white")
 	tkgrid(tklabel(tt1, text = "STATION NAME", bg = "white", font = font_small))
@@ -1196,14 +1196,14 @@ load.data.qc <- function() {
         frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
         tkgrid(frame.space)
 	tkgrid(tt1)
-	tkpack(tt1)
+#	tkpack(tt1)
 
 	tt1<-tkframe(infor1,bg="white")
 	LatEntry <- tkentry(tt1, width = 6, textvariable = latentry, bg = "white")
 	LonEntry <- tkentry(tt1, width = 6, textvariable = lonentry, bg = "white")
 	tkgrid(tklabel(tt1, text = "LATITUDE:", bg = "white", font = font_small),LatEntry,tklabel(tt1, text="LONGITUDE:", bg = "white", font = font_small),LonEntry)
 	tkgrid(tt1)
-	tkpack(tt1)
+#	tkpack(tt1)
 
         tt1<-tkframe(infor1,bg="white")
         frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
@@ -1212,7 +1212,7 @@ load.data.qc <- function() {
         tkgrid(frame.space)
 	tkgrid(lab1)
         tkgrid(tt1)
-        tkpack(tt1)
+#        tkpack(tt1)
 
         tt1<-tkframe(infor1,bg="white")
         lab2<-tklabel(tt1,text=' to ',bg='white',font=font_small)
@@ -1222,39 +1222,39 @@ load.data.qc <- function() {
         base.year.start<-as.numeric(tclvalue(base.year.start.tcl));  assign("base.year.start",base.year.start,envir=.GlobalEnv)
         base.year.end<-as.numeric(tclvalue(base.year.end.tcl));    assign("base.year.end",base.year.end,envir=.GlobalEnv)
         tkgrid(tt1)
-        tkpack(tt1)
+#        tkpack(tt1)
 
         tt1<-tkframe(infor1,bg="white")
         frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
         tkgrid(frame.space)
 	tkgrid(tklabel(tt1, text = "STANDARD DEVIATIONS FOR\nTEMPERATURE OUTLIERS", bg = "white", font = font_small))#, side = "left")
         tkgrid(tt1)
-        tkpack(tt1)
+#        tkpack(tt1)
         tt1<-tkframe(infor1,bg="white")
         textEntryWidget2 <- tkentry(tt1, width = 5, textvariable = nstddev, bg = "white")
 	tkgrid(textEntryWidget2)
 	tkgrid(tt1)
-	tkpack(tt1)
+#	tkpack(tt1)
 	
 	err2 <- tklabel(tt1, text = err20, font = font_small, bg = "white")
 
         tt1<-tkframe(infor1,bg="white")
         tkgrid(tklabel(tt1, text = "    ", bg = "white"));
-        t1=tkbutton(tt1,text='load thresholds',command=read.threshold,bg='white',font=fontTextLabel)
+        t1=tkbutton(tt1,text='load previous thresholds',command=read.threshold,bg='white',font=fontTextLabel)
         t2=tkbutton(tt1,text='load SPEI/SPI thresholds',command=read.threshold.spei,bg='white',font=fontTextLabel)
         tkgrid(t1)#,t2)
         msg=tklabel(tt1,text=thres_err,bg='white')
         tkgrid(msg)
         tkgrid(tt1)
-        tkpack(tt1)
+#        tkpack(tt1)
 
         tt1<-tkframe(infor1,bg="white")
         frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
-	tkgrid(tkbutton(tt1, text = "  PROCESS DATA ",command = qcontrol, font = fontHeading2, bg = "white"))
+	tkgrid(tkbutton(tt1, text = "  PERFORM QUALITY CONTROL ",command = qcontrol, font = fontHeading2, bg = "white"))
         tkgrid(frame.space)
         tkgrid(frame.space)
         tkgrid(tt1)
-        tkpack(tt1)
+#        tkpack(tt1)
 
 #        tt1<-tkframe(infor1,bg="white")
 #        tkgrid(tkbutton(tt1, text = "  Load an additional climate field ",command = additional.data, font = fontTextLabel, bg = "white"))
@@ -1270,7 +1270,7 @@ load.data.qc <- function() {
         frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
         tkgrid(frame.space)
         tkgrid(tt1)
-	tkpack(tt1)
+#	tkpack(tt1)
 } # END OF load.data.qc
 
 # function leapyear
@@ -1977,12 +1977,12 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 	nay <- which(!is.na(y0))
 	x <- x0[nay[1]:nay[length(nay)]]
 	y <- y0[nay[1]:nay[length(nay)]]
-	
+
 	# james: i'm turning xpd off for barplots, so that i can clip the range w/o the bars
 	# running off the page. is this required?
 	par(oma = c(1, 1, 1, 1), xpd = FALSE) #to enable things to be drawn outside the plot region
-	names(y) <- c(strtrim(x,4))
-	
+	#names(y) <- c(strtrim(x,4))
+
 	# calculate range to limit the plots to (otherwise barplots are useless... they're in
 	# any non-barplots for consistency). also to allow for overlays like marking na points
 	# y.range <- range(y, na.rm = TRUE) #- 0.1 * (max(y, na.rm = TRUE) - min(y, na.rm = TRUE))
@@ -2012,7 +2012,9 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 			xy <- cbind(bp,y)
 		} else {
 #			bp <- barplot(y, main = main, cex.main = 2,ylim = range(y, na.rm = TRUE),xlab = NULL, ylab = ylab,cex.lab = 1.5, cex.axis = 1.5,xpd = FALSE)
-	                plot(x, unname(y), main = main, cex.main = 2,ylim = range(unname(y), na.rm = TRUE), xlab = "", ylab = ylab,type = "b", cex.lab = 1.5, cex.axis = 1.5,col="black")
+	                plot(1:length(x), unname(y), main = main, cex.main = 2,xaxt="n",ylim = range(unname(y), na.rm = TRUE), xlab = "", ylab = ylab,type = "b", cex.lab = 1.5, cex.axis = 1.5,col="black")
+	                axis(1,at=1:length(x),labels=x)
+
 	                # NA points
 	                na.x <- x
 	                na.y <- rep(NA, length(na.x))
@@ -2047,7 +2049,7 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 #	xy <- cbind(x, y)                      # for regular plots
 #	if (barplot_flag) xy <- cbind(bp,y)    # for barplots
 	xy <- na.omit(xy)
-	lines(lowess(xy[, 1], xy[, 2]), lwd = 3, lty = 2, col = "black")  # add fitting curve
+	lines(lowess(1:length(xy[,1]), xy[, 2]), lwd = 3, lty = 2, col = "black")  # add fitting curve
 	
 	if (sum(is.na(y) == FALSE) >= min_trend)
 	{
@@ -2244,7 +2246,7 @@ about <- function(){
         tkgrid(tklabel(tt2, text = "About ClimPACT2", bg = "white", font = fontHeading2),columnspan=1)
         tkgrid(frame.space)
         tkgrid(tt2)
-        tkpack(tt2)
+#        tkpack(tt2)
 
         tt2 <- tkframe(ab,bg="white")
         frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
@@ -2256,22 +2258,22 @@ Climate Change Detection and Indies (ETCCDI), with modifications by several rese
 and students."
 ,bg='white',font=font_small,width=90),sticky="nsew")
         tkgrid(frame.space)
-        tkgrid(tt2);tkpack(tt2)
+        tkgrid(tt2);#tkpack(tt2)
 
         tt2 <- tkframe(ab,bg="white")
         frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
         tkgrid(frame.space)
-        tkgrid(tt2);tkpack(tt2)
+        tkgrid(tt2);#tkpack(tt2)
 
         tt2 <- tkframe(ab,bg="white")
         ok1.but<-tkbutton(tt2,text="    Done    ",command=ab.done,bg='white',font=font_small)
         tkgrid(ok1.but)
-        tkgrid(tt2);tkpack(tt2)
+        tkgrid(tt2);#tkpack(tt2)
 
         tt3 <- tkframe(ab,bg="white")
         frame.space <- tklabel(tt3, text = " ", font = font_small, bg = "white")
         tkgrid(frame.space)
-        tkgrid(tt3);tkpack(tt3)
+        tkgrid(tt3);#tkpack(tt3)
 }
 
 license <- function(){
@@ -2289,7 +2291,7 @@ license <- function(){
 	tkgrid(tklabel(tt2, text = "ClimPACT2 license agreement", bg = "white", font = fontHeading2),columnspan=1)
 	tkgrid(frame.space)
 	tkgrid(tt2)
-	tkpack(tt2)
+#	tkpack(tt2)
 	
 	tt2 <- tkframe(lic,bg="white")
 	frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
@@ -2304,25 +2306,25 @@ members of the ETSCI or ETCCDI). Lastly, this software is provided as-is and the
 host institutions take any responsibility for the accuracy of the data produced by it.",bg='white',font=font_small,width=90),sticky="nsew")
         tkgrid(frame.space)
 	tkgrid(tt2)
-	tkpack(tt2)#,side = "left")
+#	tkpack(tt2)#,side = "left")
 
         tt2 <- tkframe(lic,bg="white")
         frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
         tkgrid(frame.space)
         tkgrid(tt2)
-        tkpack(tt2)
+#        tkpack(tt2)
 
 	tt2 <- tkframe(lic,bg="white")
 	ok1.but<-tkbutton(tt2,text="    Done    ",command=lic.done,bg='white',font=font_small)
 	tkgrid(ok1.but)
         tkgrid(tt2)
-        tkpack(tt2)
+#        tkpack(tt2)
 
         tt3 <- tkframe(lic,bg="white")
         frame.space <- tklabel(tt3, text = " ", font = font_small, bg = "white")
         tkgrid(frame.space)
         tkgrid(tt3)
-        tkpack(tt3)
+#        tkpack(tt3)
 }
 
 # package.check
