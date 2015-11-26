@@ -1614,7 +1614,7 @@ index.calc2<-function(){
                 cat(file=trend_file,paste(latitude,longitude,indices[43],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
                 if (cbv[44]==1) { print(paste("calculating",indices[44])) ; index.store <- climdex.r99ptot(cio) ; write.index.csv(index.store,index.name=indices[44]) ; plot.call(index.store,index.name=indices[44],index.units=units[44],x.label="Years")
                 cat(file=trend_file,paste(latitude,longitude,indices[44],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[45]==1) { print(paste("calculating",indices[45])) ; index.store <- climdex.rxnday(cio,n=rx_ud) ; write.index.csv(index.store,index.name=indices[45]) ; plot.call(index.store,index.name=indices[45],index.units=units[45],x.label="Years")
+                if (cbv[45]==1) { print(paste("calculating",indices[45])) ; index.store <- climdex.rxnday(cio,n=rx_ud,freq=frequency) ; write.index.csv(index.store,index.name=indices[45]) ; plot.call(index.store,index.name=indices[45],index.units=units[45],x.label="Years")
                 cat(file=trend_file,paste(latitude,longitude,indices[45],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
                 if (cbv[46]==1) { print(paste("calculating",indices[46])) ; index.store <- climdex.rnnmm(cio,rnnmm_ud) ; write.index.csv(index.store,index.name=indices[46]) ; plot.call(index.store,index.name=indices[46],index.units=units[46],x.label="Years")
                 cat(file=trend_file,paste(latitude,longitude,indices[46],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
@@ -1998,7 +1998,7 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 
 	if(barplot_flag)  # if true, we're doing a barplot
 	{
-		if(index.name=="spei" | index.name=="spi" | index.name=="rxnday") {
+		if(index.name=="spei" | index.name=="spi") {
 			bp <- barplot(y, main = main, cex.main = 2,ylim = range(y, na.rm = TRUE),xlab = NULL, ylab = ylab,cex.lab = 1.5, cex.axis = 1.5,xpd = FALSE,col=ifelse(y>0,"blue","red"),border=NA,space=c(0,0))
 	                # NA points
 	                na.x <- bp
@@ -2019,7 +2019,7 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 	                na.x <- x
 	                na.y <- rep(NA, length(na.x))
 	                na.y[is.na(y)] <- min(y, na.rm = TRUE)
-	                points(na.x, na.y, pch = 17, col = "blue", cex = 1.5)
+	                points(1:length(na.x), na.y, pch = 17, col = "blue", cex = 1.5)
 			xy <- cbind(x, y)
 		}
 	} else            # if false, we're doing a regular (line) plot
@@ -2049,7 +2049,7 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 #	xy <- cbind(x, y)                      # for regular plots
 #	if (barplot_flag) xy <- cbind(bp,y)    # for barplots
 	xy <- na.omit(xy)
-	lines(lowess(1:length(xy[,1]), xy[, 2]), lwd = 3, lty = 2, col = "black")  # add fitting curve
+	lines(lowess(1:length(xy[,1]), xy[,2]), lwd = 3, lty = 2, col = "black")  # add fitting curve
 	
 	if (sum(is.na(y) == FALSE) >= min_trend)
 	{

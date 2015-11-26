@@ -806,7 +806,7 @@ climdex.gddgrow <- function(ci,Tb=10) {
 # Rxnday
 # Monthly maximum consecutive n-day precipitation (up to a maximum of 10)
 # Same as rx5day except specifying a monthly frequency and accepting user specified number of consecutive days
-climdex.rxnday <- function(ci, center.mean.on.last.day=FALSE,n=7) { stopifnot(!is.null(ci@data$prec),is.numeric(n),is.logical(center.mean.on.last.day)); return(nday.consec.prec.max(ci@data$prec, ci@date.factors$monthly, n, center.mean.on.last.day) * ci@namasks$monthly$prec) }
+climdex.rxnday <- function(ci, center.mean.on.last.day=FALSE,n=7,freq=c("monthly", "annual")) { stopifnot(!is.null(ci@data$prec),is.numeric(n),is.logical(center.mean.on.last.day)); return(nday.consec.prec.max(ci@data$prec, ci@date.factors[[match.arg(freq)]], n, center.mean.on.last.day) * ci@namasks[[match.arg(freq)]]$prec) }
 
 # r95p as per Donat et al. (2013). This is the same as r95ptot in climdex and will need correcting in that package
 climdex.r95p <- function(ci) { stopifnot(!is.null(ci@data$prec),!is.null(ci@quantiles$prec)); return(total.precip.op.threshold(ci@data$prec, ci@date.factors$annual, ci@quantiles$prec['q95'], ">") * ci@namasks$annual$prec) }
