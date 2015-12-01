@@ -119,6 +119,7 @@ indexlist <- (read.table(indexfile,sep="\t"))
 indices <- as.character(indexlist[,1])
 units <- as.character(indexlist[match(indices,indexlist[,1]),2])
 longnames <- as.character(indexlist[match(indices,indexlist[,1]),3])
+subtitle <- as.character(indexlist[,3])
 
 # ------------------------------------------------ #
 # ClimPACT2 GUI functions
@@ -885,7 +886,7 @@ load.data.qc <- function() {
 #                if (any(tmax.outliers==TRUE) | any(tmin.outliers==TRUE) | any(dtr.outliers==TRUE))
 #                {
                         close(process.pb)
-                        nam1 <- paste(outlogdir, paste(ofilename, "_temp_stddev_QC.csv", sep = ""), sep = "/")
+                        nam1 <- paste(outqcdir, paste(ofilename, "_temp_stddev_QC.csv", sep = ""), sep = "/")
                         idx <- which(tmax.outliers==TRUE | tmin.outliers==TRUE | dtr.outliers==TRUE)
                         ofile <- cbind.data.frame(as.character(cio@dates[idx]),cio@data$tmax[idx],cio@data$tmin[idx],cio@data$dtr[idx])    # TODO: write out stddev's as well?
                         write.table(ofile, file = nam1, append = FALSE, quote = FALSE, sep = ",", row.names = FALSE,col.names=c("Date","Tmax","Tmin","DTR"))
@@ -1250,7 +1251,7 @@ load.data.qc <- function() {
 
         tt1<-tkframe(infor1,bg="white")
         frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
-	tkgrid(tkbutton(tt1, text = "  PERFORM QUALITY CONTROL ",command = qcontrol, font = fontHeading2, bg = "white"))
+	tkgrid(tkbutton(tt1, text = "PROCESS AND\nQUALITY CONTROL",command = qcontrol, font = fontHeading2, bg = "white"))
         tkgrid(frame.space)
         tkgrid(frame.space)
         tkgrid(tt1)
@@ -1523,104 +1524,104 @@ index.calc2<-function(){
 		# Calculate selected indices
 		#============================================================
 
-		if (cbv[1]==1) { print(paste("calculating",indices[1])) ; index.store <- climdex.fd(cio) ; write.index.csv(index.store,index.name=indices[1]) ; plot.call(index.store,index.name=indices[1],index.units=units[1],x.label="Years") ;
+		if (cbv[1]==1) { print(paste("calculating",indices[1])) ; index.store <- climdex.fd(cio) ; write.index.csv(index.store,index.name=indices[1]) ; plot.call(index.store,index.name=indices[1],index.units=units[1],x.label="Years",sub=subtitle[1]) ;
 		cat(file=trend_file,paste(latitude,longitude,indices[1],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[2]==1) { print(paste("calculating",indices[2])) ; index.store <- climdex.fd2(cio) ; write.index.csv(index.store,index.name=indices[2]) ; plot.call(index.store,index.name=indices[2],index.units=units[2],x.label="Years") 
+		if (cbv[2]==1) { print(paste("calculating",indices[2])) ; index.store <- climdex.fd2(cio) ; write.index.csv(index.store,index.name=indices[2]) ; plot.call(index.store,index.name=indices[2],index.units=units[2],x.label="Years",sub=subtitle[2]) 
                 cat(file=trend_file,paste(latitude,longitude,indices[2],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[3]==1) { print(paste("calculating",indices[3])) ; index.store <- climdex.fdm2(cio) ; write.index.csv(index.store,index.name=indices[3]) ; plot.call(index.store,index.name=indices[3],index.units=units[3],x.label="Years") 
+		if (cbv[3]==1) { print(paste("calculating",indices[3])) ; index.store <- climdex.fdm2(cio) ; write.index.csv(index.store,index.name=indices[3]) ; plot.call(index.store,index.name=indices[3],index.units=units[3],x.label="Years",sub=subtitle[3]) 
                 cat(file=trend_file,paste(latitude,longitude,indices[3],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[4]==1) { print(paste("calculating",indices[4])) ; index.store <- climdex.fdm20(cio) ; write.index.csv(index.store,index.name=indices[4]) ; plot.call(index.store,index.name=indices[4],index.units=units[4],x.label="Years") 
+		if (cbv[4]==1) { print(paste("calculating",indices[4])) ; index.store <- climdex.fdm20(cio) ; write.index.csv(index.store,index.name=indices[4]) ; plot.call(index.store,index.name=indices[4],index.units=units[4],x.label="Years",sub=subtitle[4]) 
                 cat(file=trend_file,paste(latitude,longitude,indices[4],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[5]==1) { print(paste("calculating",indices[5])) ; index.store <- climdex.id(cio) ; write.index.csv(index.store,index.name=indices[5]) ; plot.call(index.store,index.name=indices[5],index.units=units[5],x.label="Years") 
+		if (cbv[5]==1) { print(paste("calculating",indices[5])) ; index.store <- climdex.id(cio) ; write.index.csv(index.store,index.name=indices[5]) ; plot.call(index.store,index.name=indices[5],index.units=units[5],x.label="Years",sub=subtitle[5]) 
                 cat(file=trend_file,paste(latitude,longitude,indices[5],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[6]==1) { print(paste("calculating",indices[6])) ; index.store <- climdex.su(cio) ; write.index.csv(index.store,index.name=indices[6]) ; plot.call(index.store,index.name=indices[6],index.units=units[6],x.label="Years") 
+		if (cbv[6]==1) { print(paste("calculating",indices[6])) ; index.store <- climdex.su(cio) ; write.index.csv(index.store,index.name=indices[6]) ; plot.call(index.store,index.name=indices[6],index.units=units[6],x.label="Years",sub=subtitle[6]) 
                 cat(file=trend_file,paste(latitude,longitude,indices[6],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[7]==1) { print(paste("calculating",indices[7])) ; index.store <- climdex.tr(cio) ; write.index.csv(index.store,index.name=indices[7]) ; plot.call(index.store,index.name=indices[7],index.units=units[7],x.label="Years") 
+		if (cbv[7]==1) { print(paste("calculating",indices[7])) ; index.store <- climdex.tr(cio) ; write.index.csv(index.store,index.name=indices[7]) ; plot.call(index.store,index.name=indices[7],index.units=units[7],x.label="Years",sub=subtitle[7]) 
                 cat(file=trend_file,paste(latitude,longitude,indices[7],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
 		if (cbv[8]==1) { print(paste("calculating",indices[8])) ; if(latitude < 0) cio@northern.hemisphere <<- FALSE ; 
-			index.store <- climdex.gsl(cio) ; write.index.csv(index.store,index.name=indices[8]) ; plot.call(index.store,index.name=indices[8],index.units=units[8],x.label="Years") 
+			index.store <- climdex.gsl(cio) ; write.index.csv(index.store,index.name=indices[8]) ; plot.call(index.store,index.name=indices[8],index.units=units[8],x.label="Years",sub=subtitle[8]) 
                 cat(file=trend_file,paste(latitude,longitude,indices[8],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[9]==1) { print(paste("calculating",indices[9])) ; index.store <- climdex.txx(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[9]) ; plot.call(index.store,index.name=indices[9],index.units=units[9],x.label="Years") 
+		if (cbv[9]==1) { print(paste("calculating",indices[9])) ; index.store <- climdex.txx(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[9]) ; plot.call(index.store,index.name=indices[9],index.units=units[9],x.label="Years",sub=subtitle[9]) 
                 cat(file=trend_file,paste(latitude,longitude,indices[9],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
 		setTkProgressBar(pb,20,title="20%")
-		if (cbv[10]==1) { print(paste("calculating",indices[10])) ; index.store <- climdex.tnn(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[10]) ; plot.call(index.store,index.name=indices[10],index.units=units[10],x.label="Years") 
+		if (cbv[10]==1) { print(paste("calculating",indices[10])) ; index.store <- climdex.tnn(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[10]) ; plot.call(index.store,index.name=indices[10],index.units=units[10],x.label="Years",sub=subtitle[10]) 
                 cat(file=trend_file,paste(latitude,longitude,indices[10],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[11]==1) { print(paste("calculating",indices[11])) ; index.store <- climdex.tnx(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[11]) ; plot.call(index.store,index.name=indices[11],index.units=units[11],x.label="Years")
+		if (cbv[11]==1) { print(paste("calculating",indices[11])) ; index.store <- climdex.tnx(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[11]) ; plot.call(index.store,index.name=indices[11],index.units=units[11],x.label="Years",sub=subtitle[11])
                 cat(file=trend_file,paste(latitude,longitude,indices[11],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[12]==1) { print(paste("calculating",indices[12])) ; index.store <- climdex.txn(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[12]) ; plot.call(index.store,index.name=indices[12],index.units=units[12],x.label="Years")
+		if (cbv[12]==1) { print(paste("calculating",indices[12])) ; index.store <- climdex.txn(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[12]) ; plot.call(index.store,index.name=indices[12],index.units=units[12],x.label="Years",sub=subtitle[12])
                 cat(file=trend_file,paste(latitude,longitude,indices[12],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[13]==1) { print(paste("calculating",indices[13])) ; index.store <- climdex.dtr(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[13]) ; plot.call(index.store,index.name=indices[13],index.units=units[13],x.label="Years")
+		if (cbv[13]==1) { print(paste("calculating",indices[13])) ; index.store <- climdex.dtr(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[13]) ; plot.call(index.store,index.name=indices[13],index.units=units[13],x.label="Years",sub=subtitle[13])
                 cat(file=trend_file,paste(latitude,longitude,indices[13],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[14]==1) { print(paste("calculating",indices[14])) ; index.store <- climdex.wsdi(cio) ; write.index.csv(index.store,index.name=indices[14]) ; plot.call(index.store,index.name=indices[14],index.units=units[14],x.label="Years")
+		if (cbv[14]==1) { print(paste("calculating",indices[14])) ; index.store <- climdex.wsdi(cio) ; write.index.csv(index.store,index.name=indices[14]) ; plot.call(index.store,index.name=indices[14],index.units=units[14],x.label="Years",sub=subtitle[14])
                 cat(file=trend_file,paste(latitude,longitude,indices[14],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[15]==1) { print(paste("calculating",indices[15])) ; index.store <- climdex.wsdin(cio,n=wsdi_ud) ; write.index.csv(index.store,index.name=indices[15]) ; plot.call(index.store,index.name=indices[15],index.units=units[15],x.label="Years")
+		if (cbv[15]==1) { print(paste("calculating",indices[15])) ; index.store <- climdex.wsdin(cio,n=wsdi_ud) ; write.index.csv(index.store,index.name=indices[15]) ; plot.call(index.store,index.name=indices[15],index.units=units[15],x.label="Years",sub=subtitle[15])
                 cat(file=trend_file,paste(latitude,longitude,indices[15],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[16]==1) { print(paste("calculating",indices[16])) ; index.store <- climdex.csdi(cio) ; write.index.csv(index.store,index.name=indices[16]) ; plot.call(index.store,index.name=indices[16],index.units=units[16],x.label="Years")
+		if (cbv[16]==1) { print(paste("calculating",indices[16])) ; index.store <- climdex.csdi(cio) ; write.index.csv(index.store,index.name=indices[16]) ; plot.call(index.store,index.name=indices[16],index.units=units[16],x.label="Years",sub=subtitle[16])
                 cat(file=trend_file,paste(latitude,longitude,indices[16],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[17]==1) { print(paste("calculating",indices[17])) ; index.store <- climdex.csdin(cio,n=csdi_ud) ; write.index.csv(index.store,index.name=indices[17]) ; plot.call(index.store,index.name=indices[17],index.units=units[17],x.label="Years")
+		if (cbv[17]==1) { print(paste("calculating",indices[17])) ; index.store <- climdex.csdin(cio,n=csdi_ud) ; write.index.csv(index.store,index.name=indices[17]) ; plot.call(index.store,index.name=indices[17],index.units=units[17],x.label="Years",sub=subtitle[17])
                 cat(file=trend_file,paste(latitude,longitude,indices[17],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[18]==1) { print(paste("calculating",indices[18])) ; index.store <- climdex.tx50p(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[18]) ; plot.call(index.store,index.name=indices[18],index.units=units[18],x.label="Years")
+		if (cbv[18]==1) { print(paste("calculating",indices[18])) ; index.store <- climdex.tx50p(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[18]) ; plot.call(index.store,index.name=indices[18],index.units=units[18],x.label="Years",sub=subtitle[18])
                 cat(file=trend_file,paste(latitude,longitude,indices[18],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[19]==1) { print(paste("calculating",indices[19])) ; index.store <- climdex.tx95t(cio) ; write.index.csv(index.store,index.name=indices[19]) ; plot.call(index.store,index.name=indices[19],index.units=units[19],x.label="Years") 
+		if (cbv[19]==1) { print(paste("calculating",indices[19])) ; index.store <- climdex.tx95t(cio) ; write.index.csv(index.store,index.name=indices[19]) ; plot.call(index.store,index.name=indices[19],index.units=units[19],x.label="Years",sub=subtitle[19]) 
                 cat(file=trend_file,paste(latitude,longitude,indices[19],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[20]==1) { print(paste("calculating",indices[20])) ; index.store <- climdex.tx10p(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[20]) ; plot.call(index.store,index.name=indices[20],index.units=units[20],x.label="Years")
+		if (cbv[20]==1) { print(paste("calculating",indices[20])) ; index.store <- climdex.tx10p(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[20]) ; plot.call(index.store,index.name=indices[20],index.units=units[20],x.label="Years",sub=subtitle[20])
                 cat(file=trend_file,paste(latitude,longitude,indices[20],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[21]==1) { print(paste("calculating",indices[21])) ; index.store <- climdex.tx90p(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[21]) ; plot.call(index.store,index.name=indices[21],index.units=units[21],x.label="Years")
+		if (cbv[21]==1) { print(paste("calculating",indices[21])) ; index.store <- climdex.tx90p(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[21]) ; plot.call(index.store,index.name=indices[21],index.units=units[21],x.label="Years",sub=subtitle[21])
                 cat(file=trend_file,paste(latitude,longitude,indices[21],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[22]==1) { print(paste("calculating",indices[22])) ; index.store <- climdex.tn10p(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[22]) ; plot.call(index.store,index.name=indices[22],index.units=units[22],x.label="Years")
+		if (cbv[22]==1) { print(paste("calculating",indices[22])) ; index.store <- climdex.tn10p(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[22]) ; plot.call(index.store,index.name=indices[22],index.units=units[22],x.label="Years",sub=subtitle[22])
                 cat(file=trend_file,paste(latitude,longitude,indices[22],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[23]==1) { print(paste("calculating",indices[23])) ; index.store <- climdex.tn90p(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[23]) ; plot.call(index.store,index.name=indices[23],index.units=units[23],x.label="Years")
+		if (cbv[23]==1) { print(paste("calculating",indices[23])) ; index.store <- climdex.tn90p(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[23]) ; plot.call(index.store,index.name=indices[23],index.units=units[23],x.label="Years",sub=subtitle[23])
                 cat(file=trend_file,paste(latitude,longitude,indices[23],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[24]==1) { print(paste("calculating",indices[24])) ; index.store <- climdex.tm5a(cio) ; write.index.csv(index.store,index.name=indices[24]) ; plot.call(index.store,index.name=indices[24],index.units=units[24],x.label="Years")
+		if (cbv[24]==1) { print(paste("calculating",indices[24])) ; index.store <- climdex.tm5a(cio) ; write.index.csv(index.store,index.name=indices[24]) ; plot.call(index.store,index.name=indices[24],index.units=units[24],x.label="Years",sub=subtitle[24])
                 cat(file=trend_file,paste(latitude,longitude,indices[24],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[25]==1) { print(paste("calculating",indices[25])) ; index.store <- climdex.tm5b(cio) ; write.index.csv(index.store,index.name=indices[25]) ; plot.call(index.store,index.name=indices[25],index.units=units[25],x.label="Years")
+		if (cbv[25]==1) { print(paste("calculating",indices[25])) ; index.store <- climdex.tm5b(cio) ; write.index.csv(index.store,index.name=indices[25]) ; plot.call(index.store,index.name=indices[25],index.units=units[25],x.label="Years",sub=subtitle[25])
                 cat(file=trend_file,paste(latitude,longitude,indices[25],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[26]==1) { print(paste("calculating",indices[26])) ; index.store <- climdex.tm10a(cio) ; write.index.csv(index.store,index.name=indices[26]) ; plot.call(index.store,index.name=indices[26],index.units=units[26],x.label="Years")
+		if (cbv[26]==1) { print(paste("calculating",indices[26])) ; index.store <- climdex.tm10a(cio) ; write.index.csv(index.store,index.name=indices[26]) ; plot.call(index.store,index.name=indices[26],index.units=units[26],x.label="Years",sub=subtitle[26])
                 cat(file=trend_file,paste(latitude,longitude,indices[26],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[27]==1) { print(paste("calculating",indices[27])) ; index.store <- climdex.tm10b(cio) ; write.index.csv(index.store,index.name=indices[27]) ; plot.call(index.store,index.name=indices[27],index.units=units[27],x.label="Years")
+		if (cbv[27]==1) { print(paste("calculating",indices[27])) ; index.store <- climdex.tm10b(cio) ; write.index.csv(index.store,index.name=indices[27]) ; plot.call(index.store,index.name=indices[27],index.units=units[27],x.label="Years",sub=subtitle[27])
                 cat(file=trend_file,paste(latitude,longitude,indices[27],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[28]==1) { print(paste("calculating",indices[28])) ; index.store <- climdex.su30(cio) ; write.index.csv(index.store,index.name=indices[28]) ; plot.call(index.store,index.name=indices[28],index.units=units[28],x.label="Years")
+		if (cbv[28]==1) { print(paste("calculating",indices[28])) ; index.store <- climdex.su30(cio) ; write.index.csv(index.store,index.name=indices[28]) ; plot.call(index.store,index.name=indices[28],index.units=units[28],x.label="Years",sub=subtitle[28])
                 cat(file=trend_file,paste(latitude,longitude,indices[28],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[29]==1) { print(paste("calculating",indices[29])) ; index.store <- climdex.su35(cio) ; write.index.csv(index.store,index.name=indices[29]) ; plot.call(index.store,index.name=indices[29],index.units=units[29],x.label="Years")
+		if (cbv[29]==1) { print(paste("calculating",indices[29])) ; index.store <- climdex.su35(cio) ; write.index.csv(index.store,index.name=indices[29]) ; plot.call(index.store,index.name=indices[29],index.units=units[29],x.label="Years",sub=subtitle[29])
                 cat(file=trend_file,paste(latitude,longitude,indices[29],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[30]==1) { print(paste("calculating",indices[30])) ; index.store <- climdex.hddheat(cio,Tb=Tb_HDD) ; write.index.csv(index.store,index.name=indices[30]) ; plot.call(index.store,index.name=indices[30],index.units=units[30],x.label="Years")
+		if (cbv[30]==1) { print(paste("calculating",indices[30])) ; index.store <- climdex.hddheat(cio,Tb=Tb_HDD) ; write.index.csv(index.store,index.name=indices[30]) ; plot.call(index.store,index.name=indices[30],index.units=units[30],x.label="Years",sub=subtitle[30])
                 cat(file=trend_file,paste(latitude,longitude,indices[30],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
 		setTkProgressBar(pb,60,title="60%")
-		if (cbv[31]==1) { print(paste("calculating",indices[31])) ; index.store <- climdex.cddcold(cio,Tb=Tb_CDD) ; write.index.csv(index.store,index.name=indices[31]) ; plot.call(index.store,index.name=indices[31],index.units=units[31],x.label="Years")
+		if (cbv[31]==1) { print(paste("calculating",indices[31])) ; index.store <- climdex.cddcold(cio,Tb=Tb_CDD) ; write.index.csv(index.store,index.name=indices[31]) ; plot.call(index.store,index.name=indices[31],index.units=units[31],x.label="Years",sub=subtitle[31])
                 cat(file=trend_file,paste(latitude,longitude,indices[31],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[32]==1) { print(paste("calculating",indices[32])) ; index.store <- climdex.gddgrow(cio,Tb=Tb_GDD) ; write.index.csv(index.store,index.name=indices[32]) ; plot.call(index.store,index.name=indices[32],index.units=units[32],x.label="Years")
+                if (cbv[32]==1) { print(paste("calculating",indices[32])) ; index.store <- climdex.gddgrow(cio,Tb=Tb_GDD) ; write.index.csv(index.store,index.name=indices[32]) ; plot.call(index.store,index.name=indices[32],index.units=units[32],x.label="Years",sub=subtitle[32])
                 cat(file=trend_file,paste(latitude,longitude,indices[32],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[33]==1) { print(paste("calculating",indices[33])) ; index.store <- climdex.cdd(cio) ; write.index.csv(index.store,index.name=indices[33]) ; plot.call(index.store,index.name=indices[33],index.units=units[33],x.label="Years")
+                if (cbv[33]==1) { print(paste("calculating",indices[33])) ; index.store <- climdex.cdd(cio) ; write.index.csv(index.store,index.name=indices[33]) ; plot.call(index.store,index.name=indices[33],index.units=units[33],x.label="Years",sub=subtitle[33])
                 cat(file=trend_file,paste(latitude,longitude,indices[33],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[34]==1) { print(paste("calculating",indices[34])) ; index.store <- climdex.cwd(cio) ; write.index.csv(index.store,index.name=indices[34]) ; plot.call(index.store,index.name=indices[34],index.units=units[34],x.label="Years")
+                if (cbv[34]==1) { print(paste("calculating",indices[34])) ; index.store <- climdex.cwd(cio) ; write.index.csv(index.store,index.name=indices[34]) ; plot.call(index.store,index.name=indices[34],index.units=units[34],x.label="Years",sub=subtitle[34])
                 cat(file=trend_file,paste(latitude,longitude,indices[34],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[35]==1) { print(paste("calculating",indices[35])) ; index.store <- climdex.r10mm(cio) ; write.index.csv(index.store,index.name=indices[35]) ; plot.call(index.store,index.name=indices[35],index.units=units[35],x.label="Years")
+                if (cbv[35]==1) { print(paste("calculating",indices[35])) ; index.store <- climdex.r10mm(cio) ; write.index.csv(index.store,index.name=indices[35]) ; plot.call(index.store,index.name=indices[35],index.units=units[35],x.label="Years",sub=subtitle[35])
                 cat(file=trend_file,paste(latitude,longitude,indices[35],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[36]==1) { print(paste("calculating",indices[36])) ; index.store <- climdex.r20mm(cio) ; write.index.csv(index.store,index.name=indices[36]) ; plot.call(index.store,index.name=indices[36],index.units=units[36],x.label="Years")
+                if (cbv[36]==1) { print(paste("calculating",indices[36])) ; index.store <- climdex.r20mm(cio) ; write.index.csv(index.store,index.name=indices[36]) ; plot.call(index.store,index.name=indices[36],index.units=units[36],x.label="Years",sub=subtitle[36])
                 cat(file=trend_file,paste(latitude,longitude,indices[36],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[37]==1) { print(paste("calculating",indices[37])) ; index.store <- climdex.rx1day(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[37]) ; plot.call(index.store,index.name=indices[37],index.units=units[37],x.label="Years")
+                if (cbv[37]==1) { print(paste("calculating",indices[37])) ; index.store <- climdex.rx1day(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[37]) ; plot.call(index.store,index.name=indices[37],index.units=units[37],x.label="Years",sub=subtitle[37])
                 cat(file=trend_file,paste(latitude,longitude,indices[37],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[38]==1) { print(paste("calculating",indices[38])) ; index.store <- climdex.rx5day(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[38]) ; plot.call(index.store,index.name=indices[38],index.units=units[38],x.label="Years")
+                if (cbv[38]==1) { print(paste("calculating",indices[38])) ; index.store <- climdex.rx5day(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[38]) ; plot.call(index.store,index.name=indices[38],index.units=units[38],x.label="Years",sub=subtitle[38])
                 cat(file=trend_file,paste(latitude,longitude,indices[38],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[39]==1) { print(paste("calculating",indices[39])) ; index.store <- climdex.prcptot(cio) ; write.index.csv(index.store,index.name=indices[39]) ; plot.call(index.store,index.name=indices[39],index.units=units[39],x.label="Years")
+                if (cbv[39]==1) { print(paste("calculating",indices[39])) ; index.store <- climdex.prcptot(cio) ; write.index.csv(index.store,index.name=indices[39]) ; plot.call(index.store,index.name=indices[39],index.units=units[39],x.label="Years",sub=subtitle[39])
                 cat(file=trend_file,paste(latitude,longitude,indices[39],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[40]==1) { print(paste("calculating",indices[40])) ; index.store <- climdex.sdii(cio) ; write.index.csv(index.store,index.name=indices[40]) ; plot.call(index.store,index.name=indices[40],index.units=units[40],x.label="Years")
+                if (cbv[40]==1) { print(paste("calculating",indices[40])) ; index.store <- climdex.sdii(cio) ; write.index.csv(index.store,index.name=indices[40]) ; plot.call(index.store,index.name=indices[40],index.units=units[40],x.label="Years",sub=subtitle[40])
                 cat(file=trend_file,paste(latitude,longitude,indices[40],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[41]==1) { print(paste("calculating",indices[41])) ; index.store <- climdex.r95p(cio) ; write.index.csv(index.store,index.name=indices[41]) ; plot.call(index.store,index.name=indices[41],index.units=units[41],x.label="Years")
+                if (cbv[41]==1) { print(paste("calculating",indices[41])) ; index.store <- climdex.r95p(cio) ; write.index.csv(index.store,index.name=indices[41]) ; plot.call(index.store,index.name=indices[41],index.units=units[41],x.label="Years",sub=subtitle[41])
                 cat(file=trend_file,paste(latitude,longitude,indices[41],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[42]==1) { print(paste("calculating",indices[42])) ; index.store <- climdex.r99p(cio) ; write.index.csv(index.store,index.name=indices[42]) ; plot.call(index.store,index.name=indices[42],index.units=units[42],x.label="Years")
+                if (cbv[42]==1) { print(paste("calculating",indices[42])) ; index.store <- climdex.r99p(cio) ; write.index.csv(index.store,index.name=indices[42]) ; plot.call(index.store,index.name=indices[42],index.units=units[42],x.label="Years",sub=subtitle[42])
                 cat(file=trend_file,paste(latitude,longitude,indices[42],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[43]==1) { print(paste("calculating",indices[43])) ; index.store <- climdex.r95ptot(cio) ; write.index.csv(index.store,index.name=indices[43]) ; plot.call(index.store,index.name=indices[43],index.units=units[43],x.label="Years")
+                if (cbv[43]==1) { print(paste("calculating",indices[43])) ; index.store <- climdex.r95ptot(cio) ; write.index.csv(index.store,index.name=indices[43]) ; plot.call(index.store,index.name=indices[43],index.units=units[43],x.label="Years",sub=subtitle[43])
                 cat(file=trend_file,paste(latitude,longitude,indices[43],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[44]==1) { print(paste("calculating",indices[44])) ; index.store <- climdex.r99ptot(cio) ; write.index.csv(index.store,index.name=indices[44]) ; plot.call(index.store,index.name=indices[44],index.units=units[44],x.label="Years")
+                if (cbv[44]==1) { print(paste("calculating",indices[44])) ; index.store <- climdex.r99ptot(cio) ; write.index.csv(index.store,index.name=indices[44]) ; plot.call(index.store,index.name=indices[44],index.units=units[44],x.label="Years",sub=subtitle[44])
                 cat(file=trend_file,paste(latitude,longitude,indices[44],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[45]==1) { print(paste("calculating",indices[45])) ; index.store <- climdex.rxnday(cio,n=rx_ud,freq=frequency) ; write.index.csv(index.store,index.name=indices[45]) ; plot.call(index.store,index.name=indices[45],index.units=units[45],x.label="Years")
+                if (cbv[45]==1) { print(paste("calculating",indices[45])) ; index.store <- climdex.rxnday(cio,n=rx_ud,freq=frequency) ; write.index.csv(index.store,index.name=indices[45]) ; plot.call(index.store,index.name=indices[45],index.units=units[45],x.label="Years",sub=subtitle[45])
                 cat(file=trend_file,paste(latitude,longitude,indices[45],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[46]==1) { print(paste("calculating",indices[46])) ; index.store <- climdex.rnnmm(cio,rnnmm_ud) ; write.index.csv(index.store,index.name=indices[46]) ; plot.call(index.store,index.name=indices[46],index.units=units[46],x.label="Years")
+                if (cbv[46]==1) { print(paste("calculating",indices[46])) ; index.store <- climdex.rnnmm(cio,rnnmm_ud) ; write.index.csv(index.store,index.name=indices[46]) ; plot.call(index.store,index.name=indices[46],index.units=units[46],x.label="Years",sub=subtitle[46])
                 cat(file=trend_file,paste(latitude,longitude,indices[46],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[47]==1) { print(paste("calculating",indices[47])) ; index.store <- climdex.ntxntn(cio,n=txtn_ud) ; write.index.csv(index.store,index.name=indices[47]) ; plot.call(index.store,index.name=indices[47],index.units=units[47],x.label="Years")
+                if (cbv[47]==1) { print(paste("calculating",indices[47])) ; index.store <- climdex.ntxntn(cio,n=txtn_ud) ; write.index.csv(index.store,index.name=indices[47]) ; plot.call(index.store,index.name=indices[47],index.units=units[47],x.label="Years",sub=subtitle[47])
                 cat(file=trend_file,paste(latitude,longitude,indices[47],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[48]==1) { print(paste("calculating",indices[48])) ; index.store <- climdex.ntxbntnb(cio,n=txtn_ud) ; write.index.csv(index.store,index.name=indices[48]) ; plot.call(index.store,index.name=indices[48],index.units=units[48],x.label="Years")
+                if (cbv[48]==1) { print(paste("calculating",indices[48])) ; index.store <- climdex.ntxbntnb(cio,n=txtn_ud) ; write.index.csv(index.store,index.name=indices[48]) ; plot.call(index.store,index.name=indices[48],index.units=units[48],x.label="Years",sub=subtitle[48])
                 cat(file=trend_file,paste(latitude,longitude,indices[48],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
                 if (cbv[49]==1) { print(paste("calculating",indices[49])) ; if(all(is.na(cio@data$tmin)) | all(is.na(cio@data$tmax))) { warning("NOT PLOTTING HEATWAVE INDICES: Requires tmin and tmax.") } else {
 			setTkProgressBar(pb,90,title="90%")
@@ -1721,7 +1722,7 @@ index.calc2<-function(){
                                 spifactor <- spifactor[(length(spifactor)-length((cio@date.factors$monthly))+1):length(spifactor)]
 		        }
 			write.precindex.csv(index.store,index.name=indices[50],spifactor)
-			plot.precindex(index.store,index.name=indices[50],index.units=units[50],x.label="Years",spifactor) } }
+			plot.precindex(index.store,index.name=indices[50],index.units=units[50],x.label="Years",spifactor,sub=subtitle[50]) } }
 
                 if (cbv[51]==1) { print(paste("calculating",indices[51])) ; if(all(is.na(cio@data$prec))) warning("NOT PLOTTING SPI: climdex.spi REQUIRES PRECIP DATA.") else {
 			setTkProgressBar(pb,99,title="99%")
@@ -1784,7 +1785,7 @@ index.calc2<-function(){
                                 spifactor <- spifactor[(length(spifactor)-length((cio@date.factors$monthly))+1):length(spifactor)]
                         }
 			write.precindex.csv(index.store,index.name=indices[51],spifactor)
-			plot.precindex(index.store,index.name=indices[51],index.units=units[51],x.label="Years",spifactor) } }
+			plot.precindex(index.store,index.name=indices[51],index.units=units[51],x.label="Years",spifactor,sub=subtitle[51]) } }
 
 		dev.off(pdf.dev)
 		graphics.off()  # close the pdf file, so you can open to view it now.
@@ -1918,7 +1919,7 @@ write.precindex.csv <- function(index=NULL,index.name=NULL,spifactor=NULL) {
 
 # plot.precindex
 # not sure how generic this process can be
-plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,spifactor=NULL) {
+plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,spifactor=NULL,sub="") {
         if(is.null(index)) stop("Need precip data to plot.")
 	scales = c(3,6,12)
 
@@ -1931,10 +1932,10 @@ plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=N
 #                namp <- paste(outjpgdir, paste(ofilename, "_",scales[time],"month_",index.name,".pdf", sep = ""), sep = "/")
 #		pdf(file=namp)
 	        dev0 = dev.cur()
-	        plotx(unique(as.character(spifactor)), index[time,], main = gsub('\\*', index.name, plot.title),ylab = index.units,xlab = x.label,index.name=index.name)
+	        plotx(unique(as.character(spifactor)), index[time,], main = gsub('\\*', index.name, plot.title),ylab = index.units,xlab = x.label,index.name=index.name,sub=sub)
 
                 dev.set(which = pdf.dev)
-                plotx(unique(as.character(spifactor)), index[time,], main = gsub('\\*', index.name, plot.title),ylab = index.units,xlab = x.label,index.name=index.name)
+                plotx(unique(as.character(spifactor)), index[time,], main = gsub('\\*', index.name, plot.title),ylab = index.units,xlab = x.label,index.name=index.name,sub=sub)
                 dev.copy()
                 dev.off(dev0)
 
@@ -1945,7 +1946,7 @@ plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=N
 }
 
 # plot.index
-plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) {
+plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,sub="") {
         if(is.null(index.name) | is.null(index) | is.null(index.units)) stop("Need index data, index.name, index units and an x label in order to plot data.")
 
 #	plot.title <- paste(title.station,index.name,sep=", ")
@@ -1957,18 +1958,18 @@ plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) 
 	else xdata <- names(index)
 
 	plotx(xdata, index, main = gsub('\\*', index.name, plot.title),
-	  ylab = index.units,xlab = x.label,index.name=index.name)
+	  ylab = index.units,xlab = x.label,index.name=index.name,sub=sub)
 
 	dev.set(which = pdf.dev)
 	plotx(xdata, index, main = gsub('\\*', index.name, plot.title),
-	  ylab = index.units, xlab = x.label,index.name=index.name)
+	  ylab = index.units, xlab = x.label,index.name=index.name,sub=sub)
 	dev.copy()
 	dev.off(dev0)
 }
 
 # plotx
 # make plots, this is called twice to make jpg and pdf files. 
-plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=NULL)
+plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=NULL,sub="")
 {
 	if(all(is.na(y0))) { print("NO DATA TO PLOT") ; return() }
 
@@ -2000,20 +2001,21 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 	{
 		if(index.name=="spei" | index.name=="spi") {
 			bp <- barplot(y, main = main, cex.main = 2,ylim = range(y, na.rm = TRUE),xlab = NULL, ylab = ylab,cex.lab = 1.5, cex.axis = 1.5,xpd = FALSE,col=ifelse(y>0,"blue","red"),border=NA,space=c(0,0))
+			mtext(sub)
 	                # NA points
 	                na.x <- bp
 	                na.y <- rep(NA, length(na.x))
 	                na.y[is.na(y)] <- par("usr")[3]
 	                points(na.x, na.y, pch = 17, col = "blue", cex = 1.5)
 			at_tick <- seq(from=1,to=length(x),by=12) #seq_len((length(x)/12) + 1)
-			axis(side=1,labels=FALSE,at=at_tick,tcl=-0.3,cex.axis=1.5)
-
+			axis(side=1,labels=x[seq(1,length(x),12)],at=at_tick,tcl=-0.3,cex.axis=1.5)
 	                box()
 			xy <- cbind(bp,y)
 		} else {
 #			bp <- barplot(y, main = main, cex.main = 2,ylim = range(y, na.rm = TRUE),xlab = NULL, ylab = ylab,cex.lab = 1.5, cex.axis = 1.5,xpd = FALSE)
-	                plot(1:length(x), unname(y), main = main, cex.main = 2,xaxt="n",ylim = range(unname(y), na.rm = TRUE), xlab = "", ylab = ylab,type = "b", cex.lab = 1.5, cex.axis = 1.5,col="black")
+	                plot(1:length(x), unname(y), main = main, cex.main = 2,ylim = range(unname(y), na.rm = TRUE),xaxt="n", xlab = "", ylab = ylab,type = "b", cex.lab = 1.5, cex.axis = 1.5,col="black")
 	                axis(1,at=1:length(x),labels=x)
+					mtext(sub)
 
 	                # NA points
 	                na.x <- x
@@ -2024,12 +2026,7 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 		}
 	} else            # if false, we're doing a regular (line) plot
 	{
-		plot(x, unname(y), main = main, cex.main = 2,ylim = range(unname(y), na.rm = TRUE), xlab = xlab, ylab = ylab,type = "b", cex.lab = 1.5, cex.axis = 1.5,col="black")
-		# NA points
-		na.x <- x
-		na.y <- rep(NA, length(na.x))
-		na.y[is.na(y)] <- min(y, na.rm = TRUE)
-		points(na.x, na.y, pch = 17, col = "blue", cex = 1.5)
+
 	}
 
 	if (opt == 1) return()  # no need to plot trend/fitting curve.
@@ -2046,10 +2043,11 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 	beta <- round(as.numeric(out$coef.table[[1]][2, 1]), 3)
 	betaerr <- round(as.numeric(out$coef.table[[1]][2, 2]), 3)
 	
-#	xy <- cbind(x, y)                      # for regular plots
-#	if (barplot_flag) xy <- cbind(bp,y)    # for barplots
 	xy <- na.omit(xy)
-	lines(lowess(1:length(xy[,1]), xy[,2]), lwd = 3, lty = 2, col = "black")  # add fitting curve
+
+	tmp_seq = 1:length(x)
+	tmp_lowess=lowess(tmp_seq[!is.na(y)], xy[,2])
+	lines(tmp_lowess, lwd = 3, lty = 2, col = "red")  # add fitting curve
 	
 	if (sum(is.na(y) == FALSE) >= min_trend)
 	{
@@ -2061,12 +2059,12 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 	title(sub = subtit, cex.sub = 1.5)
 	if (abs(max(y, na.rm = TRUE) - min(y, na.rm = TRUE)) < 1.e-3)
 	{
-		legend("bottomleft", "locally weighted scatterplot smoothing", col = "black", lty = 2, lwd = 3, bty = "n")
+		legend("bottomleft", "locally weighted scatterplot smoothing", col = "red", lty = 2, lwd = 3, bty = "n")
 	} else
 	{  
 #	  legend(x[1],
 #	    min(y, na.rm = TRUE) - (max(y, na.rm = TRUE) - min(y, na.rm = TRUE)) / 10,
-		legend("bottomleft","locally weighted scatterplot smoothing",col = "black", lty = 2, lwd = 3, bty = "n")
+		legend("bottomleft","locally weighted scatterplot smoothing",col = "red", lty = 2, lwd = 3, bty = "n")
 	}
 }
 # end of plotx
@@ -2255,7 +2253,9 @@ about <- function(){
 "Developed by Nicholas Herold, Lisa Alexander, Hongang Yang, James Goldie, Sarah Perkins.
 Based on the RClimDEX software developed by the joint WMO CCl/CLIVAR/JCOMM Expert Team on 
 Climate Change Detection and Indies (ETCCDI), with modifications by several researchers 
-and students."
+and students. ClimPACT2 uses the R package climdex.pcic, developed by the Pacific Climate
+Impacts Consortium (PCIC), to calculate the majority of indices. For any comments, questions
+or suggestions, e-mail nicholas.herold@unsw.edu.au"
 ,bg='white',font=font_small,width=90),sticky="nsew")
         tkgrid(frame.space)
         tkgrid(tt2);#tkpack(tt2)
