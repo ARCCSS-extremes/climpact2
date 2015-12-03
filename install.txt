@@ -1,7 +1,7 @@
 
 
 				ClimPACT2
-			Last updated: 17/11/2015
+			Last updated: November 2015
 
 
   What is it?
@@ -44,8 +44,13 @@
      be able to use the GUI. In a Unix-based operating system you can use 
      the GUI as well as operate on gridded data.
 
+
+  VIDEO TUTORIAL FOUND HERE -> https://www.youtube.com/watch?v=rbZt8MJpLJE
+  ------------------------------------------------------------------------
+
+
   What if I want to calculate the indices on a netCDF dataset?**
-  ------------------------------------------------------------
+  --------------------------------------------------------------
 
     Software you will need:
         -R
