@@ -118,7 +118,9 @@ indexfile <- "index.master.list"
 indexlist <- (read.table(indexfile,sep="\t"))
 indices <- as.character(indexlist[,1])
 units <- as.character(indexlist[match(indices,indexlist[,1]),2])
+Encoding(units) <- "UTF-8"
 longnames <- as.character(indexlist[match(indices,indexlist[,1]),3])
+Encoding(longnames) <- "UTF-8"
 subtitle <- as.character(indexlist[,3])
 
 # ------------------------------------------------ #
@@ -1952,6 +1954,7 @@ plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=N
 plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,sub="") {
         if(is.null(index.name) | is.null(index) | is.null(index.units)) stop("Need index data, index.name, index units and an x label in order to plot data.")
 
+		Encoding(index.units) <- "UTF-8"
 #	plot.title <- paste(title.station,index.name,sep=", ")
 	namp <- paste(outjpgdir, paste(ofilename, "_", index.name, ".jpg", sep = ""), sep = "/")
 	jpeg(file = namp, width = 1024, height = 768)
@@ -1975,7 +1978,8 @@ plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,s
 plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=NULL,sub="")
 {
 	if(all(is.na(y0))) { print("NO DATA TO PLOT") ; return() }
-
+	Encoding(main) <- "UTF-8"
+	Encoding(sub) <- "UTF-8"
 # take a copy of input, so we will not modify the input by mistake.
 # And only take index values from the first non-NA value onwards, to avoid plotting long series of NA values.
 	nay <- which(!is.na(y0))
