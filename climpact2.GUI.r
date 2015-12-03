@@ -740,6 +740,8 @@ load.data.qc <- function() {
 		assign("longitude", longitude, envir = .GlobalEnv)
 		if(latitude<0) lat_text = "°S" else lat_text = "°N"
 		if(longitude<0) lon_text = "°W" else lon_text = "°E"
+		Encoding(lon_text) <- "UTF-8"	# to ensure proper plotting of degree symbol in Windows (which uses Latin encoding by default)
+		Encoding(lat_text) <- "UTF-8"
 		title.station <- paste(ofilename, " [", latitude,lat_text, ", ", longitude,lon_text, "]", sep = "")
 		assign("title.station", title.station, envir = .GlobalEnv)
 		assign("ofilename", ofilename, envir = .GlobalEnv)
@@ -1872,6 +1874,7 @@ plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) {
 	definitions <- c("Tx90","Tn90","EHF")
 	aspects <- c("HWM","HWA","HWN","HWD","HWF")
 	units <- c("°C","°C","heat waves","days","days")
+	Encoding(units) <- "UTF-8"
 
 	for (def in 1:length(definitions)) {
 		for (asp in 1:length(aspects)) {
@@ -1880,7 +1883,7 @@ plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) {
 	        	namp <- paste(outjpgdir, paste(ofilename, "_", definitions[def],"_",aspects[asp], ".jpg", sep = ""), sep = "/")
 	        	jpeg(file = namp, width = 1024, height = 768)
 		        dev0 = dev.cur()
-			if(definitions[def]=="EHF" && any(aspects[asp]=="HWM",aspects[asp]=="HWA")) unit = "°C^2" else unit = units[asp]
+			if(definitions[def]=="EHF" && any(aspects[asp]=="HWM",aspects[asp]=="HWA")) { unit = "°C^2" ; Encoding(unit) <- "UTF-8" } else unit = units[asp]
 		        plotx((date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label,index.name=index.name)
 
 	                dev.set(which = pdf.dev)
