@@ -1386,14 +1386,14 @@ index.calc1 <- function() {
 	tkgrid(tklabel(tt1,text="month ",bg='white',font=font_small),rb1)
 	tkgrid(tklabel(tt1,text="annual ",bg='white',font=font_small),rb2)
 
-	tkgrid(tklabel(tt1,text="User defined upper threshold of daily maximum temperature",bg='white',font=font_small),textEntryWidget6)
-	tkgrid(tklabel(tt1,text="User defined lower threshold of daily maximum temperature",bg='white',font=font_small),textEntryWidget7)
-	tkgrid(tklabel(tt1,text="User defined upper threshold of daily minimum temperature",bg='white',font=font_small),textEntryWidget8)
-	tkgrid(tklabel(tt1,text="User defined lower threshold of daily minimum temperature",bg='white',font=font_small),textEntryWidget9)
-	tkgrid(tklabel(tt1,text="User defined daily precipitation threshold",bg='white',font=font_small),textEntryWidget12)
-	tkgrid(tklabel(tt1,text="User defined WSDI Flex Days",bg='white',font=font_small),textEntryWidget13) # 13 wsdi
-	tkgrid(tklabel(tt1,text="User defined CSDI Flex Days",bg='white',font=font_small),textEntryWidget14) # 14 csdi
-	tkgrid(tklabel(tt1,text="User defined RxnDay Flex Days",bg='white',font=font_small),textEntryWidget15) # 15 rxday
+#	tkgrid(tklabel(tt1,text="User defined upper threshold of daily maximum temperature",bg='white',font=font_small),textEntryWidget6)
+#	tkgrid(tklabel(tt1,text="User defined lower threshold of daily maximum temperature",bg='white',font=font_small),textEntryWidget7)
+#	tkgrid(tklabel(tt1,text="User defined upper threshold of daily minimum temperature",bg='white',font=font_small),textEntryWidget8)
+#	tkgrid(tklabel(tt1,text="User defined lower threshold of daily minimum temperature",bg='white',font=font_small),textEntryWidget9)
+#	tkgrid(tklabel(tt1,text="User defined daily precipitation threshold",bg='white',font=font_small),textEntryWidget12)
+	tkgrid(tklabel(tt1,text="User defined WSDIn Days",bg='white',font=font_small),textEntryWidget13) # 13 wsdi
+	tkgrid(tklabel(tt1,text="User defined CSDIn Days",bg='white',font=font_small),textEntryWidget14) # 14 csdi
+	tkgrid(tklabel(tt1,text="User defined RxnDay Days",bg='white',font=font_small),textEntryWidget15) # 15 rxday
 	tkgrid(tklabel(tt1,text="User defined n for nTXnTN and nTXbnTNb",bg='white',font=font_small),textEntryWidget16) # txtn
 	tkgrid(tklabel(tt1,text="User defined base temperature for HDDheat",bg='white',font=font_small),textEntryWidget20) # Tb for HDDheat
 	tkgrid(tklabel(tt1,text="User defined base temperature for CDDcold",bg='white',font=font_small),textEntryWidget21) # Tb for CDDcold
@@ -1406,13 +1406,13 @@ index.calc1 <- function() {
 		tkdestroy(tt1)
 		frequency <- as.character(tclvalue(rbValue)) ; assign("frequency",frequency,envir=.GlobalEnv)
 
-		uuu<-as.numeric(tclvalue(textEntry6)); assign("uuu",uuu,envir=.GlobalEnv)
-		ulu<-as.numeric(tclvalue(textEntry7)); assign("uul",ulu,envir=.GlobalEnv)
-		uul<-as.numeric(tclvalue(textEntry8)); assign("ulu",uul,envir=.GlobalEnv)
-		ull<-as.numeric(tclvalue(textEntry9)); assign("ull",ull,envir=.GlobalEnv)
-		nn<-as.numeric(tclvalue(textEntry12)); 
-		if(nn<0.){tkmessageBox(message='daily precipitation threshold WRONG!\n\nvalid range is [0, inf)',icon='warning');  return()}
-		assign("nn",nn,envir=.GlobalEnv)
+#		uuu<-as.numeric(tclvalue(textEntry6)); assign("uuu",uuu,envir=.GlobalEnv)
+#		ulu<-as.numeric(tclvalue(textEntry7)); assign("uul",ulu,envir=.GlobalEnv)
+#		uul<-as.numeric(tclvalue(textEntry8)); assign("ulu",uul,envir=.GlobalEnv)
+#		ull<-as.numeric(tclvalue(textEntry9)); assign("ull",ull,envir=.GlobalEnv)
+#		nn<-as.numeric(tclvalue(textEntry12)); 
+#		if(nn<0.){tkmessageBox(message='daily precipitation threshold WRONG!\n\nvalid range is [0, inf)',icon='warning');  return()}
+#		assign("nn",nn,envir=.GlobalEnv)
 		
 		ctmp<-as.character(tclvalue(textEntry3))
 		plot.title<-gsub('\\#',title.station,ctmp); assign('plot.title',plot.title,envir=.GlobalEnv)
