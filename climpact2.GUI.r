@@ -96,9 +96,9 @@ Entry8<-tclVar(paste("20"));Entry9<-tclVar(paste("0"))
 Entry12<-tclVar(paste("25"))
 Entry13<-tclVar(paste("2"))
 Entry14<-tclVar(paste("2"))
-Entry15<-tclVar(paste("5"))
+Entry15<-tclVar(paste("3"))
 Entry16<-tclVar(paste("2"))
-Entry17<-tclVar(paste("10"))
+Entry17<-tclVar(paste("30"))
 Entry20<-tclVar(paste("18"))
 Entry21<-tclVar(paste("18"))
 Entry22<-tclVar(paste("10"))
@@ -1840,8 +1840,15 @@ index.calc2<-function(){
 write.index.csv <- function(index=NULL,index.name=NULL) {
         if(is.null(index.name) | is.null(index)) stop("Need index data and index.name in order to write CSV file.")
 
-	nam1 <- paste(outinddir, paste(ofilename, "_", index.name, ".csv", sep = ""), sep = "/")
-	write.table(index,    file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "-99.9", col.names = paste("time",index.name,sep=", "))
+	if(index.name=="wsdin") { tmp.name=paste("wsdi",wsdi_ud,sep="") } 
+	else if (index.name=="csdin") { tmp.name=paste("csdi",csdi_ud,sep="") }
+	else if (index.name=="rxnday") { tmp.name=paste("rx",rx_ud,"day",sep="") }
+	else if (index.name=="rnnmm") { tmp.name=paste("r",rnnmm_ud,"mm",sep="") }
+	else if (index.name=="ntxntn") { tmp.name=paste(txtn_ud,"tx",txtn_ud,"tn",sep="") }
+	else if (index.name=="ntxbntnb") { tmp.name=paste(txtn_ud,"txb",txtn_ud,"tnb",sep="") }
+	else { tmp.name = index.name }
+	nam1 <- paste(outinddir, paste(ofilename, "_", tmp.name, ".csv", sep = ""), sep = "/")
+	write.table(index,    file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "-99.9", col.names = paste("time",tmp.name,sep=", "))
 }
 
 # write.hw.csv
@@ -1956,18 +1963,25 @@ plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,s
 
 		Encoding(index.units) <- "UTF-8"
 #	plot.title <- paste(title.station,index.name,sep=", ")
-	namp <- paste(outjpgdir, paste(ofilename, "_", index.name, ".jpg", sep = ""), sep = "/")
+	if(index.name=="wsdin") { tmp.name=paste("wsdi",wsdi_ud,sep="") } 
+	else if (index.name=="csdin") { tmp.name=paste("csdi",csdi_ud,sep="") }
+	else if (index.name=="rxnday") { tmp.name=paste("rx",rx_ud,"day",sep="") }
+	else if (index.name=="rnnmm") { tmp.name=paste("r",rnnmm_ud,"mm",sep="") }
+	else if (index.name=="ntxntn") { tmp.name=paste(txtn_ud,"tx",txtn_ud,"tn",sep="") }
+	else if (index.name=="ntxbntnb") { tmp.name=paste(txtn_ud,"txb",txtn_ud,"tnb",sep="") }
+	else { tmp.name = index.name }
+	namp <- paste(outjpgdir, paste(ofilename, "_", tmp.name, ".jpg", sep = ""), sep = "/")
 	jpeg(file = namp, width = 1024, height = 768)
 
 	dev0 = dev.cur()
 	if(index.name=="tx95t") { xdata <- 1:length(index) }
 	else xdata <- names(index)
 
-	plotx(xdata, index, main = gsub('\\*', index.name, plot.title),
+	plotx(xdata, index, main = gsub('\\*', tmp.name, plot.title),
 	  ylab = index.units,xlab = x.label,index.name=index.name,sub=sub)
 
 	dev.set(which = pdf.dev)
-	plotx(xdata, index, main = gsub('\\*', index.name, plot.title),
+	plotx(xdata, index, main = gsub('\\*', tmp.name, plot.title),
 	  ylab = index.units, xlab = x.label,index.name=index.name,sub=sub)
 	dev.copy()
 	dev.off(dev0)
