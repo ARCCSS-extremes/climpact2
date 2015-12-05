@@ -1403,7 +1403,7 @@ index.calc1 <- function() {
 	tkpack(tt1)
 
 	check.then.continue<-function(){   # get user-definded parameters, check if they're valid, and set as global variable.
-		tkdestroy(tt1)
+#		tkdestroy(tt1)
 		frequency <- as.character(tclvalue(rbValue)) ; assign("frequency",frequency,envir=.GlobalEnv)
 
 #		uuu<-as.numeric(tclvalue(textEntry6)); assign("uuu",uuu,envir=.GlobalEnv)
@@ -1418,12 +1418,12 @@ index.calc1 <- function() {
 		plot.title<-gsub('\\#',title.station,ctmp); assign('plot.title',plot.title,envir=.GlobalEnv)
 		
 		Entry13<-as.numeric(tclvalue(textEntry13)); assign("wsdi_ud",as.double(Entry13),envir=.GlobalEnv) # 13 wsdi wsdi_ud
-		if(Entry13<2 | Entry13>10 ){tkmessageBox(message='WSDI Flex days WRONG!\n\nvalid range is [2, 10]',icon='warning');  return()}
+		if(Entry13<2 | Entry13>10 ){tkmessageBox(message='WSDI days WRONG!\n\nvalid range is [2, 10]',icon='warning');  return()}
 		Entry14<-as.numeric(tclvalue(textEntry14)); assign("csdi_ud",as.double(Entry14),envir=.GlobalEnv)    # 14 csdi_ud
-		if(Entry14<2 | Entry14>10 ){tkmessageBox(message='CSDI Flex days WRONG!\n\nvalid range is [2, 10]',icon='warning');  return()}
+		if(Entry14<2 | Entry14>10 ){tkmessageBox(message='CSDI days WRONG!\n\nvalid range is [2, 10]',icon='warning');  return()}
 		
 		Entry15<-as.numeric(tclvalue(textEntry15)); assign("rx_ud",as.double(Entry15),envir=.GlobalEnv)# 14 rx_ud
-		if(Entry15<2 | Entry15>10 ){tkmessageBox(message='RxDay Flex days WRONG!\n\nvalid range is [2, 10]',icon='warning');  return()}
+		if(Entry15<2 | Entry15>10 ){tkmessageBox(message='RxDay days WRONG!\n\nvalid range is [2, 10]',icon='warning');  return()}
 		Entry16<-as.numeric(tclvalue(textEntry16)); assign("txtn_ud",as.double(Entry16),envir=.GlobalEnv)# txtn_ud
 		if(Entry16<2 | Entry16>10 ){tkmessageBox(message='n in nTXnTN and nTXbnTNb WRONG!\n\nvalid range is [2, 10]',icon='warning');  return()}
                 Entry17<-as.numeric(tclvalue(textEntry17)); assign("rnnmm_ud",as.double(Entry17),envir=.GlobalEnv)# txtn_ud
