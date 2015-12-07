@@ -110,13 +110,14 @@ for(i in 1:100){
 	cbvalue<-c(cbvalue,as.character(aux))
 	tclvalue(cbvalue[i])<-TRUE
 }
-selectAll<-function() { for(i in 1:length(indices)) tclvalue(cbvalue[i])=TRUE }
-selectNone<-function() { for(i in 1:length(indices)) tclvalue(cbvalue[i])=FALSE }
+selectAll<-function() { for(i in 1:length.indices) tclvalue(cbvalue[i])=TRUE }
+selectNone<-function() { for(i in 1:length.indices) tclvalue(cbvalue[i])=FALSE }
 
 # Read in climate index data
 indexfile <- "index.master.list"
 indexlist <- (read.table(indexfile,sep="\t"))
 indices <- as.character(indexlist[,1])
+length.indices = length(indices)+4
 units <- as.character(indexlist[match(indices,indexlist[,1]),2])
 Encoding(units) <- "UTF-8"
 longnames <- as.character(indexlist[match(indices,indexlist[,1]),3])
@@ -1386,10 +1387,10 @@ index.calc1 <- function() {
 	tkgrid(tklabel(tt1,text="month ",bg='white',font=font_small),rb1)
 	tkgrid(tklabel(tt1,text="annual ",bg='white',font=font_small),rb2)
 
-#	tkgrid(tklabel(tt1,text="User defined upper threshold of daily maximum temperature",bg='white',font=font_small),textEntryWidget6)
-#	tkgrid(tklabel(tt1,text="User defined lower threshold of daily maximum temperature",bg='white',font=font_small),textEntryWidget7)
-#	tkgrid(tklabel(tt1,text="User defined upper threshold of daily minimum temperature",bg='white',font=font_small),textEntryWidget8)
-#	tkgrid(tklabel(tt1,text="User defined lower threshold of daily minimum temperature",bg='white',font=font_small),textEntryWidget9)
+	tkgrid(tklabel(tt1,text="Count the number of days where maximum temperature > n (sun)",bg='white',font=font_small),textEntryWidget6)
+	tkgrid(tklabel(tt1,text="Count the number of days where maximum temperature < n (idn)",bg='white',font=font_small),textEntryWidget7)
+	tkgrid(tklabel(tt1,text="Count the number of days where minimum temperature > n (trn)",bg='white',font=font_small),textEntryWidget8)
+	tkgrid(tklabel(tt1,text="Count the number of days where minimum temperature < n (fdn)",bg='white',font=font_small),textEntryWidget9)
 #	tkgrid(tklabel(tt1,text="User defined daily precipitation threshold",bg='white',font=font_small),textEntryWidget12)
 	tkgrid(tklabel(tt1,text="User defined WSDIn Days",bg='white',font=font_small),textEntryWidget13) # 13 wsdi
 	tkgrid(tklabel(tt1,text="User defined CSDIn Days",bg='white',font=font_small),textEntryWidget14) # 14 csdi
@@ -1398,7 +1399,7 @@ index.calc1 <- function() {
 	tkgrid(tklabel(tt1,text="User defined base temperature for HDDheat",bg='white',font=font_small),textEntryWidget20) # Tb for HDDheat
 	tkgrid(tklabel(tt1,text="User defined base temperature for CDDcold",bg='white',font=font_small),textEntryWidget21) # Tb for CDDcold
 	tkgrid(tklabel(tt1,text="User defined base temperature for GDDgrow",bg='white',font=font_small),textEntryWidget22) # Tb for GDDgrow
-        tkgrid(tklabel(tt1,text="User defined amount of precipitation (mm) for Rnnmm",bg='white',font=font_small),textEntryWidget17)
+        tkgrid(tklabel(tt1,text="Count the number of days where precipitation >= nn (Rnnmm)",bg='white',font=font_small),textEntryWidget17)
 	
 	tkpack(tt1)
 
@@ -1406,10 +1407,10 @@ index.calc1 <- function() {
 #		tkdestroy(tt1)
 		frequency <- as.character(tclvalue(rbValue)) ; assign("frequency",frequency,envir=.GlobalEnv)
 
-#		uuu<-as.numeric(tclvalue(textEntry6)); assign("uuu",uuu,envir=.GlobalEnv)
-#		ulu<-as.numeric(tclvalue(textEntry7)); assign("uul",ulu,envir=.GlobalEnv)
-#		uul<-as.numeric(tclvalue(textEntry8)); assign("ulu",uul,envir=.GlobalEnv)
-#		ull<-as.numeric(tclvalue(textEntry9)); assign("ull",ull,envir=.GlobalEnv)
+		uuu<-as.numeric(tclvalue(textEntry6)); assign("uuu",uuu,envir=.GlobalEnv)
+		ulu<-as.numeric(tclvalue(textEntry7)); assign("uul",ulu,envir=.GlobalEnv)
+		uul<-as.numeric(tclvalue(textEntry8)); assign("ulu",uul,envir=.GlobalEnv)
+		ull<-as.numeric(tclvalue(textEntry9)); assign("ull",ull,envir=.GlobalEnv)
 #		nn<-as.numeric(tclvalue(textEntry12)); 
 #		if(nn<0.){tkmessageBox(message='daily precipitation threshold WRONG!\n\nvalid range is [0, inf)',icon='warning');  return()}
 #		assign("nn",nn,envir=.GlobalEnv)
@@ -1418,16 +1419,16 @@ index.calc1 <- function() {
 		plot.title<-gsub('\\#',title.station,ctmp); assign('plot.title',plot.title,envir=.GlobalEnv)
 		
 		Entry13<-as.numeric(tclvalue(textEntry13)); assign("wsdi_ud",as.double(Entry13),envir=.GlobalEnv) # 13 wsdi wsdi_ud
-		if(Entry13<2 | Entry13>10 ){tkmessageBox(message='WSDI days WRONG!\n\nvalid range is [2, 10]',icon='warning');  return()}
+		if(Entry13<2 | Entry13>10 ){tkmessageBox(message='WSDI days is incorrect\n\nvalid range is [2, 10]',icon='warning');  return()}
 		Entry14<-as.numeric(tclvalue(textEntry14)); assign("csdi_ud",as.double(Entry14),envir=.GlobalEnv)    # 14 csdi_ud
-		if(Entry14<2 | Entry14>10 ){tkmessageBox(message='CSDI days WRONG!\n\nvalid range is [2, 10]',icon='warning');  return()}
+		if(Entry14<2 | Entry14>10 ){tkmessageBox(message='CSDI days is incorrect\n\nvalid range is [2, 10]',icon='warning');  return()}
 		
 		Entry15<-as.numeric(tclvalue(textEntry15)); assign("rx_ud",as.double(Entry15),envir=.GlobalEnv)# 14 rx_ud
-		if(Entry15<2 | Entry15>10 ){tkmessageBox(message='RxDay days WRONG!\n\nvalid range is [2, 10]',icon='warning');  return()}
+		if(Entry15<2 | Entry15>10 ){tkmessageBox(message='RxDay days is incorrect\n\nvalid range is [2, 10]',icon='warning');  return()}
 		Entry16<-as.numeric(tclvalue(textEntry16)); assign("txtn_ud",as.double(Entry16),envir=.GlobalEnv)# txtn_ud
-		if(Entry16<2 | Entry16>10 ){tkmessageBox(message='n in nTXnTN and nTXbnTNb WRONG!\n\nvalid range is [2, 10]',icon='warning');  return()}
+		if(Entry16<2 | Entry16>10 ){tkmessageBox(message='n in nTXnTN and nTXbnTNb is incorrect\n\nvalid range is [2, 10]',icon='warning');  return()}
                 Entry17<-as.numeric(tclvalue(textEntry17)); assign("rnnmm_ud",as.double(Entry17),envir=.GlobalEnv)# txtn_ud
-                if(Entry17<0 ){tkmessageBox(message='n in Rnnmm WRONG!\n\nvalid range is [0,Inf)',icon='warning');  return()}
+                if(Entry17<0 ){tkmessageBox(message='User defined amount of precipitation (mm) for Rnnmm is incorrect\n\nvalid range is [0,Inf)',icon='warning');  return()}
 
 		Entry20<-as.numeric(tclvalue(textEntry20)); assign("Tb_HDD",as.double(Entry20),envir=.GlobalEnv) # Tb for HDDheat
 		Entry21<-as.numeric(tclvalue(textEntry21)); assign("Tb_CDD",as.double(Entry21),envir=.GlobalEnv) # Tb for HDDcold
@@ -1489,10 +1490,24 @@ index.calc2<-function(){
 	tkinsert(txt,'end','ETCCDI, ETSCI and heatwave indices\n',header)  # group 1 indives
 
 	# List index check boxes
-	for (i in 1:length(indices)) {
+	for (i in 1:(length.indices-4)) {
+			if(indices[i]=="rnnmm") { 
+	        check_button <- tkcheckbutton(txt, variable = cbvalue[i], text = paste("r",rnnmm_ud,"mm : Annual number of days when precipitation >= ",rnnmm_ud,"mm",sep=""),font=font0,bg='white')
+        	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button) 
+			} else {
 	        check_button <- tkcheckbutton(txt, variable = cbvalue[i], text = paste(indices[i]," : ",longnames[i]),font=font0,bg='white')
-        	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button)
+        	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button) 
+        	}
 	}
+	# List GUI specific ClimPACT2 indices
+	check_button <- tkcheckbutton(txt, variable = cbvalue[length.indices-3], text = paste("su",uuu," : Number of days where TX is greater than ",uuu,sep=""),font=font0,bg='white')
+	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button)
+	check_button <- tkcheckbutton(txt, variable = cbvalue[length.indices-2], text = paste("id",uul," : Number of days where TX is less than",uul,sep=""),font=font0,bg='white')
+	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button)
+	check_button <- tkcheckbutton(txt, variable = cbvalue[length.indices-1], text = paste("tr",ulu," : Number of days where TN is greater than",ulu,sep=""),font=font0,bg='white')
+	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button)
+	check_button <- tkcheckbutton(txt, variable = cbvalue[length.indices], text = paste("fd",ull," : Number of days where TN is less than",ull,sep=""),font=font0,bg='white')
+	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button)
 	
 	tkinsert(txt,'end','\n')
 	
@@ -1505,8 +1520,8 @@ index.calc2<-function(){
 	# fucntion index.calc3 is triggered by the OK button
 	# Does all the calculations.
 	index.calc3 <- function(){
-                cbv=rep(0,length(indices))
-                for(i in 1:length(indices)) cbv[i]=tclvalue(cbvalue[i])
+                cbv=rep(0,length.indices)
+                for(i in 1:length.indices) cbv[i]=tclvalue(cbvalue[i])
 		if(all(cbv==0)) {tkmessageBox(message="Please select at least one index to calculate.",title="ClimPACT2", icon='warning') ; return() }
 
 		pb <- tkProgressBar("Index calculation progress", "Calculation complete %",0, 100, 10)
@@ -1621,7 +1636,8 @@ index.calc2<-function(){
                 cat(file=trend_file,paste(latitude,longitude,indices[44],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
                 if (cbv[45]==1) { print(paste("calculating",indices[45])) ; index.store <- climdex.rxnday(cio,n=rx_ud,freq=frequency) ; write.index.csv(index.store,index.name=indices[45]) ; plot.call(index.store,index.name=indices[45],index.units=units[45],x.label="Years",sub=subtitle[45])
                 cat(file=trend_file,paste(latitude,longitude,indices[45],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[46]==1) { print(paste("calculating",indices[46])) ; index.store <- climdex.rnnmm(cio,rnnmm_ud) ; write.index.csv(index.store,index.name=indices[46]) ; plot.call(index.store,index.name=indices[46],index.units=units[46],x.label="Years",sub=subtitle[46])
+                if (cbv[46]==1) { print(paste("calculating",indices[46])) ; user.ind46 = paste("r",rnnmm_ud,"mm",sep="") ; 
+                index.store <- climdex.rnnmm(cio,rnnmm_ud) ; write.index.csv(index.store,index.name=user.ind46) ; plot.call(index.store,index.name=user.ind46,index.units=units[46],x.label="Years",sub=paste("Annual number of days when precipitation >= ",rnnmm_ud,sep=""))
                 cat(file=trend_file,paste(latitude,longitude,indices[46],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
                 if (cbv[47]==1) { print(paste("calculating",indices[47])) ; index.store <- climdex.ntxntn(cio,n=txtn_ud) ; write.index.csv(index.store,index.name=indices[47]) ; plot.call(index.store,index.name=indices[47],index.units=units[47],x.label="Years",sub=subtitle[47])
                 cat(file=trend_file,paste(latitude,longitude,indices[47],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
@@ -1790,7 +1806,20 @@ index.calc2<-function(){
                         }
 			write.precindex.csv(index.store,index.name=indices[51],spifactor)
 			plot.precindex(index.store,index.name=indices[51],index.units=units[51],x.label="Years",spifactor,sub=subtitle[51]) } }
-
+			
+			if(cbv[52]==1) { user.ind52 = paste("su",uuu,sep="") ; print(paste("calculating",user.ind52)) ; index.store <- (number.days.op.threshold(cio@data$tmax,cio@date.factors$annual,uuu,">")* cio@namasks$annual$tmax) ; write.index.csv(index.store,index.name=user.ind52) ; 
+			plot.call(index.store,index.name=user.ind52,index.units="days",x.label="Years",sub=paste("Number of days where TX is greater than ",uuu,sep=""))
+                cat(file=trend_file,paste(latitude,longitude,user.ind52,years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
+			if(cbv[53]==1) { user.ind53 = paste("id",uul,sep="") ; print(paste("calculating",user.ind53)) ; index.store <- (number.days.op.threshold(cio@data$tmax,cio@date.factors$annual,uul,"<")* cio@namasks$annual$tmax) ; write.index.csv(index.store,index.name=user.ind53) ; 
+			plot.call(index.store,index.name=user.ind53,index.units="days",x.label="Years",sub=paste("Number of days where TX is less than ",uul,sep=""))
+                cat(file=trend_file,paste(latitude,longitude,user.ind53,years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
+			if(cbv[54]==1) { user.ind54 = paste("tr",ulu,sep="") ; print(paste("calculating",user.ind54)) ; index.store <- (number.days.op.threshold(cio@data$tmin,cio@date.factors$annual,ulu,">")* cio@namasks$annual$tmin) ; write.index.csv(index.store,index.name=user.ind54) ; 
+			plot.call(index.store,index.name=user.ind54,index.units="days",x.label="Years",sub=paste("Number of days where TN is greater than ",ulu,sep=""))
+                cat(file=trend_file,paste(latitude,longitude,user.ind54,years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
+			if(cbv[55]==1) { user.ind55 = paste("fd",ull,sep="") ; print(paste("calculating",user.ind55)) ; index.store <- (number.days.op.threshold(cio@data$tmin,cio@date.factors$annual,ull,"<")* cio@namasks$annual$tmin) ; write.index.csv(index.store,index.name=user.ind55) ; 
+			plot.call(index.store,index.name=user.ind55,index.units="days",x.label="Years",sub=paste("Number of days where TN is less than ",ull,sep=""))
+                cat(file=trend_file,paste(latitude,longitude,user.ind55,years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
+ 
 		dev.off(pdf.dev)
 		graphics.off()  # close the pdf file, so you can open to view it now.
 
