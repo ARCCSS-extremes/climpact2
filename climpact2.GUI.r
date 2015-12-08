@@ -518,6 +518,8 @@ load.data.qc <- function() {
 		cio <<- NULL
 		quantiles <<- NULL
 		loaded <<- FALSE
+                tkconfigure(start.but,bg="lightgreen",text = "   LOAD AND  \n  CHECK DATA   ", command = load.data.qc, width = 15, font = fontHeading2)
+                tkconfigure(cal.but,bg="white",text = "   CALCULATE \n   INDICES  ", command = index.calc1, width = 15, font = fontHeading2)
 		return() }
 
 	# Load data. This function does the meat of the work and creates the climdex input object.
@@ -1175,8 +1177,8 @@ load.data.qc <- function() {
                 tkmessageBox(message=paste("Station name: name of the recording station that data originated from.",
 					"Latitude/Longitude: geographical coordinates of the station in decimal form. (-90 to +90 and -180 to +180)",
 					"Base period: a beginning and end year (four digits) to use as a reference period to calculate certain indices.",
-					"Standard deviations for outliers: the distance from the mean of the data that is considered suspicious.",
-					"[OPTIONAL] Load thresholds: if thresholds previously calculated are to be used for percentile indices.",
+					"Standard deviations for temperature outliers: the distance from the mean of the data that is considered suspicious.",
+					"[OPTIONAL] load previous thresholds: if thresholds previously calculated are to be used for percentile indices.",
 #					"[OPTIONAL] Load additional field: an additional time-series of data (which can represent anything) to load and plot with the indices. The file must be formatted similarly to your climate data file and must contain identical dates. e.g. [year,month,day,data].",
 					sep="\n\n"),icon='question')
         }
@@ -1387,10 +1389,10 @@ index.calc1 <- function() {
 	tkgrid(tklabel(tt1,text="month ",bg='white',font=font_small),rb1)
 	tkgrid(tklabel(tt1,text="annual ",bg='white',font=font_small),rb2)
 
-	tkgrid(tklabel(tt1,text="Count the number of days where maximum temperature > n (sun)",bg='white',font=font_small),textEntryWidget6)
-	tkgrid(tklabel(tt1,text="Count the number of days where maximum temperature < n (idn)",bg='white',font=font_small),textEntryWidget7)
-	tkgrid(tklabel(tt1,text="Count the number of days where minimum temperature > n (trn)",bg='white',font=font_small),textEntryWidget8)
-	tkgrid(tklabel(tt1,text="Count the number of days where minimum temperature < n (fdn)",bg='white',font=font_small),textEntryWidget9)
+	tkgrid(tklabel(tt1,text="  Count the number of days where maximum temperature > ",bg='white',font=font_small),textEntryWidget6)
+	tkgrid(tklabel(tt1,text="  Count the number of days where maximum temperature < ",bg='white',font=font_small),textEntryWidget7)
+	tkgrid(tklabel(tt1,text="  Count the number of days where minimum temperature > ",bg='white',font=font_small),textEntryWidget8)
+	tkgrid(tklabel(tt1,text="  Count the number of days where minimum temperature < ",bg='white',font=font_small),textEntryWidget9)
 #	tkgrid(tklabel(tt1,text="User defined daily precipitation threshold",bg='white',font=font_small),textEntryWidget12)
 	tkgrid(tklabel(tt1,text="User defined WSDIn Days",bg='white',font=font_small),textEntryWidget13) # 13 wsdi
 	tkgrid(tklabel(tt1,text="User defined CSDIn Days",bg='white',font=font_small),textEntryWidget14) # 14 csdi
@@ -1834,8 +1836,9 @@ index.calc2<-function(){
 		okk<-function(){tkdestroy(nstation);tkfocus(start1)}  # all are done, return to main window.
 		textlabel0<-tklabel(nstation,text="     ",bg='white')  # message showing all are done, showing directory.
 		textlabel1<-tklabel(nstation,text="Indices calculation completed",font=fontHeading1,bg='white')
-		textlabel2<-tklabel(nstation,text=paste("Plots are in: ",outjpgdir,sep=" "),font=fontHeading2,bg='white')
-		textlabel3<-tklabel(nstation,text=paste(ofilename,"_all_plots.pdf  contains all plots.",sep=""),font=fontHeading2,bg='white')
+		textlabel2<-tklabel(nstation,text=paste("   Plots are in ",outjpgdir,"   ",sep=" "),font=fontHeading2,bg='white')
+#		textlabel3<-tklabel(nstation,text=paste(ofilename,"_all_plots.pdf ",sep=""),font=fontHeading2,bg='white')
+                textlabel3<-tklabel(nstation,text=paste("   Data are in ",outinddir,"   ",sep=" "),font=fontHeading2,bg='white')
 	
 		## Will add one more part here, to show which indices were not calculated...
 		okk.but<-tkbutton(nstation,text="   OK   ",command=okk,width=20,bg='white')
