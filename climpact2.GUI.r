@@ -91,7 +91,7 @@ base.year.start.tcl<-tclVar(paste("1971"));base.year.end.tcl<-tclVar(paste("2000
 latentry=tclVar(''); lonentry<-tclVar('') ; add.data.name.entry <-tclVar('')
 Entry4<-tclVar(paste("0"))
 Entry5<-tclVar(paste("0"))
-Entry6<-tclVar(paste("25"));Entry7<-tclVar(paste("0"))
+Entry6<-tclVar(paste("20"));Entry7<-tclVar(paste("0"))
 Entry8<-tclVar(paste("20"));Entry9<-tclVar(paste("0"))
 Entry12<-tclVar(paste("25"))
 Entry13<-tclVar(paste("2"))
@@ -1444,7 +1444,7 @@ index.calc1 <- function() {
 	}
   
 	tt1<-tkframe(infor)
-	ok1.but<-    tkbutton(tt1,text="    OK    ",command=check.then.continue,bg='white',font=font_small)
+	ok1.but<-    tkbutton(tt1,text=" CALCULATE INDICES ",command=check.then.continue,bg='white',font=font_small)
 	cancel1.but<-tkbutton(tt1,text="  CANCEL  ",command=cancel1,bg='white',font=font_small)
 	tkgrid(ok1.but,cancel1.but)
 	tkpack(tt1)
@@ -1456,66 +1456,66 @@ done<-function(){tkdestroy(start1)}
 # index.calc2
 # Final index calculation window and is called from index.calc1. User selects which indices to calculate. Index function calls come from this function.
 index.calc2<-function(){
-	main<-tktoplevel(bg='white',width=900,height=700)
-	tkfocus(main)
-	tkwm.geometry(main, "+300+200") # position in upper left corner of screen
-	tkwm.title(main,"ClimPACT2 - Calculating indices")
-	
-	mainall<-tkframe(main,bg='white')
-	main0<-tkframe(mainall,bg='white')
-	tkgrid(tklabel(main0,text="Check desired indices",font=fontHeading1,bg='white'))
-	tkgrid(main0)
-	
-	main0<-tkframe(mainall,bg='white')
-	  
-	check_all <- tkbutton(main0 ,  text = " select ALL ",  command = selectAll, width=15,bg='white',font=font_small)
-	check_none <- tkbutton(main0 , text = " select NONE ", command = selectNone,width=15,bg='white',font=font_small)
-	
-	tkgrid(check_all,check_none)
-	tkgrid(main0)
-	
-	tt=tkframe(mainall,bg='white')   # add scrollbar
-	scr <- tkscrollbar(tt, command=function(...)tkyview(txt,...),bg='white')
-	txt <- tktext(tt,height=40,bg='white',width=200) 
-	tkconfigure(txt, yscrollcommand=function(...)tkset(scr,...))
-	tkpack(scr,side='right',fill='y')
-	tkpack(txt,expand='yes',fill='both')
-	
-	header= tclVar(TRUE)
-	color1=tclVar(TRUE)
-	tktag.configure(txt,header,font='arial 16 bold')
-	tktag.configure(txt,color1,foreground="red")
-	font0='arial 14'
-	
-	tkinsert(txt,'end','ETCCDI, ETSCI and heatwave indices\n',header)  # group 1 indives
-
-	# List index check boxes
-	for (i in 1:(length.indices-4)) {
-			if(indices[i]=="rnnmm") { 
-	        check_button <- tkcheckbutton(txt, variable = cbvalue[i], text = paste("r",rnnmm_ud,"mm : Annual number of days when precipitation >= ",rnnmm_ud,"mm",sep=""),font=font0,bg='white')
-        	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button) 
-			} else {
-	        check_button <- tkcheckbutton(txt, variable = cbvalue[i], text = paste(indices[i]," : ",longnames[i]),font=font0,bg='white')
-        	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button) 
-        	}
-	}
-	# List GUI specific ClimPACT2 indices
-	check_button <- tkcheckbutton(txt, variable = cbvalue[length.indices-3], text = paste("su",uuu," : Number of days where TX is greater than ",uuu,sep=""),font=font0,bg='white')
-	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button)
-	check_button <- tkcheckbutton(txt, variable = cbvalue[length.indices-2], text = paste("id",uul," : Number of days where TX is less than",uul,sep=""),font=font0,bg='white')
-	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button)
-	check_button <- tkcheckbutton(txt, variable = cbvalue[length.indices-1], text = paste("tr",ulu," : Number of days where TN is greater than",ulu,sep=""),font=font0,bg='white')
-	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button)
-	check_button <- tkcheckbutton(txt, variable = cbvalue[length.indices], text = paste("fd",ull," : Number of days where TN is less than",ull,sep=""),font=font0,bg='white')
-	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button)
-	
-	tkinsert(txt,'end','\n')
-	
-	tkconfigure(txt, state="disabled")
-	tkpack(txt)
-	tkgrid(tt)
-	
-	main0=tkframe(mainall,bg='white')
+#	main<-tktoplevel(bg='white',width=900,height=700)
+#	tkfocus(main)
+#	tkwm.geometry(main, "+300+200") # position in upper left corner of screen
+#	tkwm.title(main,"ClimPACT2 - Calculating indices")
+#	
+#	mainall<-tkframe(main,bg='white')
+#	main0<-tkframe(mainall,bg='white')
+#	tkgrid(tklabel(main0,text="Check desired indices",font=fontHeading1,bg='white'))
+#	tkgrid(main0)
+#	
+#	main0<-tkframe(mainall,bg='white')
+#	  
+#	check_all <- tkbutton(main0 ,  text = " select ALL ",  command = selectAll, width=15,bg='white',font=font_small)
+#	check_none <- tkbutton(main0 , text = " select NONE ", command = selectNone,width=15,bg='white',font=font_small)
+#	
+#	tkgrid(check_all,check_none)
+#	tkgrid(main0)
+#	
+#	tt=tkframe(mainall,bg='white')   # add scrollbar
+#	scr <- tkscrollbar(tt, command=function(...)tkyview(txt,...),bg='white')
+#	txt <- tktext(tt,height=40,bg='white',width=200) 
+#	tkconfigure(txt, yscrollcommand=function(...)tkset(scr,...))
+#	tkpack(scr,side='right',fill='y')
+#	tkpack(txt,expand='yes',fill='both')
+#	
+#	header= tclVar(TRUE)
+#	color1=tclVar(TRUE)
+#	tktag.configure(txt,header,font='arial 16 bold')
+#	tktag.configure(txt,color1,foreground="red")
+#	font0='arial 14'
+#	
+#	tkinsert(txt,'end','ETCCDI, ETSCI and heatwave indices\n',header)  # group 1 indives
+#
+#	# List index check boxes
+#	for (i in 1:(length.indices-4)) {
+#			if(indices[i]=="rnnmm") { 
+#	        check_button <- tkcheckbutton(txt, variable = cbvalue[i], text = paste("r",rnnmm_ud,"mm : Annual number of days when precipitation >= ",rnnmm_ud,"mm",sep=""),font=font0,bg='white')
+#        	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button) 
+#			} else {
+#	        check_button <- tkcheckbutton(txt, variable = cbvalue[i], text = paste(indices[i]," : ",longnames[i]),font=font0,bg='white')
+#        	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button) 
+#        	}
+#	}
+#	# List GUI specific ClimPACT2 indices
+#	check_button <- tkcheckbutton(txt, variable = cbvalue[length.indices-3], text = paste("su",uuu," : Number of days where TX is greater than ",uuu,sep=""),font=font0,bg='white')
+#	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button)
+#	check_button <- tkcheckbutton(txt, variable = cbvalue[length.indices-2], text = paste("id",uul," : Number of days where TX is less than",uul,sep=""),font=font0,bg='white')
+#	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button)
+#	check_button <- tkcheckbutton(txt, variable = cbvalue[length.indices-1], text = paste("tr",ulu," : Number of days where TN is greater than",ulu,sep=""),font=font0,bg='white')
+#	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button)
+#	check_button <- tkcheckbutton(txt, variable = cbvalue[length.indices], text = paste("fd",ull," : Number of days where TN is less than",ull,sep=""),font=font0,bg='white')
+#	tkinsert(txt,'end','\n    '); tkwindow.create(txt, 'end',window=check_button)
+#	
+#	tkinsert(txt,'end','\n')
+#	
+#	tkconfigure(txt, state="disabled")
+#	tkpack(txt)
+#	tkgrid(tt)
+#	
+#	main0=tkframe(mainall,bg='white')
 	
 	# fucntion index.calc3 is triggered by the OK button
 	# Does all the calculations.
@@ -1828,7 +1828,7 @@ index.calc2<-function(){
 		tkwm.geometry(nstation, "+300+200") # position in upper left corner of screen
 		tkwm.title(nstation,"ClimPACT2 - Done")
                 tkfocus(nstation)
-		tkdestroy(main)
+#		tkdestroy(main)
                 close(pb)
 		
 		okk<-function(){tkdestroy(nstation);tkfocus(start1)}  # all are done, return to main window.
@@ -1846,21 +1846,24 @@ index.calc2<-function(){
 		tkpack(okk.but)
 	}
 
+        selectAll()
+        index.calc3()
+
 	# If you choose "cancel", close current window, and return to main window (start1).
-	done2<-function(){
-		tkdestroy(main)
-		tkfocus(start1)
-	}
-	
-	tkgrid(tklabel(main0,text='',bg='white'))
-	ok.but <-tkbutton(main0,text="  CONTINUE  ",command=index.calc3,width=20,bg='white',font=font_small)
-	cancel.but<-tkbutton(main0,text="CANCEL",command=done2,width=20,bg='white',font=font_small)
-	tkgrid(ok.but, cancel.but) 
-	tkgrid(tklabel(main0,text='',bg='white'))
-	
-	tkgrid(main0)
-	tkgrid(tklabel(mainall,text='',bg='white'))
-	tkgrid(mainall)
+#	done2<-function(){
+#		tkdestroy(main)
+#		tkfocus(start1)
+#	}
+#	
+#	tkgrid(tklabel(main0,text='',bg='white'))
+#	ok.but <-tkbutton(main0,text="  CONTINUE  ",command=index.calc3,width=20,bg='white',font=font_small)
+#	cancel.but<-tkbutton(main0,text="CANCEL",command=done2,width=20,bg='white',font=font_small)
+#	tkgrid(ok.but, cancel.but) 
+#	tkgrid(tklabel(main0,text='',bg='white'))
+#	
+#	tkgrid(main0)
+#	tkgrid(tklabel(mainall,text='',bg='white'))
+#	tkgrid(mainall)
 }
 # end of index.calc2  
 
@@ -2092,7 +2095,7 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 	pval <- round(as.numeric(out$summary[1, 6]), 3)
 	beta <- round(as.numeric(out$coef.table[[1]][2, 1]), 3)
 	betaerr <- round(as.numeric(out$coef.table[[1]][2, 2]), 3)
-	
+	abline(fit,lwd=2.0)
 	xy <- na.omit(xy)
 
 	tmp_seq = 1:length(x)
