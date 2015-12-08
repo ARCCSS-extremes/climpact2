@@ -69,7 +69,7 @@ fontTextLabel   <- tkfont.create(family = "arial", size = 12)
 fontFixedWidth  <- tkfont.create(family = "courier", size = 12)
 font_small  <- "arial 12"
 font_big    <- "arial 15 bold"
-font_err    <- "arial 13 bold"
+font_err    <- "times 13 bold"
 grey_font <- tkfont.create(family = "arial", size = 30, weight = "bold", slant = "italic") #'times 20 grey bold'
 
 # Global variables
