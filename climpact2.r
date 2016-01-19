@@ -1,5 +1,5 @@
 # ------------------------------------------------ #
-# ClimPACT2 V.0.1.
+# ClimPACT2
 # University of New South Wales
 # ------------------------------------------------ #
 #
@@ -8,20 +8,21 @@
 # the indices through the climpact.loader function contained in this file. This function accepts gridded netCDF files of tmin, tmax and precip and produces gridded datasets of the requested indices. 
 # Conversely, non-specialists are able to use the GUI (accessed by sourcing climpact2.GUI.r) to calculate point data from ASCII files.
 #
-# This package is available on github https://github.com/ARCCSS-extremes/climpact2
+# This package is available on github https://github.com/ARCCSS-extremes/climpact2. See this site for specific version history.
 # 
-# nherold, May 2015.
+# nherold, December 2015.
 
 # Nullify some objects to suppress spurious warning messages
 caltype <<- nc_tsmin <<- nc_tsmax <<- nc_prec <<- yeardate <<- origin <<- latstr <<- latdim <<- londim <<- j <<- tsmin <<- tsmax <<- prec <<- tsmintime <<- tsmaxtime <<- prectime <<- missingval <<- cicompile <<- tminqtiles_array <<- tmaxqtiles_array <<-  
-tminqtiles <<- tnames <<- tmaxqtiles <<- tavgqtiles <<- precipqtiles <<- pnames <<- tavgqtileshw <<- tminqtileshw <<- tmaxqtileshw <<- tminraw <<- tmaxraw <<- precraw <<- timeraw <<- northern.hemisphere <<- tavgqtiles_array <<- precipqtiles_array <<- NULL
+tminqtiles <<- tnames <<- tmaxqtiles <<- tavgqtiles <<- precipqtiles <<- pnames <<- tavgqtileshw <<- tminqtileshw <<- tmaxqtileshw <<- tminraw <<- tmaxraw <<- precraw <<- timeraw <<- northern.hemisphere <<- tavgqtiles_array <<- precipqtiles_array <<- 
+tavg05_95p <<- tavg0595qtiles <<- NULL
 
 # Load global libraries and enable compilation.
 library(climdex.pcic)
 library(PCICt)
 library(SPEI,quietly=TRUE)
 options(warn=1)
-software_id = "0.1"
+software_id = "1.0.0"
 
 # climpact.loader
 #
@@ -61,7 +62,7 @@ climpact.loader <- function(tsminfile=NULL,tsmaxfile=NULL,precfile=NULL,tsminnam
 freq=c("monthly","annual"),tempqtiles=c(0.1,0.9),precqtiles=c(0.1,0.9),max.missing.days=c(annual=15, monthly=3),min.base.data.fraction.present=0.1,csdin_n=5,csdin_spells.can.span.years=FALSE,wsdin_n=5,wsdin_spells.can.span.years=FALSE,
 cdd_spells.can.span.years=TRUE,cwd_spells.can.span.years=TRUE,csdi_spells.can.span.years=FALSE,wsdi_spells.can.span.years=FALSE,ntxntn_n=5,
 ntxbntnb_n=5,gslmode="GSL",rx5day_centermean=FALSE,hddheat_n=18,cddcold_n=18,gddgrow_n=10,time_format=NULL,rxnday_n=7,rxnday_center.mean.on.last.day=FALSE,rnnm_threshold=1,
-spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL,output_dir="./")
+spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NULL,cores=NULL,output_dir="./",hw_ehf="PA13")
 {
 # modules needed for parallel and netCDF
         library(ncdf4)
@@ -190,6 +191,7 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 		if(!is.null(ncvar_get(nc_qtiles,"tmin"))) { tminqtiles = ncvar_get(nc_qtiles,"tmin") ; tnames = ncvar_get(nc_qtiles,"tqtile") }
                 if(!is.null(ncvar_get(nc_qtiles,"tmax"))) { tmaxqtiles = ncvar_get(nc_qtiles,"tmax") ; tnames = ncvar_get(nc_qtiles,"tqtile") }
                 if(!is.null(ncvar_get(nc_qtiles,"tavg"))) { tavgqtiles = ncvar_get(nc_qtiles,"tavg") ; tnames = ncvar_get(nc_qtiles,"tqtile") }
+                if(!is.null(ncvar_get(nc_qtiles,"tavg05_95p"))) { tavg0595qtiles = ncvar_get(nc_qtiles,"tavg05_95p") }
                 if(!is.null(ncvar_get(nc_qtiles,"prec"))) { precipqtiles = ncvar_get(nc_qtiles,"prec") ; pnames = ncvar_get(nc_qtiles,"pqtile") }
                 if(!is.null(ncvar_get(nc_qtiles,"tmin90p_hw"))) { tminqtileshw = ncvar_get(nc_qtiles,"tmin90p_hw") }
                 if(!is.null(ncvar_get(nc_qtiles,"tmax90p_hw"))) { tmaxqtileshw = ncvar_get(nc_qtiles,"tmax90p_hw") }
@@ -198,8 +200,10 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
                 if(!is.null(ncvar_get(nc_qtiles,"tmaxraw"))) { tmaxraw = ncvar_get(nc_qtiles,"tmaxraw") }
                 if(!is.null(ncvar_get(nc_qtiles,"precraw"))) { precraw = ncvar_get(nc_qtiles,"precraw") }
                 if(!is.null(ncvar_get(nc_qtiles,"base_time"))) { timeraw = ncvar_get(nc_qtiles,"base_time") }
+tavg0595qtiles = aperm(tavg0595qtiles,c(2,3,1))
 	}
-
+print(dim(tavg0595qtiles))
+print(dim(tavgqtiles))
 # Compile climdexinput function for performance.
 	cicompile <<- cmpfun(climdexInput.raw)
 	exportlist <- c(exportlist,"cicompile")
@@ -268,7 +272,8 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
                         spi={indexparam = paste("array(indexcompile(",indexparam,",scale=",spi_scale,",ref.start=",paste("c(",baserange[1],",1)",sep=""),",ref.end=",paste("c(",
 				baserange[2],",1)",sep=""),",baseprec=praw,basetime=btime","))") ; if(!write_quantiles) {tempqtiles_tmp = NULL ; precqtiles_tmp = NULL } },
 			hw={	indexparam = paste("array(indexcompile(",indexparam,",base.range=c(",baserange[1],",",baserange[2],"),pwindow=",hwn_n,",min.base.data.fraction.present=",
-                                min.base.data.fraction.present,",lat=",latstr,",tavg90p=tavg90p",",tn90p=tn90p",",tx90p=tx90p","))",sep="") ; if(!write_quantiles) {tempqtiles_tmp = c(0.1,0.9) ; precqtiles_tmp = NULL } },
+                                min.base.data.fraction.present,",lat=",latstr,",tavg90p=tavg90p",",tn90p=tn90p",",tx90p=tx90p",",tavg05p=tavg05p",",tavg95p=tavg95p",",ehfdef=hw_ehf","))",sep="")
+				if(!write_quantiles) {tempqtiles_tmp = c(0.1,0.9) ; precqtiles_tmp = NULL } },
 		{ indexparam = paste("array(indexcompile(",indexparam,"))",sep="") ; tempqtiles_tmp <- precqtiles_tmp <- NULL } )
 		print(paste("diag: index call: ",(eval(indexparam)),sep=""))
 
@@ -282,13 +287,14 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 		}
 
 	# array size depending on whether index is daily, monthly, annual, heatwave or SPEI/SPI
-		if(indices[a] == "hw") { index = array(NA,c(3,5,length(lon),length(lat),nyears)) } 				# additional dimensions of 3,5 for 3 definitions and 5 aspects of heat waves
+		if(indices[a] == "hw") { index = array(NA,c(4,5,length(lon),length(lat),nyears)) } 				# additional dimensions of 3,5 for 3 definitions and 5 aspects of heat waves
 		else if (indices[a] == "spei" | indices[a] == "spi") { index = array(NA,c(3,length(lon),length(lat),nmonths))} 	# an additional dimension of size 3 for default 3, 6 and 12 month calculations
 		else if(period == "MON") {index = array(NA,c(length(lon),length(lat),nmonths))} else if(period == "ANN") { index = array(NA,c(length(lon),length(lat),nyears))} else {index = array(NA,c(length(lon),length(lat),365))}
 
 	# create quantile arrays if quantile file is requested. [lon,lat,days,percentiles,base]
 		if(write_quantiles == TRUE) { tminqtiles_array <<- tmaxqtiles_array <<- tavgqtiles_array <<- array(NA,c(length(lon),length(lat),365,length(tempqtiles),2)) 
-				precipqtiles_array <<- array(NA,c(length(lon),length(lat),365,length(precqtiles),2)) }
+				precipqtiles_array <<- array(NA,c(length(lon),length(lat),365,length(precqtiles),2)) 
+				tavg05_95p_array <<- array(NA,c(length(lon),length(lat),2)) }
 
         # If quantiles are requested, record and write quantiles. This will only happen once.
                 if (write_quantiles == TRUE) { record.quantiles(refnc,timename,time_format,tempqtiles,precqtiles,lat,lon,baserange,identifier,period,londim,latdim,output_dir,time) ; write_quantiles = FALSE }
@@ -342,15 +348,23 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 		                                for (l in 1:length(pnames)) { preclist[[l]]=precipqtiles[i,j,l] }
 		                                quantiles$prec = preclist
 		                        }
+#                                        if(!is.null(tavg0595qtiles)) { 
+#                                                tavg0595list=vector("list", 2)
+#                                                names(tavg0595list) <- paste("q",c("05","95"),sep="")
+#                                                for (l in 1:2) { tavg0595list[[l]]=tavg0595qtiles[i,j,l] }
+#                                                quantiles$tavg0595 = tavg0595list
+#                                        }
+
 					tempqtiles_tmp <- precqtiles_tmp <- NULL
-		                } else { quantiles = NULL }
+		                } else { quantiles <- NULL }
 
 				# Calculate climdex input object
 				cio <<- cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=prec[i,j,],tmin.dates=tsmintime,tmax.dates=tsmaxtime,prec.dates=prectime,prec.qtiles=precqtiles_tmp,
 					temp.qtiles=tempqtiles_tmp,quantiles=quantiles,base.range=baserange)
-
+#print(dim(tavg0595qtiles))
 				# Call index function and store in different variable if hw, or spei or spi.
-				if(indices[a] == "hw") { if(exists("tavgqtileshw")) { tavg90p = tavgqtileshw[i,j,] ; tn90p = tminqtileshw[i,j,] ; tx90p = tmaxqtileshw[i,j,] } else { tavg90p = NULL ; tx90p = NULL ; tn90p = NULL}
+				if(indices[a] == "hw") { if(exists("tavgqtileshw")) { tavg90p = tavgqtileshw[i,j,] ; tn90p = tminqtileshw[i,j,] ; tx90p = tmaxqtileshw[i,j,] ; tavg05p = tavg0595qtiles[j,1,i] ; tavg95p = tavg0595qtiles[j,2,i] } 
+					else { tavg90p = NULL ; tx90p = NULL ; tn90p = NULL ; tavg05p = NULL ; tavg95p = NULL }
 					test[,,i,] = eval(parse(text=indexparam)) }
 				else if(indices[a] == "spei") { if(!is.null(precraw)) { tnraw <- tminraw[i,j,] ; txraw <- tmaxraw[i,j,] ; praw <- precraw[i,j,] ; btime <- timeraw } else { tnraw <- txraw <- praw <- btime <- NULL }
 					test[,i,] = eval(parse(text=indexparam)) }
@@ -399,23 +413,30 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 			hwmcdf_tx90 <- ncvar_def("HWM_Tx90","degC",list(londim,latdim,timedim),missingval,longname="Heat wave magnitude",prec="float")
                         hwmcdf_tn90 <- ncvar_def("HWM_Tn90","degC",list(londim,latdim,timedim),missingval,longname="Heat wave magnitude",prec="float")
                         hwmcdf_EHF <- ncvar_def("HWM_EHF","degC^2",list(londim,latdim,timedim),missingval,longname="Heat wave magnitude",prec="float")
+                        hwmcdf_ECF <- ncvar_def("CWM_ECF","degC^2",list(londim,latdim,timedim),missingval,longname="Cold wave magnitude",prec="float")
 
 			hwacdf_tx90 <- ncvar_def("HWA_Tx90","degC",list(londim,latdim,timedim),missingval,longname="Heat wave amplitude",prec="float")
                         hwacdf_tn90 <- ncvar_def("HWA_Tn90","degC",list(londim,latdim,timedim),missingval,longname="Heat wave amplitude",prec="float")
                         hwacdf_EHF <- ncvar_def("HWA_EHF","degC^2",list(londim,latdim,timedim),missingval,longname="Heat wave amplitude",prec="float")
+                        hwacdf_ECF <- ncvar_def("CWA_ECF","degC^2",list(londim,latdim,timedim),missingval,longname="Cold wave amplitude",prec="float")
 
 			hwncdf_tx90 <- ncvar_def("HWN_Tx90","heat waves",list(londim,latdim,timedim),missingval,longname="Heat wave number",prec="float")
                         hwncdf_tn90 <- ncvar_def("HWN_Tn90","heat waves",list(londim,latdim,timedim),missingval,longname="Heat wave number",prec="float")
                         hwncdf_EHF <- ncvar_def("HWN_EHF","heat waves",list(londim,latdim,timedim),missingval,longname="Heat wave number",prec="float")
+                        hwncdf_ECF <- ncvar_def("CWN_ECF","heat waves",list(londim,latdim,timedim),missingval,longname="Cold wave number",prec="float")
 
 			hwdcdf_tx90 <- ncvar_def("HWD_Tx90","days",list(londim,latdim,timedim),missingval,longname="Heat wave duration",prec="float")
                         hwdcdf_tn90 <- ncvar_def("HWD_Tn90","days",list(londim,latdim,timedim),missingval,longname="Heat wave duration",prec="float")
                         hwdcdf_EHF <- ncvar_def("HWD_EHF","days",list(londim,latdim,timedim),missingval,longname="Heat wave duration",prec="float")
+                        hwdcdf_ECF <- ncvar_def("CWD_ECF","days",list(londim,latdim,timedim),missingval,longname="Cold wave duration",prec="float")
 
                         hwfcdf_tx90 <- ncvar_def("HWF_Tx90","days",list(londim,latdim,timedim),missingval,longname="Heat wave frequency",prec="float")
                         hwfcdf_tn90 <- ncvar_def("HWF_Tn90","days",list(londim,latdim,timedim),missingval,longname="Heat wave frequency",prec="float")
 			hwfcdf_EHF <- ncvar_def("HWF_EHF","days",list(londim,latdim,timedim),missingval,longname="Heat wave frequency",prec="float")
-			varlist <- list(hwmcdf_tx90,hwmcdf_tn90,hwmcdf_EHF,hwacdf_tx90,hwacdf_tn90,hwacdf_EHF,hwncdf_tx90,hwncdf_tn90,hwncdf_EHF,hwdcdf_tx90,hwdcdf_tn90,hwdcdf_EHF,hwfcdf_tx90,hwfcdf_tn90,hwfcdf_EHF)
+                        hwfcdf_ECF <- ncvar_def("CWF_ECF","days",list(londim,latdim,timedim),missingval,longname="Cold wave frequency",prec="float")
+
+			varlist <- list(hwmcdf_tx90,hwmcdf_tn90,hwmcdf_EHF,hwacdf_tx90,hwacdf_tn90,hwacdf_EHF,hwncdf_tx90,hwncdf_tn90,hwncdf_EHF,hwdcdf_tx90,hwdcdf_tn90,hwdcdf_EHF,hwfcdf_tx90,hwfcdf_tn90,hwfcdf_EHF,
+				hwmcdf_ECF,hwacdf_ECF,hwncdf_ECF,hwdcdf_ECF,hwfcdf_ECF)
 		} else if (indices[a] == "spi" | indices[a] == "spei") {
 			scale_dim <- ncdim_def("scale","3,6,12 months",1:3)
 			spcdf <- ncvar_def(indices[a],"unitless",list(londim,latdim,timedim,scale_dim),missingval,prec="float")
@@ -443,11 +464,11 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 
         # write out variables and 'coordinates' attribute if on a irregular grid.
         # Includes NARCliM kludge for cell_method attribute.
-                if(indices[a] == "hw") { ncvar_put(tmpout,hwmcdf_tx90,index3d_trans[,,,1,1]) ; ncvar_put(tmpout,hwmcdf_tn90,index3d_trans[,,,1,2]) ; ncvar_put(tmpout,hwmcdf_EHF,index3d_trans[,,,1,3]) ;
-					ncvar_put(tmpout,hwacdf_tx90,index3d_trans[,,,2,1]) ; ncvar_put(tmpout,hwacdf_tn90,index3d_trans[,,,2,2]) ; ncvar_put(tmpout,hwacdf_EHF,index3d_trans[,,,2,3]) ;
-					ncvar_put(tmpout,hwncdf_tx90,index3d_trans[,,,3,1]) ; ncvar_put(tmpout,hwncdf_tn90,index3d_trans[,,,3,2]) ; ncvar_put(tmpout,hwncdf_EHF,index3d_trans[,,,3,3]) ;
-					ncvar_put(tmpout,hwdcdf_tx90,index3d_trans[,,,4,1]) ; ncvar_put(tmpout,hwdcdf_tn90,index3d_trans[,,,4,2]) ; ncvar_put(tmpout,hwdcdf_EHF,index3d_trans[,,,4,3]) ;
-					ncvar_put(tmpout,hwfcdf_tx90,index3d_trans[,,,5,1]) ; ncvar_put(tmpout,hwfcdf_tn90,index3d_trans[,,,5,2]) ; ncvar_put(tmpout,hwfcdf_EHF,index3d_trans[,,,5,3]) ;
+                if(indices[a] == "hw") { ncvar_put(tmpout,hwmcdf_tx90,index3d_trans[,,,1,1]) ; ncvar_put(tmpout,hwmcdf_tn90,index3d_trans[,,,1,2]) ; ncvar_put(tmpout,hwmcdf_EHF,index3d_trans[,,,1,3]) ; ncvar_put(tmpout,hwmcdf_ECF,index3d_trans[,,,1,4])
+					ncvar_put(tmpout,hwacdf_tx90,index3d_trans[,,,2,1]) ; ncvar_put(tmpout,hwacdf_tn90,index3d_trans[,,,2,2]) ; ncvar_put(tmpout,hwacdf_EHF,index3d_trans[,,,2,3]) ; ncvar_put(tmpout,hwacdf_ECF,index3d_trans[,,,2,4])
+					ncvar_put(tmpout,hwncdf_tx90,index3d_trans[,,,3,1]) ; ncvar_put(tmpout,hwncdf_tn90,index3d_trans[,,,3,2]) ; ncvar_put(tmpout,hwncdf_EHF,index3d_trans[,,,3,3]) ; ncvar_put(tmpout,hwncdf_ECF,index3d_trans[,,,3,4])
+					ncvar_put(tmpout,hwdcdf_tx90,index3d_trans[,,,4,1]) ; ncvar_put(tmpout,hwdcdf_tn90,index3d_trans[,,,4,2]) ; ncvar_put(tmpout,hwdcdf_EHF,index3d_trans[,,,4,3]) ; ncvar_put(tmpout,hwdcdf_ECF,index3d_trans[,,,4,4])
+					ncvar_put(tmpout,hwfcdf_tx90,index3d_trans[,,,5,1]) ; ncvar_put(tmpout,hwfcdf_tn90,index3d_trans[,,,5,2]) ; ncvar_put(tmpout,hwfcdf_EHF,index3d_trans[,,,5,3]) ; ncvar_put(tmpout,hwfcdf_ECF,index3d_trans[,,,5,4])
                         if (irregular) { for (var in varlist) { ncatt_put(tmpout,var,"coordinates","lon lat") } }
                         for (var in varlist) { ncatt_put(tmpout,var,"cell_method","time point values 3600.0 seconds") } }
                 else if (indices[a] == "spi" | indices[a] == "spei") {
@@ -475,13 +496,21 @@ spei_scale=3,spi_scale=c(3,6,12),hwn_n=5,write_quantiles=FALSE,quantile_file=NUL
 
 	# write out global attributes for heatwaves
 		if(indices[a] == "hw") {
-			ncatt_put(tmpout,0,"Climpact2_HWM_definition","Average magnitude of all heatwave events in a season")
-			ncatt_put(tmpout,0,"Climpact2_HWA_definition","Hottest day of the hottest heatwave (defined by HWM)")
-			ncatt_put(tmpout,0,"Climpact2_HWF_definition","The number of days contributing to heatwave events in a season")
-			ncatt_put(tmpout,0,"Climpact2_HWD_definition","The number of days of the longest heatwave event in a season")
-			ncatt_put(tmpout,0,"Climpact2_HWN_definition","The number of individual heatwave events in a season")
+			ncatt_put(tmpout,0,"Climpact2_HWM_definition","Average magnitude of all heat wave events in a season")
+			ncatt_put(tmpout,0,"Climpact2_HWA_definition","Hottest day of the hottest heat wave (defined by HWM)")
+			ncatt_put(tmpout,0,"Climpact2_HWF_definition","The number of days contributing to heat wave events in a season")
+			ncatt_put(tmpout,0,"Climpact2_HWD_definition","The number of days of the longest heat wave event in a season")
+			ncatt_put(tmpout,0,"Climpact2_HWN_definition","The number of individual heat wave events in a season")
 			ncatt_put(tmpout,0,"Climpact2_Heatwave_summer","Defined as November - March in the Southern Hemisphere and May - September in the Nothern Hemisphere")
 			ncatt_put(tmpout,0,"Climpact2_Heatwave_years","Each heatwave time-step refers to the year that the summer of interest began (e.g. 2009 in the Southern Hemisphere means the summer that started in November 2009)")
+			if(hw_ehf=="BOM") { ncatt_put(tmpout,0,"Climpact2_Heatwave_years_EHF","EHF (Excess Heat Factor) calculated according to Nairn and Fawcett (2013)") }
+			else if (hw_ehf=="PA13") { ncatt_put(tmpout,0,"Climpact2_Heatwave_years_EHF","EHF (Excess Heat Factor) calculated according to Perkins and Alexander (2013), with some modifications (Perkins personal comms)") }
+			ncatt_put(tmpout,0,"Climpact2_CWM_definition","Average magnitude of all cold wave events in a season")
+			ncatt_put(tmpout,0,"Climpact2_CWA_definition","Coldest day of the coldest cold wave (defined by CWM)")
+			ncatt_put(tmpout,0,"Climpact2_CWF_definition","The number of days contributing to cold wave events in a season")
+			ncatt_put(tmpout,0,"Climpact2_CWD_definition","The number of days of the longest cold wave event in a season")
+			ncatt_put(tmpout,0,"Climpact2_CWN_definition","The number of individual cold wave events in a season")
+			ncatt_put(tmpout,0,"Climpact2_ECF_definition","Excess Cold Factor as defined by Nairn and Fawcett (2013)")
 		}
 
 	# write out global attributes from input file. Assumes all input files have the same global attributes.
@@ -546,7 +575,9 @@ record.quantiles <- function(nc=NULL,timename=NULL,time_format=NULL,tempqtiles,p
         yeardate2 <- format(time,format="%Y")
         base.time <- time[which(yeardate2 >= baserange[1] & yeardate2 <= baserange[2])]
 
+	tavg05_95p = array(NA,c(length(lon),length(lat),2))	# Will store the 5th and 95 percentiles of tavg for each grid cell. Not using the climdex.pcic method (where a 15 day window is used to derive running percentiles).
         qtilefetch = array(NA,c(3,length(tempqtiles),length(lon),length(lat),365))
+
         innert = qtilefetch[,,,1,]
 	innerthw = array(NA,c(3,1,length(lon),365))	# three variables (tx,tn,tavg), and only 90th percentile for each at each lat/lon
         innertminmaxprec = array(NA,c(3,1,length(lon),length(tsmax[1,1,which(yeardate2 >= baserange[1] & yeardate2 <= baserange[2])])))
@@ -584,9 +615,9 @@ record.quantiles <- function(nc=NULL,timename=NULL,time_format=NULL,tempqtiles,p
                                 cio = cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=NULL,tmin.dates=tsmintime,tmax.dates=tsmaxtime,prec.dates=NULL,prec.qtiles=NULL,temp.qtiles=tempqtiles_tmp,quantiles=NULL,base.range=baserange)
 				tx90p = suppressWarnings(get.outofbase.quantiles(cio@data$tmax,tmin=NULL,prec=NULL,tmax.dates=cio@dates,tmin.dates=NULL,prec.dates=NULL,base.range=baserange,temp.qtiles=c(0.9),prec.qtiles=NULL,n=15))
                                 tavg90p_tn90p = suppressWarnings(get.outofbase.quantiles(cio@data$tavg,cio@data$tmin,tmax.dates=cio@dates,tmin.dates=cio@dates,base.range=baserange,temp.qtiles=c(0.9),prec.qtiles=NULL,n=15))
-                                innerthw[1,1,i,] = tavg90p_tn90p$tmin$outbase$q90 #  cio@quantiles$tmin$outbase[[l]]
-                                innerthw[2,1,i,] = tx90p$tmax$outbase$q90  #cio@quantiles$tmax$outbase[[l]]
-                                innerthw[3,1,i,] = tavg90p_tn90p$tmax$outbase$q90 #tavgqtiles$tmax$outbase[[l]]
+                                innerthw[1,1,i,] = tavg90p_tn90p$tmin$outbase$q90
+                                innerthw[2,1,i,] = tx90p$tmax$outbase$q90
+                                innerthw[3,1,i,] = tavg90p_tn90p$tmax$outbase$q90
                         }
                         innerthw # return the array
                 }
@@ -599,6 +630,21 @@ record.quantiles <- function(nc=NULL,timename=NULL,time_format=NULL,tempqtiles,p
                 stopCluster(cl)
                 cl <- makeCluster(cores)
                 registerDoParallel(cl) }
+
+# Record 5th and 95th quantile for tavg. Not a running quantile.
+        if(!is.null(tsmin) && !is.null(tsmax)) {
+                for(j in 1:length(lat)){
+                        for(i in 1:length(lon)){
+                                cio = cicompile(tmin=tsmin[i,j,],tmax=tsmax[i,j,],prec=NULL,tmin.dates=tsmintime,tmax.dates=tsmaxtime,prec.dates=NULL,prec.qtiles=NULL,temp.qtiles=NULL,quantiles=NULL,base.range=baserange)
+                                # get base period indices for daily data. Inefficient to have the following two lines inside the loop.
+                                factor.numeric = as.numeric(levels(cio@date.factors$annual))[cio@date.factors$annual]
+                                ind = which(factor.numeric >= baserange[1] & factor.numeric <= baserange[2])
+
+                                tavg05_95p[i,j,1] = quantile(cio@data$tavg[ind],0.05,na.rm=TRUE)        # record 5th and 95th percentiles of entire base period
+                                tavg05_95p[i,j,2] = quantile(cio@data$tavg[ind],0.95,na.rm=TRUE)
+                        }
+                }
+        }
 
 # Record precipitation quantiles
         if(!is.null(prec)) {
@@ -625,7 +671,7 @@ record.quantiles <- function(nc=NULL,timename=NULL,time_format=NULL,tempqtiles,p
         pqnames = precqtiles*100
 
         # create time, quantile and inbase/outbase dimensions
-        timedim <- ncdim_def("time","days",1:365) ; tqdim <- ncdim_def("tqtile","unitless",tqnames) ; pqdim <- ncdim_def("pqtile","unitless",pqnames)
+        timedim <- ncdim_def("time","days",1:365) ; tqdim <- ncdim_def("tqtile","unitless",tqnames) ; pqdim <- ncdim_def("pqtile","unitless",pqnames) ; tavgqdim <- ncdim_def("tavgtile","unitless",c(5,95))
 
         # create another time dimension for the base period
         time <- get.time(nc,timename,time_format)
@@ -646,12 +692,13 @@ record.quantiles <- function(nc=NULL,timename=NULL,time_format=NULL,tempqtiles,p
         tmincdfhw = ncvar_def(paste("tmin90p_hw",sep=""),"degC",list(londim,latdim,timedim),missingval,prec="float")
         tmaxcdfhw = ncvar_def(paste("tmax90p_hw",sep=""),"degC",list(londim,latdim,timedim),missingval,prec="float")
         tavgcdfhw = ncvar_def(paste("tavg90p_hw",sep=""),"degC",list(londim,latdim,timedim),missingval,prec="float")
+        tavg05_95cdf = ncvar_def(paste("tavg05_95p",sep=""),"degC",list(londim,latdim,tavgqdim),missingval,prec="float")
 
 	tminrawcdf = ncvar_def(paste("tminraw",sep=""),"degC",list(londim,latdim,basetimedim),missingval,prec="double")
         tmaxrawcdf = ncvar_def(paste("tmaxraw",sep=""),"degC",list(londim,latdim,basetimedim),missingval,prec="double")
         precrawcdf = ncvar_def(paste("precraw",sep=""),"mm/day",list(londim,latdim,basetimedim),missingval,prec="double")
 
-        qout = nc_create(qfile,list(tmincdf,tmaxcdf,tavgcdf,preccdf,tmincdfhw,tmaxcdfhw,tavgcdfhw,tminrawcdf,tmaxrawcdf,precrawcdf),force_v4=TRUE)
+        qout = nc_create(qfile,list(tmincdf,tmaxcdf,tavgcdf,preccdf,tmincdfhw,tmaxcdfhw,tavgcdfhw,tminrawcdf,tmaxrawcdf,precrawcdf,tavg05_95cdf),force_v4=TRUE)
 
         # write out data
         ncvar_put(qout,tmincdf,tminqtiles_array) ; ncvar_put(qout,tmaxcdf,tmaxqtiles_array) ; ncvar_put(qout,tavgcdf,tavgqtiles_array) ; ncvar_put(qout,preccdf,precipqtiles_array)
@@ -659,6 +706,7 @@ record.quantiles <- function(nc=NULL,timename=NULL,time_format=NULL,tempqtiles,p
 	if(!is.null(prec)) { ncvar_put(qout,precrawcdf,prec[,,which(yeardate2 >= baserange[1] & yeardate2 <= baserange[2])]) }
 	if(!is.null(tsmin)) { ncvar_put(qout,tminrawcdf,tsmin[,,which(yeardate2 >= baserange[1] & yeardate2 <= baserange[2])]) }
 	if(!is.null(tsmax)) { ncvar_put(qout,tmaxrawcdf,tsmax[,,which(yeardate2 >= baserange[1] & yeardate2 <= baserange[2])]) }
+	if(!is.null(tsmax) && !is.null(tsmin)) { ncvar_put(qout,tavg05_95cdf,tavg05_95p) }
 
 	nc_close(qout)
 	print(paste(qfile," created.",sep=""))
@@ -852,6 +900,10 @@ climdex.ntxbntnb <- function(ci, n=5) {
         stopifnot(!is.null(ci@data$tmax),!is.null(ci@quantiles$tmax),!is.null(ci@data$tmin),!is.null(ci@quantiles$tmin))
         return(dual.threshold.exceedance.duration.index(ci@data$tmax, ci@data$tmin, ci@date.factors$annual, ci@jdays, ci@quantiles$tmax$outbase$q5,ci@quantiles$tmin$outbase$q5,
                 "<","<", n=n, max.missing.days=ci@max.missing.days['annual']) * ci@namasks$annual$tmax) }
+
+# prcptot
+# Modified from climdex.pcic to calculate monthly or annual values
+climdex.prcptot <- function(ci, freq=c("monthly", "annual")) { stopifnot(!is.null(ci@data$prec)); return(total.precip.op.threshold(ci@data$prec, ci@date.factors[[match.arg(freq)]], 1, ">=") * ci@namasks[[match.arg(freq)]]$prec) }
 
 # dual.threshold.exceedance.duration.index
 # calculates the number of n consecutive days where op1 and op2 operating on daily.temp1 and daily.temp2 respectively are satisfied.
@@ -1086,12 +1138,19 @@ climdex.spi <- function(ci,scale=c(3,6,12),kernal=list(type='rectangular',shift=
 #    - HWN: heat wave number
 #    - HWD: heat wave duration
 #    - HWF: heat wave frequency
-climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fraction.present,lat,tavg90p=NULL,tn90p=NULL,tx90p=NULL) {
+climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fraction.present,lat,tavg90p=NULL,tn90p=NULL,tx90p=NULL,tavg05p=NULL,tavg95p=NULL,ehfdef="PA13") {
         stopifnot(!is.null(lat),!is.null(ci@data$tmin),!is.null(ci@data$tmax))
 # step 1. Get data needed for the three definitions of a heat wave. 
         # recalculate tavg here to ensure it is based on tmax/tmin. Then get 15 day moving windows of percentiles.
         tavg = (ci@data$tmax + ci@data$tmin)/2
+
         if(any(is.null(tavg90p),is.null(tx90p),is.null(tn90p))) { 
+			# retrieve indices corresponding to base period, for calculation of quantiles for ECF and EHF_BOM
+			factor.numeric = as.numeric(levels(ci@date.factors$annual))[ci@date.factors$annual]
+			ind = which(factor.numeric >= base.range[1] & factor.numeric <= base.range[2])
+                if(ehfdef == "BOM") {
+                        tavg95p <- quantile(tavg[ind],0.95,na.rm=TRUE)
+                }
                 # need to reference 'tmax' data slot in tavg90p because of naming convention in get.outofbase.quantiles
                 tavg90p <- suppressWarnings(get.outofbase.quantiles(tavg,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=15,temp.qtiles=0.9,prec.qtiles=0.9,
                                                                 min.base.data.fraction.present=min.base.data.fraction.present))
@@ -1099,12 +1158,8 @@ climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fract
                 TxTn90p <- suppressWarnings(get.outofbase.quantiles(ci@data$tmax,ci@data$tmin,tmax.dates=ci@dates,tmin.dates=ci@dates,base.range=base.range,n=15,temp.qtiles=0.9,prec.qtiles=0.9,
                                                                 min.base.data.fraction.present=min.base.data.fraction.present))
                 tn90p <- TxTn90p$tmin$outbase$q90
-                tx90p <- TxTn90p$tmax$outbase$q90 }
-
-        # get shells for the following three variables
-#        EHIaccl = array(NA,length(tavg))
-#        EHIsig = array(NA,length(tavg))
-#        EHF = array(NA,length(tavg))
+                tx90p <- TxTn90p$tmax$outbase$q90 
+		tavg05p <- quantile(tavg[ind],0.05,na.rm=TRUE) }
 
         # take any non leap year to create 365 month-day factors
         beg = as.Date("2001-01-01",format="%Y-%m-%d")
@@ -1126,24 +1181,30 @@ climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fract
 	monthly.factors <- ci@date.factors$monthly[!fact2 %in% as.factor("02-29")]
 	annual.factors <- ci@date.factors$annual[!fact2 %in% as.factor("02-29")]
 
-#print(length(annual.factors))
-#exit
 	fact2 <- fact2[!fact2 %in% as.factor("02-29")]
 
-        # get shells for the following three variables
-        EHIaccl = array(NA,length(tavg))
-        EHIsig = array(NA,length(tavg))
-        EHF = array(NA,length(tavg))
+        # get shells for the following three variables and duplicate
+        EHIaccl <- EHIsig <- EHF <- array(NA,length(tavg))
+        ECIaccl <- ECIsig <- ECF <- array(NA,length(tavg))
 
         # assign the 365 percentiles to the entire time series based on date factors (so as to account for leap years) - February 29 days will be NA.
-        annualrepeat_tavg90 = array(NA,length(tavg))
-        annualrepeat_tavg90 = tavg90p[match(fact2,fact)]
+        annualrepeat_tavg90 <- annualrepeat_tavg05 <- array(NA,length(tavg))
+        if(ehfdef == "BOM") {
+                annualrepeat_tavg90 = array(tavg95p,length(tavg))
+        } else if (ehfdef == "PA13") {
+                annualrepeat_tavg90 = tavg90p[match(fact2,fact)]
+        }
+	annualrepeat_tavg05 <- array(tavg05p,length(tavg)) 
 
-        # Calculate EHI values and EHF for each day of the given record. Must start at day 33 since the previous 32 days are required for each calculation.
+        # Calculate EHI/ECI values and EHF/ECF for each day of the given record. Must start at day 33 since the previous 32 days are required for each calculation.
         for (a in 33:length(tavg)) {
                 EHIaccl[a] = (sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3) - (sum(tavg[(a-32):(a-3)],na.rm=TRUE)/30)
                 EHIsig[a] = (sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3) - as.numeric(unlist(annualrepeat_tavg90[a]))  #as.numeric(unlist(tavg90p$tmax[1])[annualrepeat[a]]) #[(a %% 365)]
                 EHF[a] = max(1,EHIaccl[a],na.rm=TRUE)*EHIsig[a]
+
+                ECIaccl[a] = (sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3) - (sum(tavg[(a-32):(a-3)],na.rm=TRUE)/30)
+                ECIsig[a] = (sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3) - as.numeric(unlist(annualrepeat_tavg05[a]))  #as.numeric(unlist(tavg90p$tmax[1])[annualrepeat[a]]) #[(a %% 365)]
+                ECF[a] = min(-1,ECIaccl[a],na.rm=TRUE)*(-1*ECIsig[a])
         }
 
 # step 2. Determine if tx90p, tn90p or EHF conditions have persisted for >= 3 days. If so, count number of summer heat waves.
@@ -1157,23 +1218,27 @@ climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fract
         tx90p_boolean <- (tmax > tx90p_arr)
         tn90p_boolean <- (tmin > tn90p_arr)
         EHF_boolean <- (EHF > 0)
+	ECF_boolean <- (ECF < 0)
 
         # Remove runs that are < 3 days long
         tx90p_boolean <- select.blocks.gt.length(tx90p_boolean,2)
         tn90p_boolean <- select.blocks.gt.length(tn90p_boolean,2)
         EHF_boolean <- select.blocks.gt.length(EHF_boolean,2)
+	ECF_boolean <- select.blocks.gt.length(ECF_boolean,2)
 
 # Step 3. Calculate aspects for each definition.
-	hw_index <- array(NA,c(3,5,length(levels(annual.factors))))
+	hw_index <- array(NA,c(4,5,length(levels(annual.factors))))
         hw1_index <- array(NA,c(5,length(levels(annual.factors))))
         hw2_index <- array(NA,c(5,length(levels(annual.factors))))
         hw3_index <- array(NA,c(5,length(levels(annual.factors))))
+        hw4_index <- array(NA,c(5,length(levels(annual.factors))))
 
-        hw_index[1,,] <- get.hw.aspects(hw1_index,tx90p_boolean,annual.factors,monthly.factors,tmax,lat)
-        hw_index[2,,] <- get.hw.aspects(hw2_index,tn90p_boolean,annual.factors,monthly.factors,tmin,lat)
-        hw_index[3,,] <- get.hw.aspects(hw3_index,EHF_boolean,annual.factors,monthly.factors,EHF,lat)
+        hw_index[1,,] <- get.hw.aspects(hw1_index,tx90p_boolean,annual.factors,monthly.factors,tmax,lat,ehfdef)
+        hw_index[2,,] <- get.hw.aspects(hw2_index,tn90p_boolean,annual.factors,monthly.factors,tmin,lat,ehfdef)
+        hw_index[3,,] <- get.hw.aspects(hw3_index,EHF_boolean,annual.factors,monthly.factors,EHF,lat,ehfdef,ehf=TRUE)
+        hw_index[4,,] <- get.hw.aspects(hw4_index,ECF_boolean,annual.factors,monthly.factors,ECF,lat,ehfdef,ecf=TRUE)
 
-        rm(tavg,tavg90p,EHIaccl,EHIsig,EHF,tx90p_boolean,tn90p_boolean,EHF_boolean,tx90p_arr,tn90p_arr,hw1_index,hw2_index,hw3_index,tn90p,tx90p,beg,end,beg2,end2,dat.seq,dat.seq2,fact,fact2)
+        rm(tavg,tavg90p,EHIaccl,EHIsig,EHF,tx90p_boolean,tn90p_boolean,EHF_boolean,tx90p_arr,tn90p_arr,hw1_index,hw2_index,hw3_index,tn90p,tx90p,beg,end,beg2,end2,dat.seq,dat.seq2,fact,fact2,ECIaccl,ECIsig,ECF)
 	return(hw_index)
 }
 
@@ -1196,7 +1261,7 @@ leapdays <- function(year) { if(!is.numeric(year)) stop("year must be of type nu
 #    - lat: latitude of current grid cell.
 # OUTPUT:
 #    - aspect.array: filled with calculated aspects.
-get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.date.factors,daily.data,lat) {
+get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.date.factors,daily.data,lat,ehfdef,ehf=FALSE,ecf=FALSE) {
 	month <- substr(monthly.date.factors,nchar(as.character(levels(monthly.date.factors)[1]))-1,nchar(as.character(levels(monthly.date.factors)[1])))
 
 	daily.data.full = daily.data # make a copy of all daily data
@@ -1207,14 +1272,14 @@ get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.
 	aspect_ind = 1 # keep track of the index of the aspect array to store data in
 
 	for (year in levels(yearly.date.factors)[1]:levels(yearly.date.factors)[nyears]) {
-	#print(year)
+		if((ehf==TRUE && ehfdef=="BOM") || ecf==TRUE) { summer_indices = which(yearly.date.factors %in% as.factor(year)) } else {
 		if(lat < 0) {
 			summer_indices = which(monthly.date.factors %in% as.factor(paste(year,"-11",sep="")) | monthly.date.factors %in% as.factor(paste(year,"-12",sep="")) | monthly.date.factors %in% as.factor(paste(year+1,"-01",sep="")) |
 	        	        monthly.date.factors %in% as.factor(paste(year+1,"-02",sep="")) | monthly.date.factors %in% as.factor(paste(year+1,"-03",sep="")))
 		} else {
 	                summer_indices = which(monthly.date.factors %in% as.factor(paste(year,"-05",sep="")) | monthly.date.factors %in% as.factor(paste(year,"-06",sep="")) | monthly.date.factors %in% as.factor(paste(year,"-07",sep="")) |
 	                        monthly.date.factors %in% as.factor(paste(year,"-08",sep="")) | monthly.date.factors %in% as.factor(paste(year,"-09",sep="")))
-		}
+		} }
 
 	        extended_indices = seq((summer_indices[1]),(summer_indices[length(summer_indices)]+extended_window),1)
 	        extended_data = daily.data.full[extended_indices]
@@ -1226,27 +1291,30 @@ get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.
 	        truevals = which((rle_extended_boolean$lengths)>=3 & cumsum(rle_extended_boolean$lengths)<=last_day_of_hw_season & rle_extended_boolean$values==TRUE)
 	
 	        # if the first heatwave exists on the first day of season, but is part of a heatwave from the previous season, then remove this heatwave since we don't want to count that in this season.
-	        if(all(extended_boolean[1:3]==TRUE) && length(truevals)>0 && boolean.str.full[(summer_indices[1])-1]==TRUE) { truevals = truevals[-1] }
+	        if(!all(is.na(extended_boolean[1:3])) && !all(is.na(boolean.str.full[(summer_indices[1])-1]))) {
+			if(all(extended_boolean[1:3]==TRUE) && length(truevals)>0 && boolean.str.full[(summer_indices[1])-1]==TRUE) { truevals = truevals[-1] } }
 	
 		# indices of heatwave(s) that end after season.
 		extvals = which((rle_extended_boolean$lengths)>=3 & cumsum(rle_extended_boolean$lengths)>last_day_of_hw_season & rle_extended_boolean$values==TRUE)
 	
 		# check for heatwaves that started near end of season and continued afterward.
-		if(length(extvals)>0 && cumsum(rle_extended_boolean$lengths)[extvals[1]-1]<last_day_of_hw_season) 
+		if(!is.na(last_day_of_hw_season)) {
+			if(length(extvals)>0 && cumsum(rle_extended_boolean$lengths)[extvals[1]-1]<last_day_of_hw_season) 
 	                # then the next heatwave actually started in summer and should be counted
 	        {
 	                truevals = c(truevals,extvals[1]) 
-	        }
+	        } }
 	
 	        nhw = length(truevals)  # number of heatwaves
 	        hwm = array(NA,nhw)  # array to store heatwave mean temperature
 		hwa = array(NA,nhw)
-	        if(nhw>0){
-	                for (i in 1:nhw) { #length(runlength$values)) { # over each run
+	        if(!is.na(nhw) && nhw>0){
+	                for (i in 1:nhw) { # over each run
 					if(truevals[i]==1) { i1 = 1 } else { i1 = cumsum(rle_extended_boolean$lengths)[truevals[i]-1] + 1 }      # "+1" to begin on day 1 of heat wave - not the last day of the non-heatwave
 	                                i2 = cumsum(rle_extended_boolean$lengths)[truevals[i]]
 	                                hwm[i] = mean(extended_data[i1:i2],na.rm=TRUE)
-					hwa[i] = max(extended_data[i1:i2],na.rm=TRUE)
+	                                if(ecf==TRUE) { hwa[i] = min(extended_data[i1:i2],na.rm=TRUE) } else {
+	                                hwa[i] = max(extended_data[i1:i2],na.rm=TRUE) }
 	                }
 	        }
 	
@@ -1254,20 +1322,20 @@ get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.
 		hwn = nhw
 	
 		# HWM
-	        if(is.nan(hwm2)) { aspect.array[1,aspect_ind] = NA } else { aspect.array[1,aspect_ind] = hwm2 }
+	        if(is.nan(hwm2) || is.na(hwm2)) { aspect.array[1,aspect_ind] = NA } else { aspect.array[1,aspect_ind] = hwm2 }
 		# HWA
-		if(is.nan(hwm2)) { aspect.array[2,aspect_ind] = NA } else { aspect.array[2,aspect_ind] = hwa[which.max(hwm)] }
+		if(is.nan(hwm2) || is.na(hwm2)) { aspect.array[2,aspect_ind] = NA } else { if (ecf==TRUE) {aspect.array[2,aspect_ind] = hwa[which.min(hwm)] } else {aspect.array[2,aspect_ind] = hwa[which.max(hwm)] } }
 		# HWN
 		aspect.array[3,aspect_ind] = hwn
 		# HWD
-		if(is.nan(hwm2)) { aspect.array[4,aspect_ind] = NA } else { aspect.array[4,aspect_ind] = max(rle_extended_boolean$lengths[truevals],na.rm=TRUE) }
+		if(is.nan(hwm2) || is.na(hwm2)) { aspect.array[4,aspect_ind] = NA } else { aspect.array[4,aspect_ind] = max(rle_extended_boolean$lengths[truevals],na.rm=TRUE) }
 		# HWF
 		aspect.array[5,aspect_ind] = sum(rle_extended_boolean$lengths[truevals],na.rm=TRUE)
 	
 	        aspect_ind = aspect_ind + 1
 	}
 
-	rm(summer_indices,extended_indices,extended_data,extended_boolean,rle_extended_boolean,truevals,nhw,hwm,hwa,hwm2,last_day_of_hw_season,extvals,daily.data.full,boolean.str.full)
+	rm(summer_indices,extended_indices,extended_data,extended_boolean,rle_extended_boolean,truevals,nhw,hwm,hwa,hwm2,last_day_of_hw_season,extvals,daily.data.full,boolean.str.full,ehf,ecf)
 
 	aspect.array[2,] <- ifelse(aspect.array[2,]=="-Inf",NA,aspect.array[2,])
 	aspect.array[4,] <- ifelse(aspect.array[4,]=="-Inf",NA,aspect.array[4,])
