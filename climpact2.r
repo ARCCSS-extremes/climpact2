@@ -22,7 +22,7 @@ library(climdex.pcic)
 library(PCICt)
 library(SPEI,quietly=TRUE)
 options(warn=1)
-software_id = "1.0.0"
+software_id = "1.1.0"
 
 # climpact.loader
 #
@@ -814,12 +814,12 @@ climdex.tm10b <- function(ci) { stopifnot(!is.null(ci@data$tavg)); return(number
 # su30
 # Annual count when TX >= 30ºC
 # same as climdex.tr except >= 30C
-climdex.su30 <- function(ci) { stopifnot(!is.null(ci@data$tmax)); return(number.days.op.threshold(ci@data$tmax, ci@date.factors$annual, 30, ">") * ci@namasks$annual$tmax) }
+climdex.su30 <- function(ci) { stopifnot(!is.null(ci@data$tmax)); return(number.days.op.threshold(ci@data$tmax, ci@date.factors$annual, 30, ">=") * ci@namasks$annual$tmax) }
 
 # su35
 # Annual count when TX >= 35ºC
 # same as climdex.tr except >= 35C
-climdex.su35 <- function(ci) { stopifnot(!is.null(ci@data$tmax)); return(number.days.op.threshold(ci@data$tmax, ci@date.factors$annual, 35, ">") * ci@namasks$annual$tmax) }
+climdex.su35 <- function(ci) { stopifnot(!is.null(ci@data$tmax)); return(number.days.op.threshold(ci@data$tmax, ci@date.factors$annual, 35, ">=") * ci@namasks$annual$tmax) }
 
 # HDDheat
 # Annual sum of Tb-TM (where Tb is a user-defined location-specific base temperature and TM < Tb). Recomputes climdex input object to re-test newly created tavg array for NA criteria.
@@ -1313,8 +1313,8 @@ get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.
 					if(truevals[i]==1) { i1 = 1 } else { i1 = cumsum(rle_extended_boolean$lengths)[truevals[i]-1] + 1 }      # "+1" to begin on day 1 of heat wave - not the last day of the non-heatwave
 	                                i2 = cumsum(rle_extended_boolean$lengths)[truevals[i]]
 	                                hwm[i] = mean(extended_data[i1:i2],na.rm=TRUE)
-	                                if(ecf==TRUE) { hwa[i] = min(extended_data[i1:i2],na.rm=TRUE) } else {
-	                                hwa[i] = max(extended_data[i1:i2],na.rm=TRUE) }
+	                                if(ecf==TRUE) { hwa[i] = min(extended_data[i1:i2],na.rm=TRUE) } 
+	                                else { hwa[i] = max(extended_data[i1:i2],na.rm=TRUE) }
 	                }
 	        }
 	
