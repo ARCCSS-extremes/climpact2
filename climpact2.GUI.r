@@ -1956,7 +1956,7 @@ write.index.csv <- function(index=NULL,index.name=NULL,freq="annual") {
 	norm = c("normalised (all years)",norm)
 	new.index = cbind(index,norm)
 
-	write.table(new.index,file = nam1, append = TRUE, sep = ", ", na = "-99.9", col.names = FALSE)
+	write.table(new.index,file = nam1, append = TRUE, sep = ", ", na = "-99.9", col.names = FALSE,quote=FALSE)
 }
 
 # write.hw.csv
