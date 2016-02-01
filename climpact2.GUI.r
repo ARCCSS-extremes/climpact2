@@ -50,7 +50,6 @@ graphics.off()
 rm(list = ls(all = TRUE))
 
 library(tcltk)
-source("climpact2.r") # source climpact code and load data from ascii file into climdex object
 tclRequire("BWidget")
 
 # ------------------------------------------------ #
@@ -75,7 +74,6 @@ font_err    <- "times 13 bold"
 grey_font <- tkfont.create(family = "arial", size = 30, weight = "bold", slant = "italic") #'times 20 grey bold'
 
 # Global variables
-version.climpact <- software_id
 running.zero.allowed.in.temperature = 4
 stdt=4
 nstddev<-tclVar(stdt)
@@ -2605,4 +2603,6 @@ startss <- function(){
 #  This checks for required packages and runs the program
 #================================================
 package.check()
+source("climpact2.r") # source climpact code and load data from ascii file into climdex object
+version.climpact <- software_id
 startss()
