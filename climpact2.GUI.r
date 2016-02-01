@@ -65,7 +65,7 @@ start1<-tktoplevel(bg='white')
 
 # Fonts 
 fontHeading     <- tkfont.create(family = "times", size = 40, weight = "bold", slant = "italic")
-fontHeading1    <- tkfont.create(family = "times", size = 20, weight = "bold")
+fontHeading1    <- tkfont.create(family = "times", size = 18)#, weight = "bold")
 fontHeading2    <- tkfont.create(family = "times", size = 14, weight = "bold")
 fontTextLabel   <- tkfont.create(family = "arial", size = 12)
 fontFixedWidth  <- tkfont.create(family = "courier", size = 12)
@@ -121,7 +121,7 @@ selectNone<-function() { for(i in 1:length.indices) tclvalue(cbvalue[i])=FALSE }
 indexfile <- "index.master.list"
 indexlist <- (read.table(indexfile,sep="\t"))
 indices <- as.character(indexlist[,1])
-length.indices = length(indices)+8		# +8 to include extra indices for GUI-only climpact2
+length.indices = length(indices)+5		# +5 to include extra indices for GUI-only climpact2
 units <- as.character(indexlist[match(indices,indexlist[,1]),2])
 Encoding(units) <- "UTF-8"
 longnames <- as.character(indexlist[match(indices,indexlist[,1]),3])
@@ -1043,7 +1043,8 @@ load.data.qc <- function() {
                         tkgrid(frame.space)
                         tkgrid(tklabel(tt2,text=
 
-						paste("Carefully evaluate output in the following directory \nfor potential issues before continuing.\n\n",outlogdir,sep="")
+						paste("Carefully evaluate output in the following directory \nfor potential issues before continuing.\n\n",outlogdir,
+								"\n\nRefer to Appendix F in the ClimPACT2 manual for help.",sep="")
 		                ,bg='white',font=font_small,width=75),sticky="nsew")
                         tkgrid(frame.space)
                         tkgrid(tt2)
@@ -1488,7 +1489,7 @@ index.calc1 <- function() {
 
 	tkgrid(tklabel(tt1,text="",bg='white',font=font_small))
 	tkgrid(tklabel(tt1,text="Custom day count index",bg='white',font=font_small))
-	tkgrid(tklabel(tt1,text="(e.g. number of days where TX < 10, named TX10)",bg='white',font=font_small))
+	tkgrid(tklabel(tt1,text="(e.g. number of days where TX > 40, named TXgt40)",bg='white',font=font_small))
 
 	user.var <- c("TN","TX","TM","PR","DTR")
 	user.op <- c(">",">=","<","<=")
@@ -1886,11 +1887,16 @@ index.calc2<-function(){
 					else if (var.choice=="TM") { var.choice2=cio@data$tmean ; mask.choice = cio@namasks[[match.arg(freq,choices=c("annual","monthly"))]]$tmin }
 					else if (var.choice=="PR") { var.choice2=cio@data$prec ; mask.choice = cio@namasks[[match.arg(freq,choices=c("annual","monthly"))]]$prec }
 
+					if(op.choice==">") { op.choice2="gt" }
+					else if(op.choice==">=") { op.choice2="ge" }
+					else if(op.choice=="<") { op.choice2="lt" }
+					else if(op.choice=="<=") { op.choice2="le" }
+
 					if(is.null(var.choice2)) return()
 					index.store <- number.days.op.threshold(var.choice2, cio@date.factors[[match.arg(freq,choices=c("annual","monthly"))]], constant.choice, op.choice) * mask.choice
-					write.index.csv(index.store,index.name=paste(var.choice,constant.choice,sep=""),freq=frequency) ; 
-					plot.call(index.store,index.name=paste(var.choice,constant.choice,sep=""),index.units="days",x.label="Years",sub=paste("Number of days where ",var.choice," ",op.choice," ",constant.choice,sep=""),freq=frequency)
-					cat(file=trend_file,paste(latitude,longitude,paste(var.choice,constant.choice,sep=""),years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) } }
+					write.index.csv(index.store,index.name=paste(var.choice,op.choice2,constant.choice,sep=""),freq=frequency) ; 
+					plot.call(index.store,index.name=paste(var.choice,op.choice2,constant.choice,sep=""),index.units="days",x.label="Years",sub=paste("Number of days where ",var.choice," ",op.choice," ",constant.choice,sep=""),freq=frequency)
+					cat(file=trend_file,paste(latitude,longitude,paste(var.choice,op.choice2,constant.choice,sep=""),years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) } }
 
 		dev.off(pdf.dev)
 		graphics.off()  # close the pdf file, so you can open to view it now.
@@ -1921,12 +1927,6 @@ index.calc2<-function(){
         index.calc3()
 }
 # end of index.calc2  
-
-climdex.mean.temp <- function(cio,freq=frequency) { stopifnot(!is.null(cio@data$tmean)); return(suppressWarnings(tapply.fast(cio@data$tmean, cio@date.factors[[match.arg(freq)]], mean, na.rm=TRUE)) * cio@namasks[[match.arg(freq)]]$tmin * cio@namasks[[match.arg(freq)]]$tmax) }
-
-climdex.mean.min.temp <- function(cio,freq=frequency) { stopifnot(!is.null(cio@data$tmin)); return(suppressWarnings(tapply.fast(cio@data$tmin, cio@date.factors[[match.arg(freq)]], mean, na.rm=TRUE)) * cio@namasks[[match.arg(freq)]]$tmin) }
-
-climdex.mean.max.temp <- function(cio,freq=frequency) { stopifnot(!is.null(cio@data$tmax)); return(suppressWarnings(tapply.fast(cio@data$tmax, cio@date.factors[[match.arg(freq)]], mean, na.rm=TRUE)) * cio@namasks[[match.arg(freq)]]$tmax) }
 
 # write.index.csv
 # takes a time series of a given index and writes to file
@@ -2566,33 +2566,37 @@ startss <- function(){
 	}
 	# Everything above here relates to logos. A tad verbose...
 
-        tkgrid(tklabel(start1, text = "    ", bg = "white",width=40));
+	tkgrid(tklabel(start1, text = "    ", bg = "white",width=40));
 	tkgrid(tklabel(start1, text = " ClimPACT2 ", font = fontHeading, width = 15, bg = "white"), columnspan = 3)
-        tkgrid(tklabel(start1, text = paste(" v",version.climpact," ",sep=""), font = fontTextLabel, width = 5, bg = "white"), columnspan = 3)
+	tkgrid(tklabel(start1, text = paste(" v",version.climpact," ",sep=""), font = fontTextLabel, width = 5, bg = "white"), columnspan = 3)
+	tkgrid(tklabel(start1, text = "    ", bg = "white"), columnspan = 3);
 	tkgrid(tklabel(start1, text = "    ", bg = "white"));
-        tkgrid(tklabel(start1, text = "    ", bg = "white"));
-        tkgrid(tklabel(start1, text = "    ", bg = "white"));
+	tkgrid(tklabel(start1, text = "    ", bg = "white"));
 
-        gap = tklabel(start1,width=1,text="",bg="white")
-	tkgrid(tklabel(start1, text = " STEP. 1", bg = "white",font=fontHeading1,width=8),gap,tklabel(start1, text = " STEP. 2  ", bg = "white",font=fontHeading1,width=25))
 	start.but   <<- tkbutton(start1, text = "   LOAD AND  \n  CHECK DATA   ", command = load.data.qc, width = 15, font = fontHeading2, bg = "lightgreen") 
 	cal.but     <<- tkbutton(start1, text = "   CALCULATE \n   INDICES  ", command = index.calc1, width = 15, font = fontHeading2, bg = "white")
+	
+	tkgrid(tklabel(start1, text = " STEP. 1", bg = "white",font=fontHeading1,width=8), columnspan =3)
+	tkgrid(start.but, columnspan =3)
+	tkgrid(tklabel(start1, text = "    ", bg = "white"));
+	tkgrid(tklabel(start1, text = " STEP. 2  ", bg = "white",font=fontHeading1,width=8), columnspan =3)
+	tkgrid(cal.but, columnspan =3)
+
 
 	cancel.but  <- tkbutton(start1, text = " Exit ", command = done, width = 7, font = fontHeading2, bg = "white");
 	help.but    <- tkbutton(start1, text = " About ", command = about, width = 7, font = fontHeading2, bg = "white");
 	license.but <- tkbutton(start1, text = " License ", command = license, width = 7, font = fontHeading2, bg = "white");
 
-        gap = tklabel(start1,width=5,text="",bg="white")
-	tkgrid(start.but,gap,cal.but,columnspan=1)
-        tkgrid(tklabel(start1, text = "    ", bg = "white"));
-        tkgrid(tklabel(start1, text = "    ", bg = "white"));
-        tkgrid(tklabel(start1, text = "    ", bg = "white"));
-        tkgrid(tklabel(start1, text = "    ", bg = "white"));
-        tkgrid(tklabel(start1, text = "    ", bg = "white"));
+	gap = tklabel(start1,width=5,text="",bg="white")
 
-	tkgrid(help.but,license.but,cancel.but)#,sticky="nsew")
+	tkgrid(tklabel(start1, text = "    ", bg = "white"));
+	tkgrid(tklabel(start1, text = "    ", bg = "white"));
+
+	tkgrid(help.but, columnspan = 3)
+	tkgrid(license.but, columnspan = 3)
+	tkgrid(cancel.but, columnspan = 3)
 	tkgrid(tklabel(start1, text = "", bg = "white"))
-        tkgrid(tklabel(start1, text = "", bg = "white"))
+	tkgrid(tklabel(start1, text = "", bg = "white"))
 
 	tkfocus(start1)
 }

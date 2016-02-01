@@ -22,7 +22,7 @@ library(climdex.pcic)
 library(PCICt)
 library(SPEI,quietly=TRUE)
 options(warn=1)
-software_id = "1.1.0"
+software_id = "1.1.2"
 
 # climpact.loader
 #
@@ -904,6 +904,12 @@ climdex.ntxbntnb <- function(ci, n=5) {
 # prcptot
 # Modified from climdex.pcic to calculate monthly or annual values
 climdex.prcptot <- function(ci, freq=c("monthly", "annual")) { stopifnot(!is.null(ci@data$prec)); return(total.precip.op.threshold(ci@data$prec, ci@date.factors[[match.arg(freq)]], 1, ">=") * ci@namasks[[match.arg(freq)]]$prec) }
+
+climdex.mean.temp <- function(cio,freq=frequency) { stopifnot(!is.null(cio@data$tmean)); return(suppressWarnings(tapply.fast(cio@data$tmean, cio@date.factors[[match.arg(freq)]], mean, na.rm=TRUE)) * cio@namasks[[match.arg(freq)]]$tmin * cio@namasks[[match.arg(freq)]]$tmax) }
+
+climdex.mean.min.temp <- function(cio,freq=frequency) { stopifnot(!is.null(cio@data$tmin)); return(suppressWarnings(tapply.fast(cio@data$tmin, cio@date.factors[[match.arg(freq)]], mean, na.rm=TRUE)) * cio@namasks[[match.arg(freq)]]$tmin) }
+
+climdex.mean.max.temp <- function(cio,freq=frequency) { stopifnot(!is.null(cio@data$tmax)); return(suppressWarnings(tapply.fast(cio@data$tmax, cio@date.factors[[match.arg(freq)]], mean, na.rm=TRUE)) * cio@namasks[[match.arg(freq)]]$tmax) }
 
 # dual.threshold.exceedance.duration.index
 # calculates the number of n consecutive days where op1 and op2 operating on daily.temp1 and daily.temp2 respectively are satisfied.
