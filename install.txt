@@ -1,20 +1,20 @@
 
 
 				ClimPACT2
-			Last updated: November 2015
+			Last updated: February 2016
 
 
   What is it?
   -----------
   
-  ClimPACT2 is an R software package that calculates the ETSCI indices, ETCCDI 
-  indices, and the heatwave indices from Perkins and Alexander (2013). It directly 
-  incorporates the R climdex.pcic package (available on CRAN) to perform most 
-  of the calculations, which is available thanks to the efforts of the Pacific 
-  Climate Impacts Consortium (PCIC). ClimPACT2 was developed at the University of 
-  New South Wales and has several dependencies on other R packages. Two separate 
-  files allow the indices to be calculated in different ways. The climpact.loader 
-  function in climpact2.r allows power users to process gridded netCDF data, while
+  ClimPACT2 is an R software package that calculates the ET-SCI indices, as well 
+  as additional climate extremes indices. It directly incorporates the R 
+  climdex.pcic package (available on CRAN) to perform most of the calculations, 
+  which is available thanks to the efforts of the Pacific Climate Impacts 
+  Consortium (PCIC). ClimPACT2 was developed at the University of New South Wales 
+  and has several dependencies on other R packages. Two separate files allow the 
+  indices to be calculated in different ways. The climpact.loader function in 
+  climpact2.r allows power users to process gridded netCDF data, while 
   climpact2.GUI.r provides a basic graphical user interface for processing ASCII 
   time-series data.
   
@@ -28,22 +28,22 @@
   How do I use the GUI?
   ---------------------
 
-    Software you will need:
+    Software you will need installed:
         -R
 
-    1) Create a new directory
-
-    2) cd to new directory, and download and extract the following file:
+    1) Download and extract the following file:
        https://github.com/ARCCSS-extremes/climpact2/archive/master.zip
 
-    3) In R, type "source('climpact2.GUI.r')"
-       The first time this is run ClimPACT2 will install required packages.
+    2) In Windows, open R and select "File->Change dir..." and select the 
+       climpact2-master directory created in step 1. Then type 
+       "source('climpact2.GUI.r')"
+
+       In Linux or MacOS, cd to the climpact2-master directory created in
+       step 1, then open R and type "source('climpact2.GUI.r')".
+
+       The first time ClimPACT2 is run it will install required packages.
        This will likely require you to select a mirror to download from.
  
-  ** Note that if you are running a Windows operating system you will only 
-     be able to use the GUI. In a Unix-based operating system you can use 
-     the GUI as well as operate on gridded data.
-
 
   VIDEO TUTORIAL FOUND HERE -> https://www.youtube.com/watch?v=rbZt8MJpLJE
   ------------------------------------------------------------------------
