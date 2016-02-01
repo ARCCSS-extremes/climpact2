@@ -45,7 +45,16 @@
        This will likely require you to select a mirror to download from.
  
 
-  VIDEO TUTORIAL FOUND HERE -> https://www.youtube.com/watch?v=rbZt8MJpLJE
+  VIDEO TUTORIAL HOW TO INSTALL R IN WINDOWS 
+  -> https://www.youtube.com/watch?v=Nb-yt3gSnQw
+
+  VIDEO TUTORIAL HOW TO RUN CLIMPACT2 IN WINDOWS
+  -> https://www.youtube.com/watch?v=eD8FqXdGNCs
+
+  VIDEO TUTORIAL HOW TO RUN CLIMPACT2 IN LINUX
+  -> https://www.youtube.com/watch?v=1sSCqsRMCZI
+
+
   ------------------------------------------------------------------------
 
 
