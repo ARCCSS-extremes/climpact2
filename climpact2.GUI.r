@@ -69,6 +69,7 @@ fontHeading2    <- tkfont.create(family = "times", size = 14, weight = "bold")
 fontTextLabel   <- tkfont.create(family = "arial", size = 12)
 fontFixedWidth  <- tkfont.create(family = "courier", size = 12)
 font_small  <- "arial 12"
+font_small_bold  <- "arial 12 bold"
 font_big    <- "arial 15 bold"
 font_err    <- "times 13 bold"
 grey_font <- tkfont.create(family = "arial", size = 30, weight = "bold", slant = "italic") #'times 20 grey bold'
@@ -1470,6 +1471,8 @@ index.calc1 <- function() {
 	tkgrid(tklabel(tt1,text="month ",bg='white',font=font_small),rb1)
 	tkgrid(tklabel(tt1,text="annual ",bg='white',font=font_small),rb2)
 
+	tkgrid(tklabel(tt1,text="",bg='white',font=font_small))
+	tkgrid(tklabel(tt1,text="Refer to section 3.6 of ClimPACT2 user guide for help",bg='white',font=font_small_bold))
 	tkgrid(tklabel(tt1,text="  Count the number of days where maximum temperature > ",bg='white',font=font_small),textEntryWidget6)
 	tkgrid(tklabel(tt1,text="  Count the number of days where maximum temperature < ",bg='white',font=font_small),textEntryWidget7)
 	tkgrid(tklabel(tt1,text="  Count the number of days where minimum temperature > ",bg='white',font=font_small),textEntryWidget8)
@@ -1496,7 +1499,7 @@ index.calc1 <- function() {
 
 	tkgrid(tklabel(tt1,text="Variable",bg='white',font=font_small),comboBox1)
 	tkgrid(tklabel(tt1,text="Operation",bg='white',font=font_small),comboBox2)
-	tkgrid(tklabel(tt1,text="Constant",bg='white',font=font_small),textEntryWidget24)
+	tkgrid(tklabel(tt1,text="Threshold",bg='white',font=font_small),textEntryWidget24)
 
 	tkpack(tt1)
 
@@ -1855,16 +1858,16 @@ index.calc2<-function(){
 			plot.precindex(index.store,index.name=indices[51],index.units=units[51],x.label="Years",spifactor,sub=subtitle[51],times=c(3,6,12,custom_SPEI)) } }
 			
 			if(cbv[52]==1) { user.ind52 = paste("su",uuu,sep="") ; print(paste("calculating",user.ind52),quote=FALSE) ; index.store <- (number.days.op.threshold(cio@data$tmax,cio@date.factors$annual,uuu,">")* cio@namasks$annual$tmax) ; write.index.csv(index.store,index.name=user.ind52) ; 
-			plot.call(index.store,index.name=user.ind52,index.units="days",x.label="Years",sub=paste("Number of days where TX is greater than ",uuu,sep=""))
+			plot.call(index.store,index.name=user.ind52,index.units="days",x.label="Years",sub=paste("Number of days where TX is greater than ",uuu,"°C",sep=""))
                 cat(file=trend_file,paste(latitude,longitude,user.ind52,years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
 			if(cbv[53]==1) { user.ind53 = paste("id",uul,sep="") ; print(paste("calculating",user.ind53),quote=FALSE) ; index.store <- (number.days.op.threshold(cio@data$tmax,cio@date.factors$annual,uul,"<")* cio@namasks$annual$tmax) ; write.index.csv(index.store,index.name=user.ind53) ; 
-			plot.call(index.store,index.name=user.ind53,index.units="days",x.label="Years",sub=paste("Number of days where TX is less than ",uul,sep=""))
+			plot.call(index.store,index.name=user.ind53,index.units="days",x.label="Years",sub=paste("Number of days where TX is less than ",uul,"°C",sep=""))
                 cat(file=trend_file,paste(latitude,longitude,user.ind53,years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
 			if(cbv[54]==1) { user.ind54 = paste("tr",ulu,sep="") ; print(paste("calculating",user.ind54),quote=FALSE) ; index.store <- (number.days.op.threshold(cio@data$tmin,cio@date.factors$annual,ulu,">")* cio@namasks$annual$tmin) ; write.index.csv(index.store,index.name=user.ind54) ; 
-			plot.call(index.store,index.name=user.ind54,index.units="days",x.label="Years",sub=paste("Number of days where TN is greater than ",ulu,sep=""))
+			plot.call(index.store,index.name=user.ind54,index.units="days",x.label="Years",sub=paste("Number of days where TN is greater than ",ulu,"°C",sep=""))
                 cat(file=trend_file,paste(latitude,longitude,user.ind54,years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
 			if(cbv[55]==1) { user.ind55 = paste("fd",ull,sep="") ; print(paste("calculating",user.ind55),quote=FALSE) ; index.store <- (number.days.op.threshold(cio@data$tmin,cio@date.factors$annual,ull,"<")* cio@namasks$annual$tmin) ; write.index.csv(index.store,index.name=user.ind55) ; 
-			plot.call(index.store,index.name=user.ind55,index.units="days",x.label="Years",sub=paste("Number of days where TN is less than ",ull,sep=""))
+			plot.call(index.store,index.name=user.ind55,index.units="days",x.label="Years",sub=paste("Number of days where TN is less than ",ull,"°C",sep=""))
                 cat(file=trend_file,paste(latitude,longitude,user.ind55,years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
  			if(cbv[56]==1) { print("calculating mean TM",quote=FALSE) ; index.store <- climdex.mean.temp(cio,freq=frequency) ; write.index.csv(index.store,index.name="TMm",freq=frequency) ; 
 			plot.call(index.store,index.name="TMm",index.units="°C",x.label="Years",sub="Mean daily mean temperature",freq=frequency)
@@ -2009,11 +2012,11 @@ plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) {
 			jpeg(file = namp, width = 1024, height = 768)
 			dev0 = dev.cur()
 
-			if(aspects[asp]=="HWM") { sub=paste("Index: ",definitions[def],"-",aspects[asp]," - Heat wave magnitude (mean temperature of all heat wave events)",sep="") } 
-			else if(aspects[asp]=="HWA"){ sub=paste("Index: ",definitions[def],"-",aspects[asp]," - Heat wave amplitude (peak temperature of the hottest heat wave event)",sep="") }
-			else if(aspects[asp]=="HWD"){ sub=paste("Index: ",definitions[def],"-",aspects[asp]," - Heat wave duration (length of longest heat wave event)",sep="") }
-			else if(aspects[asp]=="HWF"){ sub=paste("Index: ",definitions[def],"-",aspects[asp]," - Heat wave frequency (number of days contributing to heat wave event)",sep="") }
-			else if(aspects[asp]=="HWN"){ sub=paste("Index: ",definitions[def],"-",aspects[asp]," - Heat wave number (number of discreet heat wave events)",sep="") }
+			if(aspects[asp]=="HWM") { sub=paste("Index: ",definitions[def],"-",aspects[asp],". Heat wave magnitude (mean temperature of all heat wave events)",sep="") } 
+			else if(aspects[asp]=="HWA"){ sub=paste("Index: ",definitions[def],"-",aspects[asp],". Heat wave amplitude (peak temperature of the hottest heat wave event)",sep="") }
+			else if(aspects[asp]=="HWD"){ sub=paste("Index: ",definitions[def],"-",aspects[asp],". Heat wave duration (length of longest heat wave event)",sep="") }
+			else if(aspects[asp]=="HWF"){ sub=paste("Index: ",definitions[def],"-",aspects[asp],". Heat wave frequency (number of days contributing to heat wave event)",sep="") }
+			else if(aspects[asp]=="HWN"){ sub=paste("Index: ",definitions[def],"-",aspects[asp],". Heat wave number (number of discreet heat wave events)",sep="") }
 
 			if((definitions[def]=="EHF" || definitions[def]=="ECF") && any(aspects[asp]=="HWM",aspects[asp]=="HWA")) { unit = "°C^2" ; Encoding(unit) <- "UTF-8" } else unit = units[asp]
 			plotx((date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label,index.name=index.name,sub=sub)
@@ -2097,9 +2100,12 @@ plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,s
 	if(index.name=="wsdin") { tmp.name=paste("wsdi",wsdi_ud,sep="") ; sub=paste("Index: ",tmp.name,". Annual number of days with at least ",wsdi_ud," consecutive days when TX > 90th percentile",sep="") } 
 	else if (index.name=="csdin") { tmp.name=paste("csdi",csdi_ud,sep="") ; sub=paste("Index: ",tmp.name,". Annual number of days with at least ",csdi_ud," consecutive days when TN < 10th percentile",sep="")  }
 	else if (index.name=="rxnday") { tmp.name=paste("rx",rx_ud,"day",sep="") ; sub=paste("Index: ",tmp.name,". Maximum ",rx_ud,"-day precipitation total",sep="")  }
-	else if (index.name=="rnnmm") { tmp.name=paste("r",rnnmm_ud,"mm",sep="") ; sub=paste("Index: ",tmp.name,". Annual number of days when precipitation >= ",rnnmm_ud,sep="")  }
+	else if (index.name=="rnnmm") { tmp.name=paste("r",rnnmm_ud,"mm",sep="") ; sub=paste("Index: ",tmp.name,". Annual number of days when precipitation >= ",rnnmm_ud,"mm",sep="")  }
 	else if (index.name=="ntxntn") { tmp.name=paste(txtn_ud,"tx",txtn_ud,"tn",sep="") ; sub=paste("Index: ",tmp.name,". Annual number of ",txtn_ud," consecutive days where both TX > 95th percentile and TN > 95th percentile",sep="")  }
 	else if (index.name=="ntxbntnb") { tmp.name=paste(txtn_ud,"txb",txtn_ud,"tnb",sep="") ; sub=paste("Index: ",tmp.name,". Annual number of ",txtn_ud," consecutive days where both TX < 5th percentile and TN < 5th percentile",sep="")  }
+	else if (index.name=="cddcold") { tmp.name=index.name ; sub=paste("Index: ",tmp.name,". Annual sum of TM - ",Tb_CDD,"°C (where ",Tb_CDD,"°C is a user-defined base temperature and should be smaller than TM)",sep="")  }
+	else if (index.name=="hddheat") { tmp.name=index.name ; sub=paste("Index: ",tmp.name,". Annual sum of ",Tb_HDD,"°C - TM (where ",Tb_HDD,"°C is a user-defined base temperature and should be larger than TM)",sep="")  }
+	else if (index.name=="gddgrow") { tmp.name=index.name ; sub=paste("Index: ",tmp.name,". Annual sum of TM - ",Tb_GDD,"°C (where ",Tb_GDD,"°C is a user-defined base temperature and should be smaller than TM)",sep="")  }
 	else { tmp.name = index.name ; sub=paste("Index: ",tmp.name,". ",sub,sep="") }
 
 	if(freq=="monthly") { freq="MON" }
