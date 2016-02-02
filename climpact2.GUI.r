@@ -1043,7 +1043,7 @@ load.data.qc <- function() {
                         tkgrid(tklabel(tt2,text=
 
 						paste("Carefully evaluate output in the following directory \nfor potential issues before continuing.\n\n",outlogdir,
-								"\n\nRefer to Appendix F in the ClimPACT2 manual for help.",sep="")
+								"\n\nRefer to Appendix G in the ClimPACT2 manual for help.",sep="")
 		                ,bg='white',font=font_small,width=75),sticky="nsew")
                         tkgrid(frame.space)
                         tkgrid(tt2)
