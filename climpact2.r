@@ -1257,7 +1257,9 @@ leapdays <- function(year) { if(!is.numeric(year)) stop("year must be of type nu
 
 # get.hw.aspects
 # Calculate heat wave aspects as per Perkins and Alexander (2013). HWM, HWA, HWN, HWD, HWF. 
-# EHF definition is updated (personal comms Perkins 2015).
+# EHF definition is updated (personal comms Perkins 2015). Changes include using the 90th percentile (instead of 95th) and using 15-day window running percentiles,
+# instead of climatological percentiles. Thus each day of the calendar year has a unique percentile associated with it.
+#
 # INPUT:
 #    - aspect.array: empty array used to hold aspects.
 #    - boolean.str: an array of booleans indicating the existence of a heatwave for each day.
