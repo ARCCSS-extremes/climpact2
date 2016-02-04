@@ -354,7 +354,7 @@ tmaxmin <- function(station,output)
 	write.table(cbind(date.tmp,maxmin$pc,maxmin$tx,maxmin$tn),sep=",",append=TRUE,file=filena,quote=FALSE,row.names=FALSE,col.names=FALSE)
 	
 	# If no data (i.e. no TN>TX) in variable print message
-	if(length(maxmin)==6) { write.table("NO TN > TX FOUND", sep=",",file = filena, append = TRUE, row.names = FALSE, col.names = FALSE) }
+	if(length(maxmin)==0) { write.table("NO TN > TX FOUND", sep=",",file = filena, append = TRUE, row.names = FALSE, col.names = FALSE) }
 
 	rm(datos)
 }
@@ -370,7 +370,7 @@ humongous <- function(station,output)
 	write.table(cbind(date.tmp,grande$pc,grande$tx,grande$tn),sep=",",append=TRUE,file=filena,quote=FALSE,row.names=FALSE,col.names=FALSE)
 
 	# If no data (i.e. no large values) in variable print message
-	if(length(grande)==6) { write.table("NO EXCESSIVE VALUES FOUND", sep=",",file = filena, append = TRUE, row.names = FALSE, col.names = FALSE) }
+	if(length(grande)==0) { write.table("NO EXCESSIVE VALUES FOUND", sep=",",file = filena, append = TRUE, row.names = FALSE, col.names = FALSE) }
 
 	rm(list=ls())
 }
