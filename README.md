@@ -55,9 +55,6 @@
   -> https://www.youtube.com/watch?v=1sSCqsRMCZI
 
 
-  ------------------------------------------------------------------------
-
-
   What if I want to calculate the indices on a netCDF dataset?**
   --------------------------------------------------------------
 
@@ -78,6 +75,17 @@
      the GUI as well as operate on netCDF files.
   *** Calculating all 51 indices for a 20 year record with horizontal resolution 
       of 144 x 215 takes approximately 12 hours on 2 cores. 
+
+
+  Common problems
+  ---------------
+
+    1) Running the GUI in Linux; when trying to install packages R fails with 
+       "/bin/bash: g++: command not found"
+       You need to install g++ onto your system via the package manager on your 
+       particular operating system. In most Linux operating system a command such 
+       as "sudo apt-get install g++" at the command line (i.e. not inside R) will
+       suffice in installing the software. Once done, run ClimPACT2 again.
 
 
   Documentation
