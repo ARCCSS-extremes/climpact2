@@ -1473,11 +1473,11 @@ index.calc1 <- function() {
 
 	tkgrid(tklabel(tt1,text="",bg='white',font=font_small))
 	tkgrid(tklabel(tt1,text="Refer to section 3.6 of ClimPACT2 user guide for help",bg='white',font=font_small_bold))
-	tkgrid(tklabel(tt1,text="  Count the number of days where maximum temperature > ",bg='white',font=font_small),textEntryWidget6)
-	tkgrid(tklabel(tt1,text="  Count the number of days where maximum temperature < ",bg='white',font=font_small),textEntryWidget7)
-	tkgrid(tklabel(tt1,text="  Count the number of days where minimum temperature > ",bg='white',font=font_small),textEntryWidget8)
-	tkgrid(tklabel(tt1,text="  Count the number of days where minimum temperature < ",bg='white',font=font_small),textEntryWidget9)
-#	tkgrid(tklabel(tt1,text="User defined daily precipitation threshold",bg='white',font=font_small),textEntryWidget12)
+#	tkgrid(tklabel(tt1,text="  Count the number of days where maximum temperature > ",bg='white',font=font_small),textEntryWidget6)
+#	tkgrid(tklabel(tt1,text="  Count the number of days where maximum temperature < ",bg='white',font=font_small),textEntryWidget7)
+#	tkgrid(tklabel(tt1,text="  Count the number of days where minimum temperature > ",bg='white',font=font_small),textEntryWidget8)
+#	tkgrid(tklabel(tt1,text="  Count the number of days where minimum temperature < ",bg='white',font=font_small),textEntryWidget9)
+##	tkgrid(tklabel(tt1,text="User defined daily precipitation threshold",bg='white',font=font_small),textEntryWidget12)
 	tkgrid(tklabel(tt1,text="User defined WSDIn Days",bg='white',font=font_small),textEntryWidget13) # 13 wsdi
 	tkgrid(tklabel(tt1,text="User defined CSDIn Days",bg='white',font=font_small),textEntryWidget14) # 14 csdi
 	tkgrid(tklabel(tt1,text="User defined RxnDay Days",bg='white',font=font_small),textEntryWidget15) # 15 rxday

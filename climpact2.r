@@ -22,7 +22,7 @@ library(climdex.pcic)
 library(PCICt)
 library(SPEI,quietly=TRUE)
 options(warn=1)
-software_id = "1.1.2"
+software_id = "1.1.3"
 
 # climpact.loader
 #
