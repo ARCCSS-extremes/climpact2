@@ -22,7 +22,7 @@ library(climdex.pcic)
 library(PCICt)
 library(SPEI,quietly=TRUE)
 options(warn=1)
-software_id = "1.1.3"
+software_id = "1.1.4"
 
 # climpact.loader
 #
@@ -1204,13 +1204,13 @@ climdex.hw <- function(ci,base.range=c(1961,1990),pwindow=15,min.base.data.fract
 
         # Calculate EHI/ECI values and EHF/ECF for each day of the given record. Must start at day 33 since the previous 32 days are required for each calculation.
         for (a in 33:length(tavg)) {
-                EHIaccl[a] = (sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3) - (sum(tavg[(a-32):(a-3)],na.rm=TRUE)/30)
-                EHIsig[a] = (sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3) - as.numeric(unlist(annualrepeat_tavg90[a]))  #as.numeric(unlist(tavg90p$tmax[1])[annualrepeat[a]]) #[(a %% 365)]
-                EHF[a] = max(1,EHIaccl[a],na.rm=TRUE)*EHIsig[a]
+                EHIaccl[a] = (sum(tavg[a],tavg[a-1],tavg[a-2])/3) - (sum(tavg[(a-32):(a-3)],na.rm=TRUE)/30)
+                EHIsig[a] = (sum(tavg[a],tavg[a-1],tavg[a-2])/3) - as.numeric(unlist(annualrepeat_tavg90[a]))  #as.numeric(unlist(tavg90p$tmax[1])[annualrepeat[a]]) #[(a %% 365)]
+                EHF[a] = max(1,EHIaccl[a])*EHIsig[a]
 
-                ECIaccl[a] = (sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3) - (sum(tavg[(a-32):(a-3)],na.rm=TRUE)/30)
-                ECIsig[a] = (sum(tavg[a],tavg[a-1],tavg[a-2],na.rm=TRUE)/3) - as.numeric(unlist(annualrepeat_tavg05[a]))  #as.numeric(unlist(tavg90p$tmax[1])[annualrepeat[a]]) #[(a %% 365)]
-                ECF[a] = min(-1,ECIaccl[a],na.rm=TRUE)*(-1*ECIsig[a])
+                ECIaccl[a] = (sum(tavg[a],tavg[a-1],tavg[a-2])/3) - (sum(tavg[(a-32):(a-3)],na.rm=TRUE)/30)
+                ECIsig[a] = (sum(tavg[a],tavg[a-1],tavg[a-2])/3) - as.numeric(unlist(annualrepeat_tavg05[a]))  #as.numeric(unlist(tavg90p$tmax[1])[annualrepeat[a]]) #[(a %% 365)]
+                ECF[a] = min(-1,ECIaccl[a])*(-1*ECIsig[a])
         }
 
 # step 2. Determine if tx90p, tn90p or EHF conditions have persisted for >= 3 days. If so, count number of summer heat waves.
@@ -1306,17 +1306,24 @@ get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.
 		extvals = which((rle_extended_boolean$lengths)>=3 & cumsum(rle_extended_boolean$lengths)>last_day_of_hw_season & rle_extended_boolean$values==TRUE)
 	
 		# check for heatwaves that started near end of season and continued afterward.
-		if(!is.na(last_day_of_hw_season)) {
-			if(length(extvals)>0 && cumsum(rle_extended_boolean$lengths)[extvals[1]-1]<last_day_of_hw_season) 
+#		print("DIAGS****************")
+#		print(truevals)
+#		print(extended_data)
+#		print(year)
+
+		if(!is.na(last_day_of_hw_season) && length(cumsum(rle_extended_boolean$lengths)) > 1) {
+			if(length(extvals)>0 && extvals[1] > 1 && cumsum(rle_extended_boolean$lengths)[extvals[1]-1]<last_day_of_hw_season) 
 	                # then the next heatwave actually started in summer and should be counted
 	        {
 	                truevals = c(truevals,extvals[1]) 
 	        } }
-	
-	        nhw = length(truevals)  # number of heatwaves
-	        hwm = array(NA,nhw)  # array to store heatwave mean temperature
-		hwa = array(NA,nhw)
+
+			# If more than 25 daily HW values are missing per season, set nhw to NA (which propogates and makes all other aspects NA)
+			# 25 is chosen to be greater than the climdex.pcic '15' since any missing values in the preceding 3 days for EHF/ECF calcs also translate into an NA value for EHF/ECF.
+			if(sum(is.na(extended_data[1:last_day_of_hw_season]))>25) { nhw = NA } else { nhw = length(truevals) }  # number of heatwaves
 	        if(!is.na(nhw) && nhw>0){
+					hwm = array(NA,nhw)  # array to store heatwave mean temperature
+					hwa = array(NA,nhw)
 	                for (i in 1:nhw) { # over each run
 					if(truevals[i]==1) { i1 = 1 } else { i1 = cumsum(rle_extended_boolean$lengths)[truevals[i]-1] + 1 }      # "+1" to begin on day 1 of heat wave - not the last day of the non-heatwave
 	                                i2 = cumsum(rle_extended_boolean$lengths)[truevals[i]]
@@ -1324,7 +1331,7 @@ get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.
 	                                if(ecf==TRUE) { hwa[i] = min(extended_data[i1:i2],na.rm=TRUE) } 
 	                                else { hwa[i] = max(extended_data[i1:i2],na.rm=TRUE) }
 	                }
-	        }
+	        } else { hwm = NA ; hwa = NA }
 	
 	        hwm2 = mean(hwm,na.rm=TRUE)
 		hwn = nhw
@@ -1338,7 +1345,7 @@ get.hw.aspects <- function(aspect.array,boolean.str,yearly.date.factors,monthly.
 		# HWD
 		if(is.nan(hwm2) || is.na(hwm2)) { aspect.array[4,aspect_ind] = NA } else { aspect.array[4,aspect_ind] = max(rle_extended_boolean$lengths[truevals],na.rm=TRUE) }
 		# HWF
-		aspect.array[5,aspect_ind] = sum(rle_extended_boolean$lengths[truevals],na.rm=TRUE)
+		if(is.na(hwn)) { aspect.array[5,aspect_ind] = NA } else { aspect.array[5,aspect_ind] = sum(rle_extended_boolean$lengths[truevals],na.rm=TRUE) }
 	
 	        aspect_ind = aspect_ind + 1
 	}

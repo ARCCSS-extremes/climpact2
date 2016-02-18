@@ -2186,6 +2186,7 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 	        na.x <- x
 			na.y <- rep(NA, length(na.x))
 			na.y[is.na(y)] <- min(y, na.rm = TRUE)
+
 			points(1:length(na.x), na.y, pch = 17, col = "blue", cex = 1.5)
 			xy <- cbind(x, y)
 		}
@@ -2209,11 +2210,10 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 	betaerr <- round(as.numeric(out$coef.table[[1]][2, 2]), 3)
 	if(index.name != "tx95t") {	abline(fit,lwd=2.0) }
 	xy <- na.omit(xy)
-
 	tmp_seq = 1:length(x)
-	tmp_lowess=lowess(tmp_seq[!is.na(y)], xy[,2])
+
+	tmp_lowess=lowess(tmp_seq[!is.na(y)], y[!is.na(y)])   #xy[,2])
 	lines(tmp_lowess, lwd = 3, lty = 2, col = "red")  # add fitting curve
-	
 	if (sum(is.na(y) == FALSE) >= min_trend)
 	{
 		subtit <- paste("Linear trend slope=", beta, "   Slope error=", betaerr, ",   p-value=", pval)             # least squares regression
