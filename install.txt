@@ -29,7 +29,7 @@
   ---------------------
 
     Software you will need installed:
-        -R
+        -R (version 3.2.3 or later)
 
     1) Download and extract the following file:
        https://github.com/ARCCSS-extremes/climpact2/archive/master.zip
@@ -60,7 +60,7 @@
   --------------------------------------------------------------
 
     Software you will need installed:
-        -R
+        -R (version 3.0.3 or later)
         -netCDF
 
     1) Create a new directory
