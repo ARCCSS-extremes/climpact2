@@ -29,7 +29,8 @@
   ---------------------
 
     Software you will need installed:
-        -R (version 3.2.3 or later)
+        -R (for Windows, version 3.2.3 or later. For Linux/MacOS version 3.0.2 
+           or later)
 
     1) Download and extract the following file:
        https://github.com/ARCCSS-extremes/climpact2/archive/master.zip
@@ -56,11 +57,11 @@
   -> https://www.youtube.com/watch?v=1sSCqsRMCZI
 
 
-  What if I want to calculate the indices on a netCDF dataset?**
-  --------------------------------------------------------------
+  What if I want to calculate the indices on a netCDF dataset? (Linux only)
+  -------------------------------------------------------------------------
 
     Software you will need installed:
-        -R (version 3.0.3 or later)
+        -R (version 3.0.2 or later)
         -netCDF
 
     1) Create a new directory
@@ -74,9 +75,6 @@
        for optional parameters to specify). Then execute by running 
        'Rscript climpact2.wrapper.r' from the Linux command line.***
 
-  ** Note that if you are running a Windows operating system you will only
-     be able to use the GUI. In a Unix-based operating system you can use
-     the GUI as well as operate on netCDF files.
   *** Calculating all 51 indices for a 20 year record with horizontal resolution 
       of 144 x 215 takes approximately 12 hours on 2 cores. 
 
