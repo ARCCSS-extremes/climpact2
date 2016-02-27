@@ -39,19 +39,20 @@
        "source('climpact2.GUI.r')"
 
        In Linux or MacOS, cd to the climpact2-master directory created in
-       step 1, then open R and type "source('climpact2.GUI.r')".
+       step 1, then open R in a terminal windows and type 
+       "source('climpact2.GUI.r')".
 
-       The first time ClimPACT2 is run it will install required packages.
+       The first time ClimPACT2 is run it will install required R packages.
        This will likely require you to select a mirror to download from.
  
 
-  VIDEO TUTORIAL HOW TO INSTALL R IN WINDOWS 
+  Video tutorial on how to install R in Windows
   -> https://www.youtube.com/watch?v=Nb-yt3gSnQw
 
-  VIDEO TUTORIAL HOW TO RUN CLIMPACT2 IN WINDOWS
+  Video tutorial on how to run ClimPACT2 in Windows
   -> https://www.youtube.com/watch?v=eD8FqXdGNCs
 
-  VIDEO TUTORIAL HOW TO RUN CLIMPACT2 IN LINUX
+  Video tutorial on how to run ClimPACT2 in Linux/MacOS
   -> https://www.youtube.com/watch?v=1sSCqsRMCZI
 
 
@@ -67,10 +68,10 @@
     2) cd to new directory, and download and extract the following file:
        https://github.com/ARCCSS-extremes/climpact2/archive/master.zip
 
-    3) Run climpact2.checker.r file to install required packages.
+    3) Run climpact2.checker.r file to install required R packages.
 
-    4) Modify the climpact2.wrapper.r file to suit your needs (see manual for
-       optional parameters to specify). Then execute by running 
+    4) Modify the climpact2.wrapper.r file to suit your needs (see manual
+       for optional parameters to specify). Then execute by running 
        'Rscript climpact2.wrapper.r' from the Linux command line.***
 
   ** Note that if you are running a Windows operating system you will only
