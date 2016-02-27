@@ -121,6 +121,7 @@
   Contacts
   --------
   
-  Software issues contact Nicholas Herold : nicholas.herold@unsw.edu.au
+  Software issues contact Nicholas Herold : nicholas.herold@unsw.edu.au 
   All other issues contact Lisa Alexander : lisa.alexander@unsw.edu.au
+
 
