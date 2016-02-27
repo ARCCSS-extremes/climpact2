@@ -58,7 +58,7 @@
   What if I want to calculate the indices on a netCDF dataset?**
   --------------------------------------------------------------
 
-    Software you will need:
+    Software you will need installed:
         -R
         -netCDF
 
@@ -67,8 +67,11 @@
     2) cd to new directory, and download and extract the following file:
        https://github.com/ARCCSS-extremes/climpact2/archive/master.zip
 
-    3) Modify the climpact2.wrapper.r file to suit your needs. Then execute 
-       by running 'Rscript climpact2.wrapper.r' from the Linux command line.***
+    3) Run climpact2.checker.r file to install required packages.
+
+    4) Modify the climpact2.wrapper.r file to suit your needs (see manual for
+       optional parameters to specify). Then execute by running 
+       'Rscript climpact2.wrapper.r' from the Linux command line.***
 
   ** Note that if you are running a Windows operating system you will only
      be able to use the GUI. In a Unix-based operating system you can use
@@ -86,6 +89,9 @@
        particular operating system. In most Linux operating system a command such 
        as "sudo apt-get install g++" at the command line (i.e. not inside R) will
        suffice in installing the software. Once done, run ClimPACT2 again.
+
+    2) If you experience trouble installing R packages in Windows, try to disable
+       your antivirus temporarily.
 
 
   Documentation
