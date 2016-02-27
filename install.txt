@@ -84,14 +84,14 @@
   Common problems
   ---------------
 
-    1) Running the GUI in Linux; when trying to install packages R fails with 
+     - Running the GUI in Linux; when trying to install packages R fails with 
        "/bin/bash: g++: command not found"
        You need to install g++ onto your system via the package manager on your 
        particular operating system. In most Linux operating system a command such 
        as "sudo apt-get install g++" at the command line (i.e. not inside R) will
        suffice in installing the software. Once done, run ClimPACT2 again.
 
-    2) If you experience trouble installing R packages in Windows, try to disable
+     - If you experience trouble installing R packages in Windows, try to disable
        your antivirus temporarily.
 
 
@@ -122,6 +122,7 @@
   --------
   
   Software issues contact Nicholas Herold : nicholas.herold@unsw.edu.au 
+
   All other issues contact Lisa Alexander : lisa.alexander@unsw.edu.au
 
 
