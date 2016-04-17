@@ -230,9 +230,9 @@ fourboxes <- function(station, output, save = 0, outrange)
 
 		# write precip outliers
 		write.table("Prec up",sep=",", file = filena, append = TRUE, row.names = FALSE, col.names = FALSE)
-		for (a in 1:12)
+		for (a in length(respc$names)) #unique(prec$month))	#1:12)
 		{
-			prov <- subset(datos,datos$month == a & datos$pc > respc$stats[5, a])
+			prov <- subset(datos,datos$month == as.numeric(respc$names[a]) & datos$pc > respc$stats[5, a])#a])
 			date.tmp = paste(prov$year,prov$month,prov$day,sep="-")
 			write.table(cbind(date.tmp,prov$pc,prov$tx,prov$tn,prov$tr), sep=",",file = filena, append = TRUE, quote = FALSE, row.names = FALSE, col.names = FALSE)
 		}
