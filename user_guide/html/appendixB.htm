@@ -1,0 +1,196 @@
+<html>
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=Generator content="Microsoft Word 15 (filtered)">
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin-top:0cm;
+	margin-right:0cm;
+	margin-bottom:8.0pt;
+	margin-left:0cm;
+	line-height:106%;
+	font-size:12.0pt;
+	font-family:"Times New Roman",serif;}
+a:link, span.MsoHyperlink
+	{color:#0563C1;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:#954F72;
+	text-decoration:underline;}
+.MsoChpDefault
+	{font-size:12.0pt;}
+@page WordSection1
+	{size:595.3pt 841.9pt;
+	margin:72.0pt 72.0pt 72.0pt 72.0pt;}
+div.WordSection1
+	{page:WordSection1;}
+.auto-style2 {
+	font-size: 14pt;
+	line-height: 150%;
+	margin-top: 0;
+	margin-bottom: 8px;
+}
+.auto-style6 {
+	font-size: 14pt;
+	line-height: 150%;
+	margin-top: 0;
+	margin-bottom: 0px;
+	font-family: "Times New Roman", Times, serif;
+}
+.auto-style7 {
+	font-size: 14pt;
+	line-height: 150%;
+	margin-top: 0;
+	margin-bottom: 0px;
+	text-decoration: underline;
+	margin-left: 40px;
+	font-family: "Times New Roman", Times, serif;
+}
+-->
+</style>
+
+<title>Appendix B</title>
+
+</head>
+
+<body lang=EN-AU link="#0563C1" vlink="#954F72">
+
+<div class=WordSection1>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center'><b><i><span
+style='font-size:38.0pt;line-height:106%;color:#2F5597'>ClimPACT2</span></i></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center'><b><span
+style='font-size:19.0pt;line-height:106%'>Appendix B: Input data format</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:16.0pt;line-height:106%'>&lt; <a href="appendixA.htm">Prev.</a> | 
+<a href="../ClimPACT2_user_guide.htm">Home</a> | <a href="appendixC.htm">Next</a> &gt;</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=auto-style7>B.1 Station text files</p>
+	<p class=auto-style6>The station text files input into the GUI or batch 
+	processing has several requirements which are
+listed below. We recommend that users use the sample input file provided with
+ClimPACT2 as a template for their own data 
+(climpact2.sampledata.1d.time-series.txt).</p>
+
+	<ol>
+		<li>
+		<p class=auto-style6>ASCII text file</p>
+		</li>
+		<li>
+		<p class=auto-style6>Columns as following sequences: Year, Month, Day,
+PR, TX, TN (NOTE: PR units = millimeters and Temperature units = degrees
+Celsius)</p>
+		</li>
+		<li>
+		<p class=auto-style6>The format as described above must be space
+delimited (e.g. each element separated by one or more spaces).</p>
+		</li>
+		<li>
+		<p class=auto-style6>For data records, missing data must be coded as
+-99.9; data records must be in calendar date order. Missing dates are allowed.</p>
+		</li>
+		<li>
+		<p class=auto-style6>Decimal places must be denoted by the period 
+		character, not a comma (i.e. &quot;.&quot; not &quot;,&quot;).</p>
+		</li>
+	</ol>
+	<p class=auto-style6>Example lines for a station text file.</p>
+
+<p class=auto-style6>1901    1          1          -99.9    -3.1      -6.8</p>
+
+<p class=auto-style6>1901    1          2          -99.9    -1.3      -3.6</p>
+
+<p class=auto-style6>1901    1          3          -99.9    -0.5      -7.9</p>
+
+<p class=auto-style6>1901    1          4          -99.9    -1         -9.1</p>
+
+<p class=auto-style6>1901    1          7          -99.9    -1.8      -8.4</p>
+	<p class=auto-style6>&nbsp;</p>
+	<p class=auto-style7>B.2 netCDF files</p>
+	<p class=auto-style6>The netCDF files processed by ClimPACT2 must be 
+	CF-compliant. See the sample input file for a template for your data 
+	(climpact2.sampledata.gridded.1991-2010.nc).</p>
+	<p class=auto-style6>Specific issues that have been found with incorrect 
+	input data include:</p>
+	<ul>
+		<li>
+		<p class=auto-style6>There must be no 'bounds' attributes in your 
+		latitude or longitude variables.</p>
+		</li>
+		<li>
+		<p class=auto-style6>Your precipitation variable must have units of &quot;kg 
+		m-2 d-1&quot;, not &quot;mm/day&quot;. These are numerically equivalent.</p>
+		</li>
+		<li>
+		<p class=auto-style6>Your minimum and maximum temperature variables must 
+		be uniquely named and have units of &quot;degrees_C&quot;, &quot;C&quot; or &quot;K&quot;.</p>
+		</li>
+		<li>
+		<p class=auto-style6>ncrename, ncatted and ncks from the
+		<a href="http://nco.sourceforge.net/">NCO</a> toolset will help you 
+		modify your netCDF files accordingly. </p>
+		</li>
+	</ul>
+	<p class=auto-style6>An ncdump of climpact2.sampledata.gridded.1991-2010.nc 
+	is provided below.</p>
+	<pre> &gt; ncdump -h climpact2.sampledata.gridded.1991-2010.nc
+netcdf climpact2.sampledata.gridded.1991-2010 {
+dimensions:
+	lon = 24 ;
+	lat = 19 ;
+	time = UNLIMITED ; // (7305 currently)
+	nb2 = 2 ;
+variables:
+	float lon(lon) ;
+		lon:standard_name = &quot;longitude&quot; ;
+		lon:long_name = &quot;Longitude&quot; ;
+		lon:units = &quot;degrees_east&quot; ;
+		lon:axis = &quot;X&quot; ;
+	float lat(lat) ;
+		lat:standard_name = &quot;latitude&quot; ;
+		lat:long_name = &quot;Latitude&quot; ;
+		lat:units = &quot;degrees_north&quot; ;
+		lat:axis = &quot;Y&quot; ;
+	double time(time) ;
+		time:standard_name = &quot;time&quot; ;
+		time:long_name = &quot;Time&quot; ;
+		time:bounds = &quot;time_bnds&quot; ;
+		time:units = &quot;hours since 1800-01-01 00:00:00&quot; ;
+		time:calendar = &quot;standard&quot; ;
+	double time_bnds(time, nb2) ;
+	float tmax(time, lat, lon) ;
+		tmax:units = &quot;K&quot; ;
+	float tmin(time, lat, lon) ;
+		tmin:units = &quot;K&quot; ;
+	float precip(time, lat, lon) ;
+		precip:units = &quot;kg m-2 d-1&quot; ;</pre>
+	<pre>// global attributes:
+		:history = &quot;Fri Feb 26 10:25:00 2016: ncatted -O -a units,precip,o,c,kg m-2 d-1 climpact2.sampledata.gridded.1991-2010.nc&quot; ;
+}</pre>
+	<p class=auto-style2>&nbsp;</p>
+
+</div>
+
+</body>
+
+</html>

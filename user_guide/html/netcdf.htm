@@ -1,0 +1,240 @@
+<html>
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=Generator content="Microsoft Word 15 (filtered)">
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin-top:0cm;
+	margin-right:0cm;
+	margin-bottom:8.0pt;
+	margin-left:0cm;
+	line-height:106%;
+	font-size:12.0pt;
+	font-family:"Times New Roman",serif;}
+a:link, span.MsoHyperlink
+	{color:#0563C1;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:#954F72;
+	text-decoration:underline;}
+.MsoChpDefault
+	{font-size:12.0pt;}
+@page WordSection1
+	{size:595.3pt 841.9pt;
+	margin:72.0pt 72.0pt 72.0pt 72.0pt;}
+div.WordSection1
+	{page:WordSection1;}
+.auto-style2 {
+	margin-left: 0px;
+}
+.auto-style7 {
+	font-size: 14pt;
+	font-family: "Times New Roman", Times, serif;
+	line-height: 150%;
+	margin-top: 0;
+	margin-bottom: 0;
+}
+.auto-style4 {
+	font-size: 14pt;
+	}
+.auto-style1 {
+	background-color: #FFFFFF;
+	}
+.auto-style9 {
+	font-size: 14pt;
+	font-family: "Times New Roman", Times, serif;
+	margin-top: 0;
+	margin-bottom: 8px;
+}
+.auto-style10 {
+	text-align: left;
+	line-height: 150%;
+	margin-top: 0;
+	margin-bottom: 8px;
+}
+.auto-style11 {
+	font-size: 14pt;
+	font-family: "Times New Roman", Times, serif;
+	line-height: 150%;
+	margin-top: 0;
+	margin-bottom: 0;
+	text-decoration: underline;
+	margin-left: 40px;
+}
+-->
+</style>
+
+<title>Calculating indices from netCDF</title>
+
+</head>
+
+<body lang=EN-AU link="#0563C1" vlink="#954F72">
+
+<div class=WordSection1>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center'><b><i><span
+style='font-size:38.0pt;line-height:106%;color:#2F5597'>ClimPACT2</span></i></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center'>
+<span
+style='font-size:19.0pt;line-height:106%'><strong>4. Calculating the indices 
+from netCDF data</strong></span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:16.0pt;line-height:106%'>&lt; <a href="GUI.htm">Prev.</a> | 
+<a href="../ClimPACT2_user_guide.htm">Home</a> | <a href="batch.html">Next</a> &gt;</span></p>
+	<p class=auto-style7>&nbsp;</p>
+	<p class=auto-style7><span class="auto-style4">Users who have three-dimensional
+netCDF datasets (time x latitude x longitude) of daily temperature and precipitation
+may utilise the climpact2.ncdf.wrapper.r and climpact2.ncdf.thresholds.wrapper.r 
+scripts to calculate
+the ClimPACT2 indices. This functionality is intended for users familiar with
+R and the unix command line. This functionality is only available to users of Linux 
+and MacOS operating systems. It utilises two packages developed by the Pacific 
+Climate Impacts Consortium (PCIC): ncdf.helpers and climdex.pcic.n</span><span class="auto-style1">cdf. 
+The latter package has been modified from it's original form in order to 
+calculate all of the ClimPACT2 indices. </span></p>
+	<p class=auto-style7>&nbsp;</p>
+	<p class=auto-style11>4.1 Installing required R packages</p>
+	<p class=auto-style7>To calculate the ClimPACT2 indices on netCDF data your 
+	operating system will require the following software installed, in addition 
+	to <a href="https://www.r-project.org/">R</a>. All three products should be 
+	installable through your operating systems package manager. Select the 
+	versions of these packages that contain the development files. This process 
+	can be system dependent, please consult your technical support if you 
+	require help.</p>
+	<ul>
+		<li>
+		<p class=auto-style7>
+		<a href="https://www.unidata.ucar.edu/software/netcdf/">netCDF</a></p>
+		</li>
+		<li>
+		<p class=auto-style7>PROJ4 (libproj-dev package on Linux) </p>
+		</li>
+		<li>
+		<p class=auto-style7>UDUNITS2 (libudunits2-dev package on Linux) </p>
+		</li>
+	</ul>
+	<p class=auto-style7>Once these products are installed on your operating 
+	system follow these steps:</p>
+	<ol>
+		<li>
+		<p class=auto-style7>cd to the climpact2-master directory created in
+		<a href="getting_software.html">Section 2</a></p>
+		</li>
+		<li>
+		<p class=auto-style7>Enter R and run the following command <em>
+		source('installers/climpact2.ncdf.installer.r') </em>to install the 
+		required R packages. This may take some time and you may be asked 
+		questions regarding the creation of a new library in which to install R 
+		packages to. You may also be asked to select the geographical location 
+		of the closest 'mirror' to download these packages from (see figure 
+		above). You may select any location, though the closest location will 
+		offer the fastest download speed. Lastly, you will also be asked whether 
+		you wish to install the modified climdex.pcic.ncdf package over any 
+		potentially existing package. This is necessary for calculating the 
+		indices on netCDF data. To do so, type &quot;y&quot; when asked.You will also be 
+		asked to confirm the installation of a modified version of 
+		climdex.pcic.ncdf. In order to proceed it is required that this modified 
+		R package be installed. It will overwrite any pre-existing copies of 
+		this package. The indices calculated in ClimPACT2 include those 
+		claculated by the original version of climdex.pcic.ncdf.</p>
+		</li>
+	</ol>
+	<p class=auto-style7>&nbsp;</p>
+	<p class=auto-style11>4.2 Calculating the indices on netCDF files</p>
+
+<p class=auto-style9 style='line-height:150%'>To calculate the ClimPACT2 indices 
+on climate data contained inside 
+one or more netCDF files, modify the climpact2.ncdf.wrapper.r script to point 
+to these files and make necessary adjustments to the variable definitions in 
+this script according to your data (the comments in this file will guide you in 
+determining how to change these variables). <em>As a test, it is recommended to run 
+the above script on the provided sample data BEFORE running on your own data.</em></p>
+	<p class=auto-style9 style='line-height:150%'>If you wish to calculate the indices 
+	for data contained in one set of netCDF files, however using percentile 
+	thresholds based on data in another set of netCDF files, then the 
+	climpact2.ncdf.thresholds.wrapper.r will need to be used. A typical example 
+	of this follows. The user has a netCDF file containing model simulated daily 
+	precipitation, maximum temperature and minimum temperature for the present 
+	day period of 1990 - 2010. The user also has a netCDF file containing 
+	climate model projections for the period 2050 - 2070. They wish to calculate 
+	the ClimPACT2 indices on both of these periods but want the percentile-based indices 
+	in both periods (present and future) to utilise thresholds calculated 
+	from the present day 
+	climate. For a brief explanation of climate indices refer to
+	<a href="appendixF.htm">Appendix F (Wait, what is a climate index?)</a>.</p>
+	<p class=auto-style9 style='line-height:150%'>This requires three steps:</p>
+	<ol>
+		<li>
+		<p class=auto-style9 style='line-height:150%'>Make a copy of 
+		climpact2.ncdf.wrapper.r and modify it to point to the present day 
+		netCDF files, specifying an appropriate base period. In the above 
+		example this might be 1990 - 2000 (your base period does NOT have to 
+		cover the entire range of your data). Run this script from the Linux 
+		command line using <em>Rscript climpact2.ncdf.wrapper.r</em></p>
+		</li>
+		<li>
+		<p class=auto-style9 style='line-height:150%'>Modify the climpact2.ncdf.thresholds.wrapper.r to 
+		point to the same present day netCDF files as specified in step 1. Here the 
+	user needs to specify the same base period, e.g. 1990 - 2000. Run this 
+		script from the Linux command line using <em>Rscript 
+		climpact2.ncdf.thresholds.wrapper.r</em>. Note step 1 and 2 can 
+		technically be done in any order, step 2 is only required in order to 
+		complete step 3.</p>
+		</li>
+		<li>
+		<p class=auto-style9 style='line-height:150%'>Make a copy of 
+		climpact2.ncdf.wrapper.r and modify it to point to the future climate 
+		netCDF files, specifying a base period consistent with the above steps (e.g. 
+		1990 - 2000) but this time specify the threshold file that was claculated in step 2 above. 
+		Run this script from the Linux command line using <em>Rscript 
+		climpact2.ncdf.wrapper.r</em></p>
+		</li>
+	</ol>
+	<p class=auto-style9 style='line-height:150%'>These scripts typically take 
+	several hours to run (however, runtime varies strongly based on input file size 
+	and computer resources). 
+	Once you have run climpact2.ncdf.wrapper.r, numerous netCDF files will exist in the output directory specified. Where relevant, indices are 
+	calculated at both monthly and annual time scales. A typical output file 
+	name is <em>r20mm_ETCCDI_ANN_climpact.sample_historical_NA_1991-2010.nc</em>, 
+	where <em>r20mm</em> refers to the index calculated and <em>ANN</em> refers 
+	to the time scale this index was calculated on (<em>MON</em> for monthly). 
+	Output file names are dervied from the CMIP5 conventions and follow this 
+	format var_timeresolution_model_scenario_run_starttime-endtime.nc.</p>
+
+<p class=auto-style9 style='line-height:150%'>A visualisation of example output of the
+Standardised Precipitation-Evapotranspiration Index (SPEI) calculated over Australia is shown below. We recommend using 
+<a href="http://meteora.ucsd.edu/~pierce/ncview_home_page.html">Ncview</a> or 
+<a href="http://www.giss.nasa.gov/tools/panoply/">Panoply</a> 
+for easily viewing netCDF output.</p>
+
+	<p class=auto-style10 align=center>&nbsp;</p>
+	<p class=auto-style10 align=center>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center'>
+<img border=0
+width=928 height=555 id="Picture 1"
+src="../images/SPEI.png" alt="SPEI" class="auto-style2"></p>
+
+</div>
+
+</body>
+
+</html>

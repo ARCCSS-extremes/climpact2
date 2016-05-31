@@ -1,0 +1,210 @@
+<html>
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=Generator content="Microsoft Word 15 (filtered)">
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin-top:0cm;
+	margin-right:0cm;
+	margin-bottom:8.0pt;
+	margin-left:0cm;
+	line-height:106%;
+	font-size:12.0pt;
+	font-family:"Times New Roman",serif;}
+a:link, span.MsoHyperlink
+	{color:#0563C1;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:#954F72;
+	text-decoration:underline;}
+.MsoChpDefault
+	{font-size:12.0pt;}
+@page WordSection1
+	{size:595.3pt 841.9pt;
+	margin:72.0pt 72.0pt 72.0pt 72.0pt;}
+div.WordSection1
+	{page:WordSection1;}
+.auto-style1 {
+	font-size: 14pt;
+	font-family: "Times New Roman", Times, serif;
+}
+.auto-style5 {
+	line-height: 150%;
+	margin-bottom: 0;
+	margin-top: 0;
+}
+.auto-style7 {
+	font-family: "Times New Roman", Times, serif;
+}
+.auto-style8 {
+	font-size: 14pt;
+	font-weight: bold;
+	line-height: 150%;
+	margin-top: 0;
+	margin-bottom: 0;
+	font-family: "Times New Roman", Times, serif;
+}
+.auto-style9 {
+	font-size: 14pt;
+	line-height: 150%;
+	margin-top: 0;
+	margin-bottom: 0;
+	font-family: "Times New Roman", Times, serif;
+}
+.auto-style10 {
+	font-size: 14pt;
+	line-height: 150%;
+	margin-top: 0;
+	margin-bottom: 0;
+}
+.auto-style11 {
+	list-style-type: lower-alpha;
+}
+.auto-style12 {
+	font-size: 14pt;
+	line-height: 150%;
+	margin-top: 0;
+	margin-bottom: 0;
+	font-family: "Times New Roman", Times, serif;
+	text-decoration: underline;
+	margin-left: 40px;
+}
+.auto-style14 {
+	font-size: 14pt;
+	font-weight: bold;
+	font-family: "Times New Roman", Times, serif;
+}
+.auto-style15 {
+	font-size: 14pt;
+	font-style: italic;
+	font-family: "Times New Roman", Times, serif;
+}
+-->
+</style>
+
+<title>Appendix E</title>
+
+</head>
+
+<body lang=EN-AU link="#0563C1" vlink="#954F72">
+
+<div class=WordSection1>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center'><b><i><span
+style='font-size:38.0pt;line-height:106%;color:#2F5597'>ClimPACT2</span></i></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center'><b><span
+style='font-size:19.0pt;line-height:106%'>Appendix E: Threshold estimation and
+base period temperature indices calculation</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:16.0pt;line-height:106%'>&lt; <a href="appendixD.htm">Prev.</a> | 
+<a href="../ClimPACT2_user_guide.htm">Home</a> | <a href="appendixF.htm">Next</a> &gt;</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=auto-style8>Empirical quantile estimation:</p>
+
+<p class=auto-style9>The quantile of a distribution is defined as </p>
+
+<p class=auto-style5> <sub><img border=0 width=225 height=24
+src="appendixE_filtered_files/image001.png" class="auto-style1"></sub><span class="auto-style1">, 1&lt;p&lt;1,</span></p>
+
+<p class=auto-style10><span class="auto-style7">where F(x) is the distribution function. Let 
+</span> <sub>
+<img
+border=0 width=181 height=28 src="appendixE_filtered_files/image002.png" class="auto-style7"></sub><span class="auto-style7"> denote
+the order statistics of </span> <sub>
+<img border=0 width=77 height=24
+src="appendixE_filtered_files/image003.png" class="auto-style7"></sub><span class="auto-style7"> (i.e. sorted values of {X}),
+and let </span> <sub>
+<img border=0 width=43 height=27
+src="appendixE_filtered_files/image004.png" class="auto-style7"></sub><span class="auto-style7"> denote the ith sample
+quantile definition. The sample quantiles can be generally written as:</span></p>
+
+<p class=auto-style10><span class="auto-style7">  </span> <sub>
+<img border=0 width=181 height=28
+src="appendixE_filtered_files/image002.png" class="auto-style7"></sub></p>
+
+<p class=auto-style10><span class="auto-style7">Hyndman and Fan (1996) suggest a formula to obtain medium
+un-biased estimate of the quantile by letting </span> <sub>
+<img border=0 width=168
+height=21 src="appendixE_filtered_files/image005.png" class="auto-style7"></sub><span class="auto-style7"> and letting  
+</span> <sub>
+<img
+border=0 width=160 height=21 src="appendixE_filtered_files/image006.png" class="auto-style7"></sub><span class="auto-style7">,
+where int(u) is the largest integer not greater than u. The empirical quantile
+is set to the smallest or largest value in the sample when j&lt;1 or j&gt; n
+respectively. That is, quantile estimates corresponding to p&lt;1/(n+1) are set
+to the smallest value in the sample, and those corresponding to p&gt;n/(n+1)
+are set to the largest value in the sample.</span></p>
+
+<p class=auto-style8>Bootstrap procedure for the estimation of exceedance rate
+for the base period:</p>
+
+<p class=auto-style9>It is not possible to make an exact estimate of the
+thresholds due to sampling uncertainty. To provide temporally consistent
+estimate of exceedance rate throughout the base period and out-of-base period,
+we adapt the following procedure (Zhang et al. 2005) to estimate exceedance
+rate for the base period. This method is used to calculate percentile thresholds 
+inside the base period for all indices except WSDI, WSDId, CSDI, CSDId and the 
+HW indices.</p>
+
+	<ol class="auto-style11">
+		<li>
+		<p class=auto-style9>The 30-year base period is divided into one
+“out-of-base” year, the year for which exceedance is to be estimated, and a
+“base-period” consisting the remaining of 29 years from which the thresholds
+would be estimated.</p>
+		</li>
+		<li>
+		<p class=auto-style9>A 30-year block of data is constructed by using
+the 29 year “base-period” data set and adding an additional year of data from
+the “base-period&quot; (i.e., one of the years in the “base-period” is
+repeated). This constructed 30-year block is used to estimate thresholds.</p>
+		</li>
+		<li>
+		<p class=auto-style9>The “out-of-base” year is then compared with
+these thresholds and the exceedance rate for the “out-of-base” year is
+obtained.</p>
+		</li>
+		<li>
+		<p class=auto-style9>&nbsp;Steps (b) and (c) are repeated for an additional
+28 times, by repeating each of the remaining 28 in-base years in turn to
+construct the 30-year block.</p>
+		</li>
+		<li>
+		<p class=auto-style9>The final index for the “out-of-base” year is
+obtained by averaging the 29 estimates obtained from steps (b), (c) and (d).</p>
+		</li>
+	</ol>
+	<p class=auto-style12>References</p>
+	<p style="margin-left:24pt;text-indent:-24.0pt"><span class="auto-style1">
+	Zhang X, Hegerl G, Zwiers F W and Kenyon J 2005 Avoiding Inhomogeneity in 
+	Percentile-Based Indices of Temperature Extremes </span>
+	<span class="auto-style15">J. Clim.</span> <span class="auto-style14">18</span><span class="auto-style1"> 
+	1641–51 Online: <a href="http://dx.doi.org/10.1175/JCLI3366.1">
+	http://dx.doi.org/10.1175/JCLI3366.1</a></span></p>
+	<p class=auto-style9>&nbsp;</p>
+
+</div>
+
+</body>
+
+</html>
