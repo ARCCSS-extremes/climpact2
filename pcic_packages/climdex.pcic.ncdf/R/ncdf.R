@@ -1270,7 +1270,7 @@ create.thresholds.file <- function(thresholds.file, f, ts, v.f.idx, variable.nam
     ncdf4.helpers::nc.copy.atts(exemplar.file, v, thresholds.netcdf, v, definemode=TRUE)
   }
 
-  put.ETCCDI.atts(thresholds.netcdf, "monClim", ncdf4::ncatt_get(exemplar.file, 0, "title")$value, author.data, definemode=TRUE,base.range)
+  put.ETCCDI.atts(thresholds.netcdf, "days", ncdf4::ncatt_get(exemplar.file, 0, "title")$value, author.data, definemode=TRUE,base.range)
 
   ## Attach history data to threshold data.
   lapply(out.vars, function(v) {
