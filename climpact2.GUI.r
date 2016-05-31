@@ -44,7 +44,7 @@
 
 # Remove previously opened devices and variables from memory.
 graphics.off()
-rm(list = ls(all = TRUE))
+#rm(list = ls(all = TRUE))
 
 # ------------------------------------------------ #
 # ClimPACT2 GUI functions
