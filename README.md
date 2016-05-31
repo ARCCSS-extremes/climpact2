@@ -63,7 +63,7 @@
 		 on your computer or the ability to install R libraries.
         -netCDF
         -PROJ4 development files (libproj-dev package on Linux)
-        -udunits2 development files (libudunits2-dev package on Linux)
+        -udunits development files (libudunits2-dev package on Linux)
 
 	1) Download and extract the following file to your computer:
        https://github.com/ARCCSS-extremes/climpact2/archive/master.zip
@@ -165,8 +165,9 @@
   
   Design and documentation: Lisa Alexander and Nicholas Herold.
   
-  GUI: Nicholas Herold, James Goldie, Hongang Yang, Yang Feng, Yujun Ouyang 
-      and the Pacific Climate Impacts Consortium (David Bronaugh, James Hiebert).
+  GUI: Nicholas Herold, James Goldie, Lisa Alexander, Enric Aguilar, Marc Prohom, 
+	  the Pacific Climate Impacts Consortium (David Bronaugh, James Hiebert),
+	  Hongang Yang, Yang Feng and Yujun Ouyang.
   
   NetCDF calculation: Pacific Climate Impacts Consortium (David Bronaugh, 
   James Hiebert) and Nicholas Herold.
