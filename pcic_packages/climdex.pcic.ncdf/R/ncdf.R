@@ -1270,7 +1270,7 @@ create.thresholds.file <- function(thresholds.file, f, ts, v.f.idx, variable.nam
     ncdf4.helpers::nc.copy.atts(exemplar.file, v, thresholds.netcdf, v, definemode=TRUE)
   }
 
-  put.ETCCDI.atts(thresholds.netcdf, "monClim", ncdf4::ncatt_get(exemplar.file, 0, "title")$value, author.data, definemode=TRUE)
+  put.ETCCDI.atts(thresholds.netcdf, "monClim", ncdf4::ncatt_get(exemplar.file, 0, "title")$value, author.data, definemode=TRUE,base.range)
 
   ## Attach history data to threshold data.
   lapply(out.vars, function(v) {
@@ -1449,6 +1449,10 @@ create.thresholds.from.file <- function(input.files, output.file, author.data, v
   ## Define what the threshold indices will look like...
   threshold.dat <- get.thresholds.metadata(names(f.meta$v.f.idx))
 
+  # source climpact2.etsci-functions.r to retrieve current ClimPACT2 version
+  source("ancillary/climpact2.etsci-functions.r")
+  assign("software_id",software_id,envir = .GlobalEnv)
+  
   ## Create the output file
   thresholds.netcdf <- create.thresholds.file(output.file, f, f.meta$ts, f.meta$v.f.idx, variable.name.map, base.range, f.meta$dim.size, f.meta$dim.axes, threshold.dat, author.data)
 
@@ -1485,6 +1489,7 @@ create.thresholds.from.file <- function(input.files, output.file, author.data, v
     snow::stopCluster(cluster)
   } else {
     ##try(getFromNamespace('nc_set_chunk_cache', 'ncdf4')(1024 * 2048, 1009), silent=TRUE)
+    
     lapply(subsets, function(x) { write.thresholds.data(get.quantiles.for.stripe(x, f.meta$ts, base.range, f.meta$dim.axes, f.meta$v.f.idx, variable.name.map, f.meta$src.units, f.meta$dest.units, f), x) })
 
     lapply(f, ncdf4::nc_close)
