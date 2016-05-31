@@ -1367,8 +1367,11 @@ index.calc<-function(metadata,graphics=TRUE){
 		tmp.index.name = as.character(index.list$ID[i])
 		tmp.index.def = as.character(index.list$Definition[i])
 		# Set frequency if relevant to current index
-		if(index.list$Annual.flag[i]==TRUE) frequency = "annual"
-		else frequency = "monthly"
+		if(is.na(index.list$Annual.flag[i])) frequency = NA
+		else {
+			if(index.list$Annual.flag[i]==TRUE) frequency = "annual"
+			else frequency = "monthly"
+		}
 		
 		if(!as.character(index.list$ID[i]) %in% no.freq.list) index.parameter = paste("cio,freq=\"",frequency,"\"",sep="")
 		else index.parameter = paste("cio",sep="")
@@ -1459,10 +1462,11 @@ index.calc<-function(metadata,graphics=TRUE){
 write.index.csv <- function(index=NULL,index.name=NULL,freq="annual",header="") {
 	if(is.null(index.name) | is.null(index)) stop("Need index data and index.name in order to write CSV file.")
 
-	if(freq=="monthly") { freq="MON" }
-	else if(freq=="annual") { freq="ANN" }
-	else {}
-	if(index.name=="tx95t") { freq="DAY" }
+	if(index.name=="tx95t") { freq="DAY" } 
+	else {
+		if(freq=="monthly") { freq="MON" }
+		else if(freq=="annual") { freq="ANN" }
+	}
 
 	if(index.name=="wsdin") { tmp.name=paste("wsdi",wsdi_ud,sep="") } 
 	else if (index.name=="csdid") { tmp.name=paste("csdi",csdi_ud,sep="") }
@@ -1642,11 +1646,11 @@ plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,s
 	else if (index.name=="gddgrow") { tmp.name=index.name ; sub=paste("Index: ",tmp.name,". Annual sum of TM - ",Tb_GDD,"°C (where ",Tb_GDD,"°C is a user-defined base temperature and should be smaller than TM)",sep="")  }
 	else { tmp.name = index.name ; sub=paste("Index: ",tmp.name,". ",sub,sep="") }
 
-	if(freq=="monthly") { freq="MON" }
-	else if(freq=="annual") { freq="ANN" }
-	else {}
-	
-	if(index.name=="tx95t") { freq="DAY" }
+	if(index.name=="tx95t") { freq="DAY" } 
+	else {
+		if(freq=="monthly") { freq="MON" }
+		else if(freq=="annual") { freq="ANN" }
+	}
 	
 	namp <- paste(outjpgdir, paste(ofilename, "_", tmp.name, "_", freq,".jpg", sep = ""), sep = "/")
 	jpeg(file = namp, width = 1024, height = 768)
