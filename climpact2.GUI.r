@@ -1264,8 +1264,8 @@ index.calc<-function(metadata,graphics=TRUE){
                 index.store[4,1:(custom_SPEI-1)] <- NA
                 spifactor <- spifactor[(length(spifactor)-length((cio@date.factors$monthly))+1):length(spifactor)]
 	        }
-		write.precindex.csv(index.store,index.name=index.list$ID[81],spifactor,header="Standardised Precipitation-Evapotranspiration Index")
-		plot.precindex(index.store,index.name=index.list$ID[81],index.units=index.list$Units[81],x.label="Years",spifactor,sub=as.character(index.list$Definition[81]),times=c(3,6,12,custom_SPEI),metadata=metadata) } 
+		write.precindex.csv(index.store,index.name=index.list$ID[82],spifactor,header="Standardised Precipitation-Evapotranspiration Index")
+		plot.precindex(index.store,index.name=index.list$ID[82],index.units=index.list$Units[81],x.label="Years",spifactor,sub=as.character(index.list$Definition[82]),times=c(3,6,12,custom_SPEI),metadata=metadata) } 
 	}
 		
 	calculate.spi <- function() {
@@ -1330,8 +1330,8 @@ index.calc<-function(metadata,graphics=TRUE){
 							index.store[4,1:(custom_SPEI-1)] <- NA
                         spifactor <- spifactor[(length(spifactor)-length((cio@date.factors$monthly))+1):length(spifactor)]
                 }
-		write.precindex.csv(index.store,index.name=index.list$ID[82],spifactor,header="Standardised Precipitation Index")
-		plot.precindex(index.store,index.name=index.list$ID[82],index.units=index.list$Units[82],x.label="Years",spifactor,sub=as.character(index.list$Definition[82]),times=c(3,6,12,custom_SPEI),metadata=metadata) } 
+		write.precindex.csv(index.store,index.name=index.list$ID[83],spifactor,header="Standardised Precipitation Index")
+		plot.precindex(index.store,index.name=index.list$ID[83],index.units=index.list$Units[82],x.label="Years",spifactor,sub=as.character(index.list$Definition[83]),times=c(3,6,12,custom_SPEI),metadata=metadata) } 
 	}
 
 	# pdf file for all plots
