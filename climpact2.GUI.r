@@ -2162,7 +2162,7 @@ startss <- function() {
 
 
 	cancel.but  <- tkbutton(start1, text = " Exit ", command = done, width = 7, font = fontHeading2, bg = "white");
-	help.but    <- tkbutton(start1, text = " About ", command = about, width = 7, font = fontHeading2, bg = "white");
+#	help.but    <- tkbutton(start1, text = " About ", command = about, width = 7, font = fontHeading2, bg = "white");
 	license.but <- tkbutton(start1, text = " License ", command = license, width = 7, font = fontHeading2, bg = "white");
 
 	gap = tklabel(start1,width=5,text="",bg="white")
@@ -2170,7 +2170,7 @@ startss <- function() {
 	tkgrid(tklabel(start1, text = "    ", bg = "white"));
 	tkgrid(tklabel(start1, text = "    ", bg = "white"));
 
-	tkgrid(help.but, columnspan = 3)
+#	tkgrid(help.but, columnspan = 3)
 	tkgrid(license.but, columnspan = 3)
 	tkgrid(cancel.but, columnspan = 3)
 	tkgrid(tklabel(start1, text = "", bg = "white"))

@@ -126,17 +126,17 @@
      - Running the GUI on MacOS. Users may need to install XQuartz, ensure
        to restart your computer after installing. https://www.xquartz.org/
 
+     - Running the GUI on Linux. If an error occurs citing "BWidget" then it is likely
+       that your operating system needs the "BWidget" package installed (this comes
+       pre-installed on some operating systems but not on all). This can be done
+       through your operating system's package manager.
+       
      - Running the GUI on Linux. When trying to install packages R fails with 
        "/bin/bash: g++: command not found"
        You need to install g++ onto your operating system via your package manager.
        In most Linux operating systems a command such as "sudo apt-get install g++" 
        at the command line (i.e. not inside R) will suffice. Once installed, run 
        ClimPACT2 again.
-       
-     - Running the GUI on Linux. If errors occur citing "BWidget" then it is likely
-       that your operating system needs the bwidget package installed (this comes
-       pre-installed on some operating systems but not on all). This can be done
-       through your operating system's package manager.
 
      - If you experience trouble installing R packages in Windows, try to disable
        your antivirus software temporarily.
