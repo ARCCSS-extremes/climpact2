@@ -24,7 +24,7 @@ author.data=list(institution="My University", institution_id="MU")
 base.range=c(1991,2010)
 
 # number of cores to use, or FALSE for single core.
-cores=2#FALSE
+cores=FALSE
 
 # list of indices to calculate, or NULL to calculate all.
 indices=NULL	#c("hw","tnn")
