@@ -62,8 +62,8 @@
         -R (version 3.0.2 or later). You will need administrator privileges 
 		 on your computer or the ability to install R libraries.
         -netCDF
-        -PROJ4 development files (libproj-dev package on Linux)
-        -udunits development files (libudunits2-dev package on Linux)
+        -PROJ4 development files (libproj-dev package on Ubuntu)
+        -udunits development files (libudunits2-dev package on Ubuntu)
 
 	1) Download and extract the following file to your computer:
        https://github.com/ARCCSS-extremes/climpact2/archive/master.zip
