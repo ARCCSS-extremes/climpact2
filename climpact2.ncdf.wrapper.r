@@ -43,12 +43,15 @@ EHF_DEF = "PA13"
 # axis to split data on. For chunking up of grid, leave this.
 axis.name="Y"
 
+# Number of data values to process at once. If you receive "Error: rows.per.slice >= 1 is not TRUE", try increasing this to 20. You might have a large grid.
+maxvals=10
+
 # output compatible with FCLIMDEX. Leave this.
 fclimdex.compatible=FALSE
 
 # Call the package.
 create.indices.from.files(infiles,outdir,file.template,author.data,variable.name.map=vars,base.range=base.range,parallel=cores,axis.to.split.on=axis.name,climdex.vars.subset=indices,thresholds.files=thresholds.files,fclimdex.compatible=fclimdex.compatible,
-	cluster.type="SOCK",ehfdef=EHF_DEF,
+	cluster.type="SOCK",ehfdef=EHF_DEF,max.vals.millions=maxvals,
 	thresholds.name.map=c(tx05thresh="tx05thresh",tx10thresh="tx10thresh", tx50thresh="tx50thresh", tx90thresh="tx90thresh",tx95thresh="tx95thresh", 
 			tn05thresh="tn05thresh",tn10thresh="tn10thresh",tn50thresh="tn50thresh",tn90thresh="tn90thresh",tn95thresh="tn95thresh",
 			tx90thresh_15days="tx90thresh_15days",tn90thresh_15days="tn90thresh_15days",tavg90thresh_15days="tavg90thresh_15days",
