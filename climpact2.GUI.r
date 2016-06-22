@@ -1,30 +1,27 @@
-# ------------------------------------------------ #
+# ------------------------------------------------
 # ClimPACT2 GUI
 # University of New South Wales
-# ------------------------------------------------ #
-#
+# nherold, May 2016.
+# ------------------------------------------------
+#    
 # This file constitutes the graphical user interface for ClimPACT2. It also contains code that plots graphs, writes out data
 # and calculates SPEI/SPI indices.
 #
 # This package is available on github https://github.com/ARCCSS-extremes/climpact2. See this site for specific version history.
-#
-# nherold, January 2016.
-#
-#
 #
 # BUGS
 #   - Currently SPEI/SPI are calculated via the old ClimPACT code. This is because the CRAN package for SPEI/SPI does not
 #     ostenisbly support large runs of NA values. When this occurs real numbers are included in the output where NA values
 #     should occur.
 #
-#
 # TECHNICAL NOTES
+#   - order of main functions: startss -> package.check,global.vars -> load.data.qc -> draw.step1.interface -> QC.wrapper
+#                                                                   -> draw.step2.interface -> index.calc
 #   - warnings are suppressed on lsfit to prevent numerous messages on the removal of missing values that may exist in the
 #     users data.
 #
-# 
-# HISTORY OF CHANGES
-#   This file is a heavily modified version of climpact.r from the original ClimPACT. The major change
+# HISTORY
+#   This file is a very heavily overhauled version of climpact.r from the original ClimPACT. The most significant change
 #   that has taken place in ClimPACT2 is that the calculation of the indices is almost entirely taken care of by the R package
 #   climdex.pcic, with several exceptions such as the heatwave indices and SPEI/SPI. 
 #
@@ -45,95 +42,15 @@
 #   Hongang to check Sandra's code and add new indices - from 2012-11-05
 #   modified 2013, James Goldie - overhaul of code
 
-# Remove all previously opened devices and variables from memory.
+# Remove previously opened devices and variables from memory.
 graphics.off()
-rm(list = ls(all = TRUE))
-
-library(tcltk)
-tclRequire("BWidget")
-
-# ------------------------------------------------ #
-# Global variables
-# ------------------------------------------------ #
-
-# Nullify objects globally to avoid warning messages.
-reading.pb <<- hwquantiles <<- process.pb <<- pb <<- orig.name.user <<- qc.yes <<- nordaytem1 <<- outthresdir <<- quantiles <<- cio <<- ofilename <<- infor1 <<- orig.name <<- title.station <<- outlogdir <<- thres.calc <<- 
-add.data <<- add.data.name <<- yeardate2 <<- add.default <<- wait <<- out <<- speidata <<- ref.start <<- ts.end <<- basetmin <<- basetmax <<- baseprec <<- start.but <<- cal.but <<- ttmp <<- outqcdir <<- nordaytem1 <<- NULL
-
-start1<-tktoplevel(bg='white')
-
-# Fonts 
-fontHeading     <- tkfont.create(family = "times", size = 40, weight = "bold", slant = "italic")
-fontHeading1    <- tkfont.create(family = "times", size = 18)#, weight = "bold")
-fontHeading2    <- tkfont.create(family = "times", size = 14, weight = "bold")
-fontTextLabel   <- tkfont.create(family = "arial", size = 12)
-fontFixedWidth  <- tkfont.create(family = "courier", size = 12)
-font_small  <- "arial 12"
-font_small_bold  <- "arial 12 bold"
-font_big    <- "arial 15 bold"
-font_err    <- "times 13 bold"
-grey_font <- tkfont.create(family = "arial", size = 30, weight = "bold", slant = "italic") #'times 20 grey bold'
-
-# Global variables
-running.zero.allowed.in.temperature = 4
-stdt=4
-nstddev<-tclVar(stdt)
-dayim <- as.integer(c(31,28,31,30,31,30,31,31,30,31,30,31))  # day # in a month
-dayim2 <- as.integer(c(31,29,31,30,31,30,31,31,30,31,30,31))
-temp.quantiles.default = c(0.05,0.1,0.5,0.9,0.95)
-prec.quantiles.default = c(0.05,0.1,0.5,0.9,0.95,0.99)
-barplot_flag    <- TRUE
-loaded <- FALSE
-min_trend       <- 10 
-
-# Initial index parameter values
-stations<-tclVar(paste(" ")); stdt<-tclVar(paste("4"))
-base.year.start.tcl<-tclVar(paste("1971"));base.year.end.tcl<-tclVar(paste("2000"))
-latentry=tclVar(''); lonentry<-tclVar('') ; add.data.name.entry <-tclVar('')
-Entry4<-tclVar(paste("0"))
-Entry5<-tclVar(paste("0"))
-Entry6<-tclVar(paste("20"));Entry7<-tclVar(paste("0"))
-Entry8<-tclVar(paste("20"));Entry9<-tclVar(paste("0"))
-Entry12<-tclVar(paste("25"))
-Entry13<-tclVar(paste("2"))
-Entry14<-tclVar(paste("2"))
-Entry15<-tclVar(paste("3"))
-Entry16<-tclVar(paste("2"))
-Entry17<-tclVar(paste("30"))
-Entry20<-tclVar(paste("18"))
-Entry21<-tclVar(paste("18"))
-Entry22<-tclVar(paste("10"))
-Entry23<-tclVar(paste("24"))
-Entry24<-tclVar(paste("0"))
-
-# Initial value for check box buttons
-cbvalue<-c()
-for(i in 1:100){
-	aux<-tclVar(init=1)
-	cbvalue<-c(cbvalue,as.character(aux))
-	tclvalue(cbvalue[i])<-TRUE
-}
-selectAll<-function() { for(i in 1:length.indices) tclvalue(cbvalue[i])=TRUE }
-selectNone<-function() { for(i in 1:length.indices) tclvalue(cbvalue[i])=FALSE }
-
-# Read in climate index data
-indexfile <- "index.master.list"
-indexlist <- (read.table(indexfile,sep="\t"))
-indices <- as.character(indexlist[,1])
-length.indices = length(indices)+5		# +5 to include extra indices for GUI-only climpact2
-units <- as.character(indexlist[match(indices,indexlist[,1]),2])
-Encoding(units) <- "UTF-8"
-longnames <- as.character(indexlist[match(indices,indexlist[,1]),3])
-Encoding(longnames) <- "UTF-8"
-subtitle <- as.character(indexlist[,3])
+#rm(list = ls(all = TRUE))
 
 # ------------------------------------------------ #
 # ClimPACT2 GUI functions
 # ------------------------------------------------ #
 
 # extraQC code, taken from the "rclimdex_extraqc.r" package, 
-# email from Lisa on 2013-07-19.
-# NOTE: this part outputs some results, but does not change the data.
 # Quality Control procedures programed by Enric Aguilar (C3, URV, Tarragona, Spain) and 
 # and Marc Prohom, (Servei Meteorologic de Catalunya). Edited by nherold to output to .csv (Jan 2016).
 allqc <- function (master, output, outrange = 4)
@@ -181,14 +98,14 @@ write_header <- function(filename,header="")
 {
 	if(is.null(filename)) { stop("Filename not passed to function 'write_header'") }
 	
-#	header = paste("Description: ",header,sep="")
-#	write.table(header, file = filename, append = FALSE, row.names=FALSE,col.names = FALSE)
+	header = cbind("Description: ",header)
+	tmp = try(write.table(header, sep=",", file = filename, append = FALSE, row.names=FALSE,col.names = FALSE))
+	# Check if file is open
+	if(class(tmp)=="try-error") { tkmessageBox(message=paste("Error encountered, please check that the file ",filename," is not currently open, then select OK to try again.",sep=""),icon='warning');  write_header(filename) }
 
 	first_lines = cbind(c("Station: ","Latitude: ","Longitude: ","ClimPACT2_version: ","Date_of_calculation: "),c(ofilename,latitude,longitude,version.climpact,toString(Sys.Date())))
-	# Check if file is open
-	tmp = try(write.table(first_lines, sep=",", file = filename, append = FALSE, row.names=FALSE,col.names = FALSE))
+	write.table(first_lines, sep=",", file = filename, append = TRUE, row.names=FALSE,col.names = FALSE)
 
-	if(class(tmp)=="try-error") { tkmessageBox(message=paste("Error encountered, please check that the file ",filename," is not currently open, then select OK to try again.",sep=""),icon='warning');  write_header(filename) }
 }
 
 check_open <- function(filename)
@@ -335,9 +252,9 @@ roundcheck <- function(station,output,fyear = 1000,lyear = 3000,save = 0)
 	par(mfrow=c(1,3))
 	my<-subset(datos,datos$year >= fyear & datos$year <= lyear)
 	ispc=subset(my$pc,my$pc > 0)
-	hist(ispc %% 1,col='blue',main='NON ZERO PREC ROUNDING',breaks=c(seq(-0.1,0.9,0.1)),xlab="")
-	hist(my$tx %% 1,col='red',main='TX ROUNDING',breaks=c(seq(-0.1,0.9,0.1)),xlab="")
-	hist(my$tn %% 1,col='cyan',main='TN ROUNDING',breaks=c(seq(-0.1,0.9,0.1)),xlab="")
+	hist(ispc %% 1,col='blue',main='NON ZERO PREC ROUNDING',breaks=c(seq(0,1.0,0.0999999)),xlab="")
+	hist(my$tx %% 1,col='red',main='TX ROUNDING',breaks=c(seq(0,1.0,0.0999999)),xlab="")
+	hist(my$tn %% 1,col='cyan',main='TN ROUNDING',breaks=c(seq(0,1.0,0.0999999)),xlab="")
 	
 	if (save == 1) { dev.off() }
 	rm(datos)
@@ -365,7 +282,7 @@ humongous <- function(station,output)
 	datos<-read.table(station,col.names=c("year","month","day","pc","tx","tn"),na.strings='-99.9')
 	grande<-subset(datos,(datos$tx > 50 | datos$tx < -50 | datos$tn > 50 | datos$tn < -50 | datos$pc > 200 | datos$pc < 0))
 	date.tmp = paste(grande$year,grande$month,grande$day,sep="-")
-	write_header(filena,"Dates where precipition > 200 mm or abs(temperature) > 50 degrees.")
+	write_header(filena,"Dates where precipitation > 200 mm or abs(temperature) > 50 degrees.")
 	write.table(cbind("Date","Prec","TX","TN"),sep=",",append=TRUE,file=filena,quote=FALSE,row.names=FALSE,col.names=FALSE)
 	write.table(cbind(date.tmp,grande$pc,grande$tx,grande$tn),sep=",",append=TRUE,file=filena,quote=FALSE,row.names=FALSE,col.names=FALSE)
 
@@ -504,7 +421,7 @@ flatline_tx <- function(station,output)
 	date.tmp = paste(flat$year,flat$month,flat$day,sep="-")
 	write_header(filena,"Dates where TX values have been repeated more than 4 times.")
 	write.table(cbind("Date","TX","Number of duplicates"),sep=",",append=TRUE,file=filena,row.names=FALSE,col.names=FALSE)
-	write.table(cbind(date.tmp,flat$tx,flat$dup),sep=",",append=TRUE,file=filena,quote=FALSE,row.names=FALSE,col.names=FALSE)
+	write.table(cbind(date.tmp,flat$tx,flat$dup+1),sep=",",append=TRUE,file=filena,quote=FALSE,row.names=FALSE,col.names=FALSE)
 
 	# If no issues found in variable, print message
 	if(length(flat$tx)==0) { write.table("NO REPEATED TX FOUND",sep=",", file = filena, append = TRUE, row.names = FALSE, col.names = FALSE) }
@@ -530,7 +447,7 @@ flatline_tn <- function(station,output)
 	date.tmp = paste(flat$year,flat$month,flat$day,sep="-")
 	write_header(filena,"Dates where TX values have been repeated more than 4 times.")
 	write.table(cbind("Date","TN","Number of duplicates"),sep=",",append=TRUE,file=filena,row.names=FALSE,col.names=FALSE)
-	write.table(cbind(date.tmp,flat$tn,flat$dup),sep=",",append=TRUE,file=filena,quote=FALSE,row.names=FALSE,col.names=FALSE)
+	write.table(cbind(date.tmp,flat$tn,flat$dup+1),sep=",",append=TRUE,file=filena,quote=FALSE,row.names=FALSE,col.names=FALSE)
 
 	# If no issues found in variable, print message
 	if(length(flat$tn)==0) { write.table("NO REPEATED TN FOUND", sep=",",file = filena, append = TRUE, row.names = FALSE, col.names = FALSE) }
@@ -541,7 +458,7 @@ flatline_tn <- function(station,output)
 
 # pplotts
 # plots QC'ed data (TX, TN, PR) into pdf files.
-pplotts <- function(var = "prcp", type = "h", tit = NULL)
+pplotts <- function(var = "prcp", type = "h", tit = NULL,cio,metadata)
 {
 	# set bounds for the plot based on available data. dtr and prcp have
 	# floors of 0 by definition (assuming tmax and tmin have been qc'd)
@@ -573,19 +490,21 @@ pplotts <- function(var = "prcp", type = "h", tit = NULL)
 	
 	par(mfrow = c(4, 1))
 	par(mar = c(3.1, 2.1, 2.1, 2.1))
-	
-	for(i in seq(years, yeare, 10))
+
+	year.start = as.numeric(format(metadata$dates[1],format="%Y"))
+	year.end = as.numeric(format(metadata$dates[length(metadata$dates)],format="%Y"))
+	for(i in seq(year.start, year.end, 10))
 	{
 		at <- rep(1, 10)
 		# if (i > yeare)
-		for(j in (i + 1):min(i + 9, yeare + 1))
+		for(j in (i + 1):min(i + 9, year.end + 1))
 		{
 			if(leapyear(j)) at[j - i + 1] <- at[j - i] + 366 else
 			  at[j - i + 1] <- at[j - i] + 365
 		}
 		
-		tmp.dates <- format(pcict.dates,format="%Y")
-		ttmp <- cio@data[[var1]][tmp.dates>=i & tmp.dates <= min(i + 9, yeare)]
+		tmp.dates <- format(cio@dates,format="%Y")
+		ttmp <- cio@data[[var1]][tmp.dates>=i & tmp.dates <= min(i + 9, year.end)]
 		plot(1:length(ttmp), ttmp, type = type, col = "blue",
 		  xlab = "", ylab = "", xaxt = "n", xlim = c(1, 3660), ylim = c(ymin, ymax))
 		abline(h = 0)
@@ -594,719 +513,337 @@ pplotts <- function(var = "prcp", type = "h", tit = NULL)
 		axis(side = 1, at = at, labels = c(i:(i + 9)))
 		for(k in 1:10) abline(v = at[k], col = "yellow")
 		lines(tt, rep(ymin, length(tt)), type = "p", col = "red")
-		title(paste("Station: ", tit, ", ", i, "~", min(i + 9, yeare), ",  ", var1, sep = ""))
+		title(paste("Station: ", tit, ", ", i, "~", min(i + 9, year.end), ",  ", var1, sep = ""))
 	}
 }
 
-# load.data.qc
-# This function essentially refers to "Step 1." in the GUI. It reads in the users text file, allows them to enter station information (name, lat/lon), outlier criteria, it then QC's the data and creates
-# a climdex input object. Users can also read in previously generated thresholds here to overwrite those created by the climdex input object. An additional file can be read in that contains one
-# additional field which can be plotted with the climate indices.
+# Creates an array of strings, each string containing a folder in the path to the user's file.
+# Globally assigns two variables: the array of strings and the final string (i.e. the file name)
+# This should be improved in the future (global variables should not be relied on)
+# The 'graphics' parameter indicates whether a progress bar is drawn to the screen via tcltk
+get.file.path <- function(user.file,graphics=FALSE) {
+	if(graphics) { process.pb <<- tkProgressBar("%", "Reading directory path...",0, 100, 10) }
+
+	outdirtmp<-strsplit(user.file,"/")[[1]]
+	file.name=outdirtmp[length(outdirtmp)]
+	e=strsplit(file.name,"\\.")[[1]]
+	if(graphics) { 
+		setTkProgressBar(process.pb,40,label="								")
+		setTkProgressBar(process.pb,40,label="Splitting directory path...") 
+	}
+	ofilename=substr(file.name,start=1,stop=nchar(file.name)-nchar(e[length(e)])-1)
+	assign('outdirtmp',outdirtmp,envir=.GlobalEnv)
+	assign('ofilename',ofilename,envir=.GlobalEnv)
+	if(graphics) { close(process.pb) }
+}
+
+# This function calls the major routines involved in reading the user's file, creating the climdex object and running quality control
 load.data.qc <- function() {
-	# Go back to ClimPACT2 home screen
-	cancel1 <- function() {
-		tkdestroy(infor1)
-		cio <<- NULL
-		quantiles <<- NULL
-		loaded <<- FALSE
-                tkconfigure(start.but,bg="lightgreen",text = "   LOAD AND  \n  CHECK DATA   ", command = load.data.qc, width = 15, font = fontHeading2)
-                tkconfigure(cal.but,bg="white",text = "   CALCULATE \n   INDICES  ", command = index.calc1, width = 15, font = fontHeading2)
-		return() }
-
-	# Load data. This function does the meat of the work and creates the climdex input object.
-	load.data <- function() {
-		print("LOADING CLIMDEX INPUT OBJECT...",quote=FALSE)
-		setTkProgressBar(process.pb,10,label="									")
-		setTkProgressBar(process.pb,10,label="Creating climdex input object...")
-
-	# create a PCICt object for dates
-		yyymmdd <- paste(data[,1],data[,2],data[,3],sep="-")
-		dates <- as.Date(yyymmdd,format="%Y-%m-%d")
-		assign('dates',dates,envir=.GlobalEnv)
-
-	# Check dates are all existing, in the correct order and none are NA values.
-		date.seq <- seq(dates[1],dates[length(dates)],by="day")
-
-#		if(data[1,2] != "1" || data[1,3] != "1" || data[length(data[,2]),2] != "12" || data[length(data[,3]),3] != "31") { 
-#			test <- tkmessageBox(message = "Please ensure your file contains only whole years (i.e. starts on January 1st and ends December 31st).",icon = "warning", title = "ClimPACT2 - warning")
-#			close(process.pb)
-#			return() }
-
-#		if(length(dates) != length(date.seq)) { 
-#                        test <- tkmessageBox(message = "Based on the first and last dates in your input file some intermediate dates seem to be missing. Check that the dates in your input file are complete and based on the gregorian calendar.",icon = "warning", title = "ClimPACT2 - warning")
-#			close(process.pb)
-#                        return() }
-#		if(any(is.na(dates),is.nan(dates))) {
-#                        test <- tkmessageBox(message = "Some dates are registering as NA, NaN or infinite. Please check dates in your input file.",icon = "warning", title = "ClimPACT2 - warning")
-#                        close(process.pb)
-#                        return() }
- #               if(any(dates[1:length(dates)-1] > dates[2:length(dates)])) {
- #                       test <- tkmessageBox(message = "Some dates are out of order. Please check dates in your input file.",icon = "warning", title = "ClimPACT2 - warning")
- #                       close(process.pb)
- #                       return() }
-
-		date.seq <- data.frame(list(time=seq(dates[1],dates[length(dates)],by="day")))
-		data_raw = data.frame(list(time=as.Date(yyymmdd,format="%Y-%m-%d"),prec=data[,4],tmax=data[,5],tmin=data[,6]))
-		merge_data = merge(data_raw,date.seq,all=TRUE)
-
-		days <- as.Date(as.character(merge_data[,1],format="%Y-%m-%d"))-as.Date("1850-01-01")
-		seconds <- as.numeric(days*24*60*60)
-		pcict.dates <- as.PCICt(seconds,cal="gregorian",origin=as.character("1850-01-01"))
-		assign('pcict.dates',pcict.dates,envir=.GlobalEnv)
-
-		date.months <- unique(format(as.character((merge_data[,1]),format="%Y-%m")))
-		date.years <- unique(format(as.character((merge_data[,1]),format="%Y")))
-		assign('date.months',date.months,envir=.GlobalEnv)
-                assign('date.years',date.years,envir=.GlobalEnv)
-
-	# create a climdex input object
-		cio <- climdexInput.raw(tmin=merge_data[,4],tmax=merge_data[,3],prec=merge_data[,2],tmin.dates=pcict.dates,tmax.dates=pcict.dates,prec.dates=pcict.dates,base.range=c(base.year.start,base.year.end),prec.qtiles=prec.quantiles,
-			temp.qtiles=temp.quantiles,quantiles=quantiles)
-
-		assign('cio',cio,envir=.GlobalEnv)
-		cio@data$dtr <<- cio@data$tmax - cio@data$tmin
-		cio@data$tmean <<- (cio@data$tmax + cio@data$tmin)/2
-        setTkProgressBar(process.pb,20,label="									")
-		setTkProgressBar(process.pb,20,label="Calculating percentiles...")
-
-	# If quantiles have not been read in, then calculate them and write out to file
-		nam1 <- paste(outthresdir, paste(ofilename, "_thres.csv", sep = ""),sep="/")
-
-		if(!is.null(temp.quantiles)) {
-	                # get tavg quantiles if not loaded by user, since these aren't automatically generated by climdex.pcic
-			tavgqtiles <- get.outofbase.quantiles(cio@data$tavg,cio@data$tmin,tmax.dates=cio@dates,tmin.dates=cio@dates,base.range=c(base.year.start,base.year.end),temp.qtiles=temp.quantiles,prec.qtiles=NULL)
-			cio@quantiles$tavg$outbase <<- tavgqtiles$tmax$outbase	# while this says tmax it is actually tavg, refer to above line.
-
-			# heat wave thresholds
-			tavg <- (cio@data$tmax + cio@data$tmin)/2
-			Tavg90p <- suppressWarnings(get.outofbase.quantiles(tavg,cio@data$tmin,tmax.dates=cio@dates,tmin.dates=cio@dates,base.range=c(base.year.start,base.year.end),n=15,temp.qtiles=0.9,prec.qtiles=NULL,
-	                                                                min.base.data.fraction.present=0.1))
-			TxTn90p <- suppressWarnings(get.outofbase.quantiles(cio@data$tmax,cio@data$tmin,tmax.dates=cio@dates,tmin.dates=cio@dates,base.range=c(base.year.start,base.year.end),n=15,temp.qtiles=0.9,prec.qtiles=NULL,
-	                                                                min.base.data.fraction.present=0.1))
-	                tn90p <<- TxTn90p$tmin$outbase
-	                tx90p <<- TxTn90p$tmax$outbase
-	                tavg90p <<- Tavg90p$tmax$outbase
-
-			# write to file
-	                thres <- c(cio@quantiles$tmax$outbase,cio@quantiles$tmin$outbase,cio@quantiles$tavg$outbase,cio@quantiles$prec,as.list(tn90p),as.list(tx90p),as.list(tavg90p))#,cio@dates,cio@data)#$tmin,cio@data$tmax,cio@data$prec)
-
-			write.table(as.data.frame(thres), file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "NA", col.names = c(paste("tmax",names(cio@quantiles$tmax$outbase),sep="_"),paste("tmin",names(cio@quantiles$tmin$outbase),sep="_"),
-				paste("tavg",names(cio@quantiles$tavg$outbase),sep="_"),paste("prec",names(cio@quantiles$prec),sep="_"),"HW_TN90","HW_TX90","HW_TAVG90"),row.names=FALSE) 
+	user.file <- get.user.file()
+	if(is.null(user.file)) { tkfocus(start1) ; return() } 
+	get.file.path(user.file,graphics=TRUE)
 	
-	        	# write raw tmin, tmax and prec data for future SPEI/SPI calcs
-		        yeardate2 <<- format(dates,format="%Y")
-			base.dates <- dates[which(yeardate2 >= base.year.start & yeardate2 <= base.year.end)]
-			thres2 <- list(dates=base.dates,tmin=cio@data$tmin[which(yeardate2 >= base.year.start & yeardate2 <= base.year.end)],tmax=cio@data$tmax[which(yeardate2 >= base.year.start & yeardate2 <= base.year.end)],
-				prec=cio@data$prec[which(yeardate2 >= base.year.start & yeardate2 <= base.year.end)])
-			nam2 <- paste(outthresdir, paste(ofilename, "_thres_spei.csv", sep = ""),sep="/")
-	                write.table(as.data.frame(thres2), file = nam2, append = FALSE, quote = FALSE, sep = ", ", na = "NA", col.names = c("Base_period_dates","Base_period_tmin","Base_period_tmax","Base_period_prec"),row.names=FALSE)
-		} else { 
-                        tn90p <<- hwlist[[2]]
-                        tx90p <<- hwlist[[1]]
-                        tavg90p <<- hwlist[[3]]
-		}
+		# put convert.user.file into a trycatch?
+	user.data <- read.user.file(user.file,graphics=TRUE)
+	if(!is.null(user.data)) draw.step1.interface(user.data,user.file)
+}
 
-	# thresholds are automatically calculated when creating a climdex input object, so set this flag to TRUE
-                thres.calc <<- TRUE #tclvalue(thres.yes)=1
+# Preps data and creates the climdex.input object based on the R package climdex.pcic
+create.climdex.input <- function(user.data,metadata) {
+	date.seq <- data.frame(list(time=seq(metadata$dates[1],metadata$dates[length(metadata$dates)],by="day")))
+	data_raw = data.frame(list(time=as.Date(metadata$dates,format="%Y-%m-%d"),prec=user.data[,4],tmax=user.data[,5],tmin=user.data[,6]))
+	merge_data = merge(data_raw,date.seq,all=TRUE)
+	
+	days <- as.Date(as.character(merge_data[,1],format="%Y-%m-%d"))-as.Date("1850-01-01")
+	seconds <- as.numeric(days*24*60*60)
+	ts.origin = "1850-01-01"                # arbitarily chosen origin to create time-series object with. This needs to be made global 
+	pcict.dates <- as.PCICt(seconds,cal="gregorian",origin=as.character(ts.origin))
+	
+	date.months <- unique(format(as.character((merge_data[,1]),format="%Y-%m")))
+	date.years <- unique(format(as.character((merge_data[,1]),format="%Y")))
+	assign('date.months',date.months,envir=.GlobalEnv)
+	assign('date.years',date.years,envir=.GlobalEnv)
+
+        # create a climdex input object
+	cio <- climdexInput.raw(tmin=merge_data[,4],tmax=merge_data[,3],prec=merge_data[,2],tmin.dates=pcict.dates,tmax.dates=pcict.dates,prec.dates=pcict.dates,base.range=c(metadata$base.start,metadata$base.end),prec.qtiles=prec.quantiles,
+				temp.qtiles=temp.quantiles,quantiles=quantiles)
+
+	# add diurnal temperature range
+	cio@data$dtr = cio@data$tmax - cio@data$tmin
+
+	return(cio)
+}
+
+# This function runs QC functionality on the user specified input data. It requres as input;
+#    - metadata: output of create.metadata()
+#    - data: output of convert.user.file
+#    - graphics: boolean for whether running with graphics or not (determines whether progress bars, message windows etc. are shown).
+QC.wrapper <- function(metadata, user.data, user.file, graphics) {
+	if(graphics) { process.pb <<- tkProgressBar("%", "Checking latitude/longitude, base period...",0, 100, 10) }
+
+	##############################
+	# Check for valid lat/lons
+	if (is.na(metadata$lat)  == TRUE | is.na(metadata$lon) == TRUE | metadata$lat < -90 | metadata$lat > 90 | metadata$lon > 180 | metadata$lon < -180) {
+	  tkmessageBox(message = paste("Please enter a valid latitude (-90 to +90) and longitude (-180 to +180).",sep = ""))
+	  close(process.pb)
+	  return() }
+
+	# Check base period is valid when no thresholds loaded
+	if(is.null(quantiles)) {
+	        if(metadata$base.start < format(metadata$dates[1],format="%Y") | metadata$base.end > format(metadata$dates[length(metadata$dates)],format="%Y") | metadata$base.start > metadata$base.end) {
+	                if(graphics) { close(process.pb) ; tkmessageBox(message = paste("Base period must be between ", format(metadata$dates[1],format="%Y")," and ",format(metadata$dates[length(metadata$dates)],format="%Y"),". Please correct.",sep="")) ; return() } }
 	}
-	
-	# Leave the QC screen to go back to main menu
-	ok1 <- function() {
-		# Users want to press "continue".
-		if(!loaded)
-		{
-		  # You must do something first - QC.
-		 tkmessageBox(message='You must process the data before continuing.',icon='warning')
-		 return()
-		}
-		tkdestroy(infor1)
-		tkfocus(start1) 
-	}
-	
-	# this function gets user-defined base period, and check if they're valid input.
-	get_base <- function() {
-		base.year.start<-as.numeric(tclvalue(base.year.start.tcl));  assign("base.year.start",base.year.start,envir=.GlobalEnv)
-		base.year.end<-as.numeric(tclvalue(base.year.end.tcl));    assign("base.year.end",base.year.end,envir=.GlobalEnv)
-		tclvalue(fail_base)=F 
-	} 
-
-	# users want to open an existing *_thres.csv file.
-	read.threshold <- function() {
-        if(loaded) {
-                tkmessageBox(message='You cannot load thresholds after processing your data. To load thresholds please select CANCEL at the bottom of the screen and start STEP 1 again.',icon='warning')
-		return() }
-
-		get_base()           # get base period.
-		if(tclvalue(fail_base)=='1') return()
-		thres.file.in <- tclvalue(tkgetOpenFile(filetypes="{{csv Files} {.csv}} {{All files} *}",initialdir=outthresdir)) # choose thres file.
-		if(thres.file.in=="")return()    # users change mind, don't want to open existing file, so return to previous window, and choose another option.
-
-		# read in previously written thresholds
-		print("READING THRESHOLDS...",quote=FALSE)
-		prev.qtiles <- (read.csv(thres.file.in,header=T,sep=','))   # read in thres data.
-		quantiles <<- hwquantiles <<- list()
-
-		tminlist=vector("list",5)
-                tmaxlist=vector("list",5)
-                tavglist=vector("list",5)
-		names(tminlist) <- c("q95","q90","q50","q10","q5")
-                names(tmaxlist) <- c("q95","q90","q50","q10","q5")
-                names(tavglist) <- c("q95","q90","q50","q10","q5")
-		for (l in 1:length(tminlist)) { tminlist[[l]]=(eval(parse(text=paste("(prev.qtiles$tmin_",names(tminlist)[l],")",sep="")))) }
-                for (l in 1:length(tmaxlist)) { tmaxlist[[l]]=(eval(parse(text=paste("(prev.qtiles$tmax_",names(tmaxlist)[l],")",sep="")))) }
-                for (l in 1:length(tavglist)) { tavglist[[l]]=(eval(parse(text=paste("(prev.qtiles$tavg_",names(tavglist)[l],")",sep="")))) }
-		quantiles$tmin$outbase <<- (tminlist)
-                quantiles$tmax$outbase <<- (tmaxlist)
-                quantiles$tavg$outbase <<- (tavglist)
-                quantiles$tmin$inbase <<- (tminlist)
-                quantiles$tmax$inbase <<- (tmaxlist)
-                quantiles$tavg$inbase <<- (tavglist)
-
-                preclist=vector("list",6)
-		names(preclist) <- c("q99","q95","q90","q50","q10","q5")
-                for (l in 1:length(preclist)) { preclist[[l]]=(eval(parse(text=paste("(prev.qtiles$prec_",names(preclist)[l],"[1])",sep="")))) }	# Only read the first element since precip quantiles are the same for each day.
-		quantiles$prec <<- (preclist)
-
-		# read in heat wave related thresholds
-		hwlist<<-vector("list",3)
-		names(hwlist) <<- c("HW_TX90","HW_TN90","HW_TAVG90")
-                for (l in 1:length(hwlist)) { hwlist[[l]]<<-eval(parse(text=paste("(prev.qtiles$",names(hwlist)[l],")",sep=""))) }
-
-                # Auto-read SPEI .csv file without the user's knowledge. Clunky and risks breaking if SPEI file doesn't exist?
-                spei.file.in <- paste(substr(thres.file.in,1,(nchar(thres.file.in)-4)),"_spei.csv",sep="")
-                spei.qtiles <- read.csv(spei.file.in,header=T,sep=',',na.strings="NA",colClasses=c('character','numeric','numeric','numeric'))
-
-				speitmax <<- spei.qtiles$Base_period_tmax ; speitmin <<- spei.qtiles$Base_period_tmin ; speiprec <<- spei.qtiles$Base_period_prec ; speidates <<- spei.qtiles$Base_period_dates
-
-		tkfocus(infor1)
-		tkconfigure(msg,text='',font=font_small)
-		thres.calc <<- TRUE
-		temp.quantiles <<- NULL
-		prec.quantiles <<- NULL
-		print("COMPLETED READING THRESHOLDS.",quote=FALSE)
-	}
-
-        # users want to open an existing *_thres.csv file.
-        read.threshold.spei <- function() {
-                thres.file.in <- tclvalue(tkgetOpenFile(filetypes="{{csv Files} {.csv}} {{All files} *}",initialdir=outthresdir)) # choose thres file.
-                if (thres.file.in=="")return()    # users change mind, don't want to open existing file, so return to previous window, and choose another option.
-
-                # read in previously written thresholds and overwrite/append cio object
-                print("READING THRESHOLDS...",quote=FALSE)
-                prev.qtiles <- read.csv(thres.file.in,header=T,sep=',')   # read in thres data.
-		speidata = list()
-                speidata$speitmax <<- prev.qtiles$Base.period.tmax ; speidata$speitmin <<- prev.qtiles$Base.period.tmin ; speidata$speiprec <<- prev.qtiles$Base.period.prec ; speidata$speidates <<- prev.qtiles$Base.period.dates
-                tkfocus(infor1)
-                tkconfigure(msg,text='',font=font_small)
-                thres.calc <<- TRUE
-                print("COMPLETED READING THRESHOLDS.",quote=FALSE)
-        } # end of reada()
-	
-	# qcontrol
-	# run QC checks, call load.data which creates the climdex input object.
-	qcontrol <- function() {
-                latitude  <- as.numeric(tclvalue(latentry))   # get user-input parameter, and check if they're valid.
-                longitude <- as.numeric(tclvalue(lonentry))
-                ofilename <- tclvalue(station.entry)
-                stddev.crit <- as.numeric(tclvalue(nstddev))
-
-                if (is.na(latitude)  == TRUE | is.na(longitude) == TRUE | latitude < -90 | latitude > 90 | longitude > 180 | longitude < -180) {
-                  tkmessageBox(message = paste("Please enter a valid latitude (-90 to +90) and longitude (-180 to +180).",sep = ""))
-                  return() }
-
-                yyymmdd <- paste(data[,1],data[,2],data[,3],sep="-")
-                dates <- as.Date(yyymmdd,format="%Y-%m-%d")
-                base.year.start<<-as.numeric(tclvalue(base.year.start.tcl)) ;  assign("base.year.start",base.year.start,envir=.GlobalEnv)
-                base.year.end<<-as.numeric(tclvalue(base.year.end.tcl)) ;  assign("base.year.end",base.year.end,envir=.GlobalEnv)
-
-        # Check base period is valid when no thresholds loaded
-                if(is.null(quantiles)) {
-                        if(base.year.start < format(dates[1],format="%Y") | base.year.end > format(dates[length(dates)],format="%Y") | base.year.start > base.year.end) {
-                                tkmessageBox(message = paste("Base period must be between ", format(dates[1],format="%Y")," and ",format(dates[length(dates)],format="%Y"),". Please correct.",sep="")) ; return() }
-                }
 
 	# Check base period is valid when thresholds ARE loaded. 
-                if (!is.null(quantiles) && ((base.year.start >= format(dates[1],format="%Y") && base.year.start <= format(dates[length(dates)],format="%Y")) | (base.year.end <= format(dates[length(dates)],format="%Y") && base.year.end >= format(dates[1],format="%Y"))))
-				{
-                	tkmessageBox(message = paste("The base period of your loaded thresholds ","(",base.year.start," to ",base.year.end,") must lie outside of the current data's date range (",format(dates[1],format="%Y")," to ",
-        	              format(dates[length(dates)],format="%Y"),").",sep = ""))
-	                return() 
-				}
+#	if (!is.null(quantiles) && ((base.year.start >= format(metadata$dates[1],format="%Y") && base.year.start <= format(metadata$dates[length(metadata$dates)],format="%Y")) | 
+#		(base.year.end <= format(metadata$dates[length(metadata$dates)],format="%Y") && base.year.end >= format(metadata$dates[1],format="%Y"))))
+#	{
+#	if(graphics) { 
+#		tkmessageBox(message = paste("The base period of your loaded thresholds ","(",base.year.start," to ",base.year.end,") must lie outside of the current data's date range (",format(metadata$dates[1],format="%Y")," to ",
+#                      format(metadata$dates[length(metadata$dates)],format="%Y"),").",sep = "")) }
+#		return()
+#	}
 
-                process.pb <<- tkProgressBar("%", "Checking latitude/longitude, base period...",0, 100, 10)
-
-                # source climpact code and load data from ascii file into climdex object
- #               source("climpact2.r")
-
-	# NICK: After this point all references to data should be made to the climdex input object 'cio'. One exception is the allqc function, 
-	# which still references the INPUT to the climdex.input function.
-		load.data() ; if(!thres.calc) return()
-		setTkProgressBar(process.pb,30,label="									")
-		setTkProgressBar(process.pb,30,label="Checking precipitation data...")
-
-		assign("latitude",  latitude, envir = .GlobalEnv)
-		assign("longitude", longitude, envir = .GlobalEnv)
-		if(latitude<0) lat_text = "°S" else lat_text = "°N"
-		if(longitude<0) lon_text = "°W" else lon_text = "°E"
-		Encoding(lon_text) <- "UTF-8"	# to ensure proper plotting of degree symbol in Windows (which uses Latin encoding by default)
-		Encoding(lat_text) <- "UTF-8"
-		title.station <- paste(ofilename, " [", latitude,lat_text, ", ", longitude,lon_text, "]", sep = "")
-		assign("title.station", title.station, envir = .GlobalEnv)
-		assign("ofilename", ofilename, envir = .GlobalEnv)
-		
-		# QC 1.
-		# search for precip < 0 and write to file. 
-#		bad.prec.ind <- which(!is.na(cio@data$prec) & cio@data$prec < 0)
-#		bad.prec = cbind.data.frame(as.character(cio@dates[bad.prec.ind]),cio@data$prec[bad.prec.ind])
-#		nam1 <- paste(outlogdir, paste(ofilename, "_prcpQC.csv", sep = ""), sep = "/")
-#		write.table(bad.prec, file = nam1, append = FALSE, quote = FALSE, sep = ", ", row.names = FALSE,col.names=c("Date","Prec"))
-##                if (any(!is.na(cio@data$prec) & cio@data$prec < 0)) {
-##                        tkmessageBox(message = paste("ERROR: Negative precipitation values were found and require correcting before indices can be calculated.\nView values in:\n ",nam1,sep = ""))
-##			cio <<- NULL
-##			tkdestroy(infor1)
-##			tkfocus(start1)
-##			close(process.pb)
-##			return()
-##		}
-		setTkProgressBar(process.pb,40,label="									")
-		setTkProgressBar(process.pb,40,label="Creating QC plots...")
-
-		# QC 2.
-		# output plots for tmin, tmax, prcp and dtr
-		nam1 <- paste(outlogdir, paste(ofilename, "_prcpPLOT.pdf", sep = ""), sep = "/")
-		check_open(nam1)
-		pdf(file = nam1)
-		
-		prcp <- cio@data$prec[cio@data$prec >= 1 & !is.na(cio@data$prec)]
-
-		if(length(prcp) > 30)
-		{
-			hist(prcp, main = paste("Histogram for Station:", ofilename, " of PRCP>=1mm", sep = ""),breaks = c(seq(0, 40, 2),max(prcp)), xlab = "", col = "green" , freq = FALSE)
-			lines(density(prcp, bw = 0.2, from = 1), col = "red")
-		}
-		pplotts(var = "prcp", tit = ofilename)
-		dev.off()
-		nam1 <- paste(outlogdir, paste(ofilename, "_tmaxPLOT.pdf", sep = ""), sep = "/")
-		check_open(nam1)
-		pdf(file = nam1)
-		pplotts(var = "tmax", type = "l", tit = ofilename)
-		dev.off()
-		nam1 <- paste(outlogdir, paste(ofilename, "_tminPLOT.pdf", sep = ""), sep = "/")
-		check_open(nam1)
-		pdf(file = nam1)
-		pplotts(var = "tmin", type = "l", tit = ofilename)
-		dev.off()
-		nam1 <- paste(outlogdir, paste(ofilename, "_dtrPLOT.pdf", sep = ""), sep = "/")
-		check_open(nam1)
-		pdf(file = nam1)
-		pplotts(var = "dtr", type = "l", tit = ofilename)
-		dev.off()
-
-		# QC 3.
-		# Find where tmax < tmin or where either are >/< 70 degC, then write to file.
-		setTkProgressBar(process.pb,60,label="									")
-		setTkProgressBar(process.pb,60,label="Checking temperature values...")
-#
-#		temiss <- which(cio@data$dtr <= 0 |
-#		                 cio@data$tmax <= -70 |
-#		                 cio@data$tmax >= 70 |
-#		                 cio@data$tmin <= -70 |
-#		                 cio@data$tmin >= 70)
-#		                 
-#		nam1 <- paste(outlogdir, paste(ofilename, "_tempQC.csv", sep = ""), sep = "/")
-#		dataout = cbind.data.frame(as.character(cio@dates[temiss]),cio@data$tmax[temiss],cio@data$tmin[temiss],cio@data$prec[temiss],cio@data$dtr[temiss])
-#		write.table(dataout, file = nam1, append = FALSE, quote = FALSE, sep = ", ", row.names = FALSE,col.names=c("Date","Tmax","Tmin","Prec","DTR"))
-#
-#		tmin.rle <- rle(cio@data$tmin[!is.na(cio@data$tmin)])
-#		tmax.rle <- rle(cio@data$tmax[!is.na(cio@data$tmax)])
-#                tmin.rle.na <- rle(cio@data$tmin)
-#                tmax.rle.na <- rle(cio@data$tmax)
-#
-#		length.arrays = any(tmin.rle$lengths[tmin.rle$values==0] > 0)
-#
-#		if(any(tmin.rle$lengths[tmin.rle$values==0] > running.zero.allowed.in.temperature)) {
-#			# Get index of beginning of anomalous zero run
-#			end.index <- sum(tmin.rle.na$lengths[1:which(tmin.rle.na$values==0 & tmin.rle.na$lengths>running.zero.allowed.in.temperature)[1]])
-#			beg.index <- end.index-tmin.rle.na$lengths[tmin.rle.na$values==0 & tmin.rle.na$lengths>running.zero.allowed.in.temperature]+1
-#
-#	                tkmessageBox(message = paste("WARNING: A series of at least ",running.zero.allowed.in.temperature," zeros were found in your minimum temperature data between ",
-#				cio@dates[beg.index[1]]," and ",cio@dates[end.index[1]],". Please check these, processing will continue.",sep=""),icon = "warning", title = "ClimPACT2 - warning")
-#			rm(beg.index,end.index)
-#		}
-#                if(any(tmax.rle$lengths[tmax.rle$values==0] > running.zero.allowed.in.temperature)) {
-#                        # Get index of beginning of anomalous zero run
-#                        end.index <- sum(tmax.rle.na$lengths[1:which(tmax.rle.na$values==0 & tmax.rle.na$lengths>running.zero.allowed.in.temperature)[1]])
-#                        beg.index <- end.index-tmax.rle.na$lengths[tmax.rle.na$values==0 & tmax.rle.na$lengths>running.zero.allowed.in.temperature]+1
-#
-#                        tkmessageBox(message = paste("WARNING: A series of at least ",running.zero.allowed.in.temperature," zeros were found in your maximum temperature data between ",
-#                                cio@dates[beg.index[1]]," and ",cio@dates[end.index[1]],". Please check these, processing will continue.",sep=""),icon = "warning", title = "ClimPACT2 - warning")
-#                        rm(beg.index,end.index)
-#                }
-#
-#		# NA temperature data at dates where tmax, tmin or dtr is suspicious.
-#		cio@data$tmax[temiss] = NA
-#		cio@data$tmin[temiss] = NA
-#		cio@data$dtr[temiss] = NA
-#		cio@data$tavg[temiss] = NA
-
-		# QC 4. Check for outliers based on standard deviations
-		# Check for temperatures outside a user-specified number of standard deviations.
-		print("CHECKING FOR TEMPERATURE OUTLIERS...",quote=FALSE)
-		# find stddev
-		all.day.factors <- factor(format(cio@dates, format="%Y-%m-%d", tz="GMT")) # 38351 levels
-		day.factors <- factor(format(cio@dates, format="%m-%d", tz="GMT"))	  # 366 levels
-
-		print("CALCULATING MEANS AND STANDARD DEVIATIONS...",quote=FALSE)
-		tmax.mean <- tapply(cio@data$tmax,day.factors,mean,na.rm=TRUE)
-		tmax.stddev <- sqrt(tapply(cio@data$tmax,day.factors,var,na.rm=TRUE))
-		tmin.mean <- tapply(cio@data$tmin,day.factors,mean,na.rm=TRUE)
-		tmin.stddev <- sqrt(tapply(cio@data$tmin,day.factors,var,na.rm=TRUE))
-		dtr.mean <- tapply(cio@data$dtr,day.factors,mean,na.rm=TRUE)
-		dtr.stddev <- sqrt(tapply(cio@data$dtr,day.factors,var,na.rm=TRUE))
-
-		print("TESTING DATA, PLEASE WAIT...",quote=FALSE)
-		setTkProgressBar(process.pb,80,label="									")
-		setTkProgressBar(process.pb,80,label="Checking for temperature outliers...")
-		tmax.outliers <- tapply(1:length(cio@data$tmax),all.day.factors,function(idx) {
-			month.day <- format(as.Date(all.day.factors[idx]),format="%m-%d")
-			if(!is.na(cio@data$tmax[idx]) && !is.na(tmax.mean[month.day]) && !is.na(tmax.stddev[month.day])) {
-				if(abs(cio@data$tmax[idx] - tmax.mean[month.day]) > (stddev.crit*tmax.stddev[month.day])) { return(TRUE) } else { return(FALSE) } }
-			else { return(FALSE) } } )
-		tmin.outliers <- tapply(1:length(cio@data$tmin),all.day.factors,function(idx) {
-				month.day <- format(as.Date(all.day.factors[idx]),format="%m-%d")
-		        if(!is.na(cio@data$tmin[idx]) && !is.na(tmin.mean[month.day]) && !is.na(tmin.stddev[month.day])) { 
-		                if(abs(cio@data$tmin[idx] - tmin.mean[month.day]) > (stddev.crit*tmin.stddev[month.day])) { return(TRUE) } else { return(FALSE) } }
-		        else { return(FALSE) } } )
-		dtr.outliers <- tapply(1:length(cio@data$dtr),all.day.factors,function(idx) {
-				month.day <- format(as.Date(all.day.factors[idx]),format="%m-%d")
-		        if(!is.na(cio@data$dtr[idx]) && !is.na(dtr.mean[month.day]) && !is.na(dtr.stddev[month.day])) { 
-		                if(abs(cio@data$dtr[idx] - dtr.mean[month.day]) > (stddev.crit*dtr.stddev[month.day])) { return(TRUE) } else { return(FALSE) } }
-		        else { return(FALSE) } } )
-		        setTkProgressBar(process.pb,90,label="									")
-                setTkProgressBar(process.pb,90,label="Extra QC checks...")
-
-		data <- data[, c("year", "month", "day", "prcp", "tmax", "tmin")]
-		assign("data", data, envir = .GlobalEnv)
-
-		# Remnant code from old climpact: writes out data to *_indcal.csv. This isn't read in in new climpact.
-		#namcal <- paste(nama, "_indcal.csv", sep = "")  # User should change this file if error was reported because it will be used for all calculation.
-		#assign("namcal", namcal, envir = .GlobalEnv)
-		#write.table(data, file = namcal, append = FALSE, quote = FALSE, sep = ",", row.names = FALSE, na = "-99.9")
-
-		# QC 5. Call the ExtraQC functions.
-		allqc(master = orig.name, output = outqcdir, outrange = 3) #stddev.crit)   # extraQC is called here. NOTE the default outrange=3 in original verson.
-		tclvalue(qc.yes) <<- TRUE  # the QC step is done, so you can continue...
-		
-		print("COMPLETED CHECKING FOR TEMPERATURE OUTLIERS.",quote=FALSE)
-
-		# QC 6. Write out NA statistics.
-		naprec = array(NA,dim=c(length(unique(cio@date.factors$annual))))
-		naprec = tapply.fast(cio@data$prec,cio@date.factors$annual,function(x) { return(sum(is.na(x))) })
-		natx = tapply.fast(cio@data$tmax,cio@date.factors$annual,function(x) { return(sum(is.na(x))) })
-		natn = tapply.fast(cio@data$tmin,cio@date.factors$annual,function(x) { return(sum(is.na(x))) })
-		
-		nam1 <- paste(outqcdir, paste(ofilename, "_nastatistics.csv", sep = ""), sep = "/")
-		write_header(nam1)
-		# Suppress warning about column names in files
-		suppressWarnings(write.table(cbind.data.frame(unique(cio@date.factors$annual),naprec,natx,natn), file = nam1, sep=",",append = TRUE, quote = FALSE, row.names = FALSE, col.names = c("Year","Prec","TX","TN")))
-
-		# If outliers are found above, write out corresponding dates that have the suspect data.
-		# This windowing code is admittedly verbose due to poor documentation of tcltk functions and time constraints.
-
-                        close(process.pb)
-                        nam1 <- paste(outqcdir, paste(ofilename, "_temp_stddev_QC.csv", sep = ""), sep = "/")
-                        write_header(nam1)
-                        idx <- which(tmax.outliers==TRUE | tmin.outliers==TRUE | dtr.outliers==TRUE)
-                        ofile <- cbind.data.frame(as.character(cio@dates[idx]),cio@data$tmax[idx],cio@data$tmin[idx],cio@data$dtr[idx])
-						# Suppress warning about column names in files
-                        suppressWarnings(write.table(ofile, file = nam1, append = TRUE, quote = FALSE, sep = ",", row.names = FALSE,col.names=c("Date","Tmax","Tmin","DTR")))
-						# If no data (i.e. no large values) in variable print message
-						if(dim(ofile)[1]==0) { write.table("NO OUTLIERS FOUND",sep=",", file = nam1, append = TRUE, row.names = FALSE, col.names = FALSE) }
-
-                        tkconfigure(start.but,bg="white",text = "   LOAD AND  \n  CHECK DATA   ", command = load.data.qc, width = 15, font = fontHeading2)
-                        tkconfigure(cal.but,bg="lightgreen",text = "   CALCULATE \n   INDICES  ", command = index.calc1, width = 15, font = fontHeading2)
-
-		        proc.complete.done <- function(){
-						tkfocus(infor1)
-		                tkdestroy(proc.complete) }
-
-                        proc.complete <<- tktoplevel(bg = "white")
-                        tkfocus(proc.complete)
-                        tkwm.title(proc.complete, "\tClimPACT2\t")
-                        tt2 <- tkframe(proc.complete,bg="white")
-                        frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
-                        tkgrid(frame.space); tkgrid(tklabel(tt2, text = "QUALITY CONTROL COMPLETE", bg = "white", font = fontHeading2),columnspan=1);tkgrid(frame.space); tkgrid(tt2)
-
-                        tt2 <- tkframe(proc.complete,bg="white")
-                        frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
-                        tkgrid(frame.space)
-                        tkgrid(tklabel(tt2,text=
-
-						paste("Carefully evaluate output in the following directory \nfor potential issues before continuing.\n\n",outlogdir,
-								"\n\nRefer to Appendix G in the ClimPACT2 manual for help.",sep="")
-		                ,bg='white',font=font_small,width=75),sticky="nsew")
-                        tkgrid(frame.space)
-                        tkgrid(tt2)
-
-                        tt2 <- tkframe(proc.complete,bg="white"); frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white");tkgrid(frame.space);tkgrid(tt2)
-                        tt2 <- tkframe(proc.complete,bg="white"); ok1.but<-tkbutton(tt2,text="    Done    ",command=proc.complete.done,bg='white',font=font_small);tkgrid(ok1.but);tkgrid(tt2)
-                        tt3 <- tkframe(proc.complete,bg="white");frame.space <- tklabel(tt3, text = " ", font = font_small, bg = "white");tkgrid(frame.space);tkgrid(tt3)
-                        loaded <<- TRUE
-	} # end of qcontrol()
-
-	# additional.data
-	# This function reads in a text file from the user that holds an additional column of data (in addition to the precip,tmin,tmax already provided).
-	# This additional column of data represents a variable of interest to the user (e.g. wheat yield) and once read in is attached to the climdex input
-	# object 'cio'. Thus, the user can repeat this process multiple times to add multiple new columns of data.
-	additional.data <- function() {
-                if (is.null(cio)) {
-                  tkmessageBox(message = paste("Please process your climate data first.",sep = ""))
-                  return() }
-
-		ok.add.data<-function(){
-	                add.data.name <<- as.character(tclvalue(add.data.name.entry))
-	                if (add.data.name=="") {
-        	          tkmessageBox(message = paste("Please provide a name for this data first.",sep = ""))
-	                  return() }
-
-			tkdestroy(add.data)
-		# get a file from user
-		        add.file.name <- tclvalue(tkgetOpenFile(filetypes="{{TEXT Files} {.txt}} {{All files} *}"))
-		        if (add.file.name=="") { no_file=T; assign('no_file',no_file,envir=.GlobalEnv); return(); tkfocus(start1) }
-		        assign('add.file.name',add.file.name,envir=.GlobalEnv)
-
-		# read in data from file
-		        add.data <- read.table(add.file.name,header=F,col.names=c("year","month","day",add.data.name),colClasses=rep("real",4))
-		        outdirtmp<-strsplit(add.file.name,"/")[[1]]
-		        assign("add.data",add.data,envir=.GlobalEnv)
-
-		# check that dates are identical to cio dates
-                        add.yyymmdd <- paste(add.data[,1],add.data[,2],add.data[,3],sep="-")
-                        add.dates <- as.Date(add.yyymmdd,format="%Y-%m-%d")
-
-                        orig.yyymmdd <- paste(data[,1],data[,2],data[,3],sep="-")
-                        orig.dates <- as.Date(orig.yyymmdd,format="%Y-%m-%d")
-
-			if(any(orig.dates!=add.dates)) {
-                          tkmessageBox(message = paste("The dates in this file must be identical to the dates in the climate data file provided:\n",orig.name.user,sep = ""))
-                          return() } else {
-
-			  if(add.operation=="sum") {
-				  add.data.monthly <- tapply(add.data[,add.data.name],cio@date.factors$monthly,sum,na.rm=TRUE)
-				  add.data.annual <- tapply(add.data[,add.data.name],cio@date.factors$annual,sum,na.rm=TRUE)
-			  } else {
-                                  add.data.monthly <- tapply(add.data[,add.data.name],cio@date.factors$monthly,mean,na.rm=TRUE)
-                                  add.data.annual <- tapply(add.data[,add.data.name],cio@date.factors$annual,mean,na.rm=TRUE)
-			  }
-                          cio@data$add.data.monthly <<- add.data.monthly
-                          cio@data$add.data.annual <<- add.data.annual
-
-			  tkdestroy(infor1)
-                          tkmessageBox(message = paste("File read successfully.",sep = ""))
-                          return() }
-		}
-		cancel.add.data <- function(){
-			add.data.name.entry <-tclVar('')
-			tkdestroy(add.data)
-			tkfocus(infor1)
-		}
-
-                add.data <<- tktoplevel(bg = "white")
-	        tkwm.title(add.data, "ClimPACT2 - Additional data")
-                tt2 <- tkframe(add.data,bg="white")
-                frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
-                tkgrid(frame.space)
-                add.data.name.widget <- tkentry(tt2, width = 20, textvariable = add.data.name.entry, bg = "white")
-                tkgrid(tklabel(tt2, text = "Enter name of additional variable", bg = "white", font = font_small))
-                tkgrid(frame.space)
-                tkgrid(add.data.name.widget)
-                tkgrid(tt2)
-                tkpack(tt2)
-
-                tt2 <- tkframe(add.data,bg="white")
-                frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
-                tkgrid(frame.space)
-	        rb1 <- tkradiobutton(tt2)
-        	rb2 <- tkradiobutton(tt2)
-	        rbValue <- tclVar("sum")
-	        tkconfigure(rb1,variable=rbValue,value="sum",bg='white')
-	        tkconfigure(rb2,variable=rbValue,value="mean",bg='white')
-	        tkgrid(tklabel(tt2,text="Sum or mean the data over months and years:",bg='white',font=font_small))
-	        tkgrid(tklabel(tt2,text="sum ",bg='white',font=font_small),rb1)
-	        tkgrid(tklabel(tt2,text="mean ",bg='white',font=font_small),rb2)
-                add.operation <- as.character(tclvalue(rbValue)) ; assign("add.operation",add.operation,envir=.GlobalEnv)
-                tkgrid(tt2)
-                tkpack(tt2)
-
-                tt2 <- tkframe(add.data,bg="white")
-                ok1.but<-    tkbutton(tt2,text="    OK    ",command=ok.add.data,bg='white',font=font_small)
-                cancel1.but<-tkbutton(tt2,text="  CANCEL  ",command=cancel.add.data,bg='white',font=font_small)
-                tkgrid(ok1.but,cancel1.but)
-		tkgrid(tt2)
-		tkpack(tt2)
-	}
-
-	create.dir <- function() {
-		file.name=outdirtmp[length(outdirtmp)]
-		e=strsplit(file.name,"\\.")[[1]]
-		ofilename=substr(file.name,start=1,stop=nchar(file.name)-nchar(e[length(e)])-1)
-		assign('ofilename',ofilename,envir=.GlobalEnv)
-
-		# create directory names
-		if(length(outdirtmp)<=2) {
-			dirsplit<-strsplit(dir.file.name,":")[[1]][1]
-			outinddir<-paste(dirsplit,"indices",sep=":/")
-			outlogdir<-paste(dirsplit,"qc",sep=":/")
-			outjpgdir<-paste(dirsplit,"plots",sep=":/")
-			outtrddir<-paste(dirsplit,"trend",sep=":/")
-			outthresdir<-paste(dirsplit,"thres",sep=":/")  # to save *_thres.csv files   
-			outqcdir<-paste(dirsplit,"qc",sep=":/")   # save results from extraqc
-		} else{
-			outdir<-outdirtmp[1]
-			for(i in 2:(length(outdirtmp)-1))
-			outdir<-paste(outdir,outdirtmp[i],sep="/")
-			outinddir<-paste(outdir,"indices",sep="/")
-			outlogdir<-paste(outdir,"qc",sep="/")
-			outjpgdir<-paste(outdir,"plots",sep="/")
-			outtrddir<-paste(outdir,"trend",sep="/")
-			outqcdir<-paste(outdir,"qc",sep="/")    # save results from extraqc
-			outthresdir<-paste(outdir,"thres",sep="/")   # to save *_thres.csv files 
-		}
-
-		# Create subdirectories if non-existent
-		if(!file.exists(paste(outinddir,ofilename,sep="/"))) { dir.create(outinddir,showWarnings=FALSE) ; dir.create(paste(outinddir,ofilename,sep="/")) }
-		if(!file.exists(paste(outlogdir,ofilename,sep="/"))) { dir.create(outlogdir,showWarnings=FALSE) ; dir.create(paste(outlogdir,ofilename,sep="/")) }
-		if(!file.exists(paste(outjpgdir,ofilename,sep="/"))) { dir.create(outjpgdir,showWarnings=FALSE) ; dir.create(paste(outjpgdir,ofilename,sep="/")) }
-		if(!file.exists(paste(outtrddir,ofilename,sep="/"))) { dir.create(outtrddir,showWarnings=FALSE) ; dir.create(paste(outtrddir,ofilename,sep="/")) }
-		if(!file.exists(paste(outqcdir,ofilename,sep="/")))  { dir.create(outqcdir,showWarnings=FALSE) ; dir.create(paste(outqcdir,ofilename,sep="/")) }
-		if(!file.exists(paste(outthresdir,ofilename,sep="/"))) { dir.create(outthresdir,showWarnings=FALSE) ; dir.create(paste(outthresdir,ofilename,sep="/")) }
-
-		# modify subdirectory names
-		outinddir <- paste(outinddir,ofilename,sep="/")
-		outlogdir <- paste(outlogdir,ofilename,sep="/")
-		outjpgdir <- paste(outjpgdir,ofilename,sep="/")
-		outtrddir <- paste(outtrddir,ofilename,sep="/")
-		outqcdir <- paste(outqcdir,ofilename,sep="/")
-		outthresdir <- paste(outthresdir,ofilename,sep="/")
-
-		# save the directory as global variable for use somewhere else.
-		assign("nama",nama,envir=.GlobalEnv)
-		assign("outinddir",outinddir,envir=.GlobalEnv)
-		assign("outlogdir",outlogdir,envir=.GlobalEnv)
-		assign("outjpgdir",outjpgdir,envir=.GlobalEnv)
-		assign("outtrddir",outtrddir,envir=.GlobalEnv)
-		assign("outqcdir", outqcdir, envir=.GlobalEnv)
-		assign("outthresdir",outthresdir,envir=.GlobalEnv)
-	}
-
-######################################################################################################
-# BEGIN load.data.qc FUNCTION SEQUENTIAL CODING
-######################################################################################################
-
-# get a file from user
-	dir.file.name <- tclvalue(tkgetOpenFile(filetypes="{{TEXT Files} {.txt}}"))
-	if (dir.file.name=="") { no_file=T; assign('no_file',no_file,envir=.GlobalEnv); return(); tkfocus(start1) } 
-        reading.pb <<- tkProgressBar("%", "Reading file...",0, 100, 10)
-	nama<-substr(dir.file.name,start=1,stop=(nchar(dir.file.name)-4))
-	assign('orig.name.user',dir.file.name,envir=.GlobalEnv)
-
-# If progressing set or reset some variables/objects. Here, any previously created climdex object is deleted.
-        loaded <<- FALSE
-        cio <<- NULL
-        quantiles <<- NULL
-	temp.quantiles <<- temp.quantiles.default
-	prec.quantiles <<- prec.quantiles.default
-
-        tkconfigure(start.but,bg="lightgreen",text = "   LOAD AND  \n  CHECK DATA   ", command = load.data.qc, width = 15, font = fontHeading2)
-        tkconfigure(cal.but,bg="white",text = "   CALCULATE \n   INDICES  ", command = index.calc1, width = 15, font = fontHeading2)
-        qc.yes <<- tclVar(FALSE)   # QC has not been done yet.
-        thres.calc <<- FALSE #thres.yes <- tclVar(FALSE) 
-
-# read in data from file
-# Scan the file and replace any commas with a tab \t. Since read.table can only handle one separator type at a time.
-        setTkProgressBar(reading.pb,30,label="Scanning for comma delimiters...")
-	temp.filename = "temporary.data.txt"
-	raw.table = readLines(dir.file.name)
-	newtext = gsub(",","\t",raw.table)
-	cat(newtext,file=temp.filename,sep="\n")
-        assign('orig.name',temp.filename,envir=.GlobalEnv)
-
-# Try to catch errors in the formatting of the user's text file gracefully.
-	data <- tryCatch(read.table(temp.filename,header=F,col.names=c("year","month","day","prcp","tmax","tmin"),colClasses=rep("real",6)),
-			error= function(c) {
-				tkmessageBox(message = paste("Your input file doesn't appear to be formatted correctly. \n\nError returned was: ",c$message,
-				"\n\nPlease correct your file, see the manual for correct formatting.", sep=""),icon = "warning", title = "ClimPACT2 - warning")
-				close(reading.pb)
-				tkfocus(start1)
-				} )
-        setTkProgressBar(reading.pb,60,label="Checking date order...")
-	outdirtmp<-strsplit(dir.file.name,"/")[[1]]
-	assign("data",data,envir=.GlobalEnv)
-
-# Check that years are in ascending order
-	if(!all(data$year == cummax(data$year))) {
+	# Check for ascending order of years
+	if(!all(user.data$year == cummax(user.data$year))) {
+				close(process.pb)
                 tkmessageBox(message = "Years are not in ascending order, please check your input file.",icon = "warning", title = "ClimPACT2 - warning")
-		close(reading.pb)
-                tkfocus(start1)
+				if(exists("reading.pb")) { tkfocus(start1) }
                 return()
 	}
 
-# create directories
-	create.dir()
+    ##############################
+	# Create climdex object
+	# NICK: After this point all references to data should be made to the climdex input object 'cio'. One exception is the allqc function, 
+	# which still references the INPUT to the climdex.input function.
+	assign("latitude",  metadata$lat, envir = .GlobalEnv)
+	assign("longitude", metadata$lon, envir = .GlobalEnv)
 
-# replace missing values (-99.9) with NA
-        setTkProgressBar(reading.pb,80,label="Formatting missing values...")
-	data$prcp[data$prcp==-99.9]=NA ; data[data$tmax==(-99.9),"tmax"]=NA ; data[data$tmin==(-99.9),"tmin"]=NA
+	cio <<- create.climdex.input(user.data,metadata)
+	print("climdex input object created.",quote=FALSE)
 
-	years<-data[1,1] ; yeare<-data[dim(data)[1],1]
-	assign("years",years,envir=.GlobalEnv)
-	assign("yeare",yeare,envir=.GlobalEnv)
+    ##############################
+	# Calculate and write out thresholds
+	tavgqtiles <- get.outofbase.quantiles(cio@data$tavg,cio@data$tmin,tmax.dates=cio@dates,tmin.dates=cio@dates,base.range=c(metadata$base.start,metadata$base.end),temp.qtiles=temp.quantiles,prec.qtiles=NULL)
+	cio@quantiles$tavg$outbase <<- tavgqtiles$tmax$outbase	# while this says tmax it is actually tavg, refer to above line.
 
-# define some error messages
-	err10 <- "no errors in PRCP"  # default error message for QC.
-	err20 <- "no errors in temp"
-	err40 <- "no errors in outlier"
-	msg0  <- "waiting for your thres choice"
-	thres_err <- ""
-	fail_base <- tclVar(T)
+	# heat wave thresholds
+	tavg <- (cio@data$tmax + cio@data$tmin)/2
+	Tavg90p <- suppressWarnings(get.outofbase.quantiles(tavg,cio@data$tmin,tmax.dates=cio@dates,tmin.dates=cio@dates,base.range=c(metadata$base.start,metadata$base.end),n=15,temp.qtiles=0.9,prec.qtiles=NULL,
+	                                                                min.base.data.fraction.present=0.1))
+	TxTn90p <- suppressWarnings(get.outofbase.quantiles(cio@data$tmax,cio@data$tmin,tmax.dates=cio@dates,tmin.dates=cio@dates,base.range=c(metadata$base.start,metadata$base.end),n=15,temp.qtiles=0.9,prec.qtiles=NULL,
+	                                                                min.base.data.fraction.present=0.1))
+    tn90p <- TxTn90p$tmin$outbase
+    tx90p <- TxTn90p$tmax$outbase
+    tavg90p <- Tavg90p$tmax$outbase
 
-	close(reading.pb)
+	# write to file
+    thres <- c(cio@quantiles$tmax$outbase,cio@quantiles$tmin$outbase,cio@quantiles$tavg$outbase,cio@quantiles$prec,as.list(tn90p),as.list(tx90p),as.list(tavg90p))#,cio@dates,cio@data)#$tmin,cio@data$tmax,cio@data$prec)
+	nam1 <- paste(outthresdir, paste(ofilename, "_thres.csv", sep = ""),sep="/")
+	write.table(as.data.frame(thres), file = nam1, append = FALSE, quote = FALSE, sep = ", ", na = "NA", col.names = c(paste("tmax",names(cio@quantiles$tmax$outbase),sep="_"),paste("tmin",names(cio@quantiles$tmin$outbase),sep="_"),
+	paste("tavg",names(cio@quantiles$tavg$outbase),sep="_"),paste("prec",names(cio@quantiles$prec),sep="_"),"HW_TN90","HW_TX90","HW_TAVG90"),row.names=FALSE) 
+	
+    # write raw tmin, tmax and prec data for future SPEI/SPI calcs
+	yeardate2 <- format(cio@dates,format="%Y")
+	dates <-format(cio@dates[1:50],format="%Y-%m-%d")
+	base.dates <- dates[which(yeardate2 >= metadata$base.start & yeardate2 <= metadata$base.end)]
+	thres2 <- list(dates=base.dates,tmin=cio@data$tmin[which(yeardate2 >= metadata$base.start & yeardate2 <= metadata$base.end)],tmax=cio@data$tmax[which(yeardate2 >= metadata$base.start & yeardate2 <= metadata$base.end)],
+	prec=cio@data$prec[which(yeardate2 >= metadata$base.start & yeardate2 <= metadata$base.end)])
+	nam2 <- paste(outthresdir, paste(ofilename, "_thres_spei.csv", sep = ""),sep="/")
+    write.table(as.data.frame(thres2), file = nam2, append = FALSE, quote = FALSE, sep = ", ", na = "NA", col.names = c("Base_period_dates","Base_period_tmin","Base_period_tmax","Base_period_prec"),row.names=FALSE)
 
-# DRAW DATA LOADING INTERFACE
-# enter station name and the times of standard deviation
+    ##############################
+	# Set some text options
+	if(metadata$lat<0) lat_text = "°S" else lat_text = "°N"
+	if(metadata$lon<0) lon_text = "°W" else lon_text = "°E"
+	Encoding(lon_text) <- "UTF-8"	# to ensure proper plotting of degree symbol in Windows (which uses Latin encoding by default)
+	Encoding(lat_text) <- "UTF-8"
+	title.station <- paste(ofilename, " [", metadata$lat,lat_text, ", ", metadata$lon,lon_text, "]", sep = "")
+	assign("title.station", title.station, envir = .GlobalEnv)
+#	assign("ofilename", ofilename, envir = .GlobalEnv)
+
+	##############################
+	# output plots for tmin, tmax, prcp and dtr
+	if(graphics) { 
+		setTkProgressBar(process.pb,40,label="									")
+		setTkProgressBar(process.pb,40,label="Creating data plots...") 
+	}
+
+	nam1 <- paste(outlogdir, paste(ofilename, "_prcpPLOT.pdf", sep = ""), sep = "/")
+	check_open(nam1)
+	pdf(file = nam1)
+	
+	prcp <- cio@data$prec[cio@data$prec >= 1 & !is.na(cio@data$prec)]
+
+	if(length(prcp) > 30)
+	{
+		hist(prcp, main = paste("Histogram for Station:", ofilename, " of PRCP>=1mm", sep = ""),breaks = c(seq(0, 40, 2),max(prcp)), xlab = "", col = "green" , freq = FALSE)
+		lines(density(prcp, bw = 0.2, from = 1), col = "red")
+	}
+	pplotts(var = "prcp", tit = ofilename,cio=cio,metadata=metadata)
+	dev.off()
+	nam1 <- paste(outlogdir, paste(ofilename, "_tmaxPLOT.pdf", sep = ""), sep = "/")
+	check_open(nam1)
+	pdf(file = nam1)
+	pplotts(var = "tmax", type = "l", tit = ofilename,cio=cio,metadata=metadata)
+	dev.off()
+	nam1 <- paste(outlogdir, paste(ofilename, "_tminPLOT.pdf", sep = ""), sep = "/")
+	check_open(nam1)
+	pdf(file = nam1)
+	pplotts(var = "tmin", type = "l", tit = ofilename,cio=cio,metadata=metadata)
+	dev.off()
+	nam1 <- paste(outlogdir, paste(ofilename, "_dtrPLOT.pdf", sep = ""), sep = "/")
+	check_open(nam1)
+	pdf(file = nam1)
+	pplotts(var = "dtr", type = "l", tit = ofilename,cio=cio,metadata=metadata)
+	dev.off()
+
+	##############################
+	# Call the ExtraQC functions.
+	print("TESTING DATA, PLEASE WAIT...",quote=FALSE)
+	if(graphics) { 
+		setTkProgressBar(process.pb,80,label="									")
+		setTkProgressBar(process.pb,80,label="Calling quality control functions...") 
+	}
+
+	allqc(master = paste(user.file,".temporary",sep=""), output = outqcdir, outrange = 3) #stddev.crit)   # extraQC is called here. NOTE the default outrange=3 in original verson.
+	if(graphics) tclvalue(qc.yes) <<- TRUE  # the QC step is done, so you can continue...
+
+	##############################	
+	# Write out NA statistics.
+	write.NA.statistics(cio)
+
+	##############################	
+	# Remove temporary file
+	system(paste("rm ",user.file,".temporary",sep=""))
+
+	##############################
+	# Draw 'QC complete' window
+	# This windowing code is admittedly verbose due to poor documentation of tcltk functions and time constraints.
+	if(graphics) {
+		close(process.pb)
+		tkdestroy(infor1)
+		white1.green2()
+
+		proc.complete.done <- function() { tkdestroy(proc.complete) }
+	
+		proc.complete <<- tktoplevel(bg = "white")
+		tkfocus(proc.complete)
+		tkwm.title(proc.complete, "\tClimPACT2\t")
+		tt2 <- tkframe(proc.complete,bg="white")
+		frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
+		tkgrid(frame.space); tkgrid(tklabel(tt2, text = "QUALITY CONTROL COMPLETE", bg = "white", font = fontHeading2),columnspan=1);tkgrid(frame.space); tkgrid(tt2)
+	
+		tt2 <- tkframe(proc.complete,bg="white")
+		frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
+		tkgrid(frame.space)
+
+		tkgrid(tklabel(tt2,text=paste("Carefully evaluate output in the following directory \nfor potential issues before continuing.\n\n",outlogdir,"\n\nRefer to Appendix C in the ClimPACT2 user guide for help.","\n\nOnce you are satisfied with the quality of your data, proceed to Step 2.",sep="")
+				,bg='white',font=font_small),sticky="nsew")
+
+		tkgrid(frame.space)
+		tkgrid(tt2)
+	
+		tt2 <- tkframe(proc.complete,bg="white"); frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white");tkgrid(frame.space);tkgrid(tt2)
+		tt2 <- tkframe(proc.complete,bg="white"); ok1.but<-tkbutton(tt2,text="    Done    ",command=proc.complete.done,bg='white',font=font_small);tkgrid(ok1.but);tkgrid(tt2)
+		tt3 <- tkframe(proc.complete,bg="white");frame.space <- tklabel(tt3, text = " ", font = font_small, bg = "white");tkgrid(frame.space);tkgrid(tt3)
+		loaded <<- TRUE
+	}
+} # end of QC.wrapper()
+
+write.NA.statistics <- function(cio) { 
+	naprec = array(NA,dim=c(length(unique(cio@date.factors$annual))))
+	naprec = tapply.fast(cio@data$prec,cio@date.factors$annual,function(x) { return(sum(is.na(x))) })
+	natx = tapply.fast(cio@data$tmax,cio@date.factors$annual,function(x) { return(sum(is.na(x))) })
+	natn = tapply.fast(cio@data$tmin,cio@date.factors$annual,function(x) { return(sum(is.na(x))) })
+	
+	nam1 <- paste(outqcdir, paste(ofilename, "_nastatistics.csv", sep = ""), sep = "/")
+	write_header(nam1)
+	# Suppress warning about column names in files
+	suppressWarnings(write.table(cbind.data.frame(unique(cio@date.factors$annual),naprec,natx,natn), file = nam1, sep=",",append = TRUE, quote = FALSE, row.names = FALSE, col.names = c("Year","Prec","TX","TN")))
+}
+
+# creates a list of metadata
+create.metadata <- function(latitude,longitude,base.year.start,base.year.end,dates,ofilename) {
+	return(list(lat=latitude,lon=longitude,base.start=base.year.start,base.end=base.year.end,year.start=as.numeric(format(dates[1],format="%Y")),year.end=as.numeric(format(dates[length(dates)],format="%Y")),dates=dates,ofile=ofilename)) 
+}
+
+# returns a date time-series from user data, removes any non-gregorian dates and corresponding data in the process
+check.and.create.dates <- function(user.data) {
+	yyymmdd <- paste(user.data[,1],user.data[,2],user.data[,3],sep="-")
+	user.dates <- as.Date(yyymmdd,format="%Y-%m-%d")
+
+	year <- user.data$year[!is.na(user.dates)]
+	month <- user.data$month[!is.na(user.dates)]
+	day <- user.data$day[!is.na(user.dates)]
+	prcp <- user.data$prcp[!is.na(user.dates)]
+	tmax <- user.data$tmax[!is.na(user.dates)]
+	tmin <- user.data$tmin[!is.na(user.dates)]
+	user.data2 <- data.frame(year=year,month=month,day=day,precp=prcp,tmax=tmax,tmin=tmin)
+
+	user.data2$dates <- user.dates[!is.na(user.dates)]
+
+	return(user.data2)
+}
+
+# This function draws the "Step 1" interface that lets user enter station metadata and run QC on their file.
+draw.step1.interface <- function(user.data,user.file) {
+	cheat.wrapper <- function () { 
+		latitude  <- as.numeric(tclvalue(latentry))   # get user-input parameter, and check if they're valid.
+        longitude <- as.numeric(tclvalue(lonentry))
+        ofilename <<- tclvalue(station.entry)
+        outdirtmp[length(outdirtmp)] <<- ofilename
+        base.year.start<-as.numeric(tclvalue(base.year.start.tcl));  assign("base.year.start",base.year.start,envir=.GlobalEnv)
+		base.year.end<-as.numeric(tclvalue(base.year.end.tcl));    assign("base.year.end",base.year.end,envir=.GlobalEnv)
+		
+        user.data <- check.and.create.dates(user.data)
+		create.dir(user.file)
+		metadata <- create.metadata(latitude,longitude,base.year.start,base.year.end,user.data$dates,ofilename)
+		assign("metadata",metadata,envir=.GlobalEnv)
+		QC.wrapper(metadata,user.data,user.file,graphics=TRUE)
+	}
+	
+	cancel1 <- function() {
+		cio <<- NULL
+		quantiles <<- NULL
+		loaded <<- FALSE
+		tkdestroy(infor1)
+		green1.white2()
+		return() 
+	}
+
 	infor1 <<- tktoplevel(bg = "white")
 	tkfocus(infor1)
 	tkwm.geometry(infor1, "+300+200") # position in upper left corner of screen
 	tkwm.title(infor1, "ClimPACT2 - Data preperation")	
 
         load.help<-function(){    # tip for the title in all plots.
-                tkmessageBox(message=paste("Station name: name of the recording station that data originated from.",
-					"Latitude/Longitude: geographical coordinates of the station in decimal form. (-90 to +90 and -180 to +180)",
-					"Base period: a beginning and end year (four digits) to use as a reference period to calculate certain indices.",
-					"Standard deviations for temperature outliers: the distance from the mean of the data that is considered suspicious.",
-					"[OPTIONAL] load previous thresholds: if thresholds previously calculated are to be used for percentile indices.",
+                tkmessageBox(message=paste("Station name: name of the recording station that data originated from. This will be used to name output files and directories.",
+					"Latitude/Longitude: geographical coordinates of the station in decimal form (-90 to +90 and -180 to +180).",
+					"Base period: a beginning and end year (four digits) to use as a reference period to calculate percentile thresholds.",
 #					"[OPTIONAL] Load additional field: an additional time-series of data (which can represent anything) to load and plot with the indices. The file must be formatted similarly to your climate data file and must contain identical dates. e.g. [year,month,day,data].",
 					sep="\n\n"),icon='question')
         }
 
 	station.entry <- tclVar(ofilename)
 	tt1 <- tkframe(infor1, bg = "white")
-        frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
-	tkgrid(tklabel(tt1, text = paste("FILE:", orig.name.user, ""), bg = "white", font = font_small))
-        tkgrid(tt1)
+	frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
+	tkgrid(tklabel(tt1, text = paste("FILE:", user.file, ""), bg = "white", font = font_small))
+	tkgrid(tt1)
 
-        tt1 <- tkframe(infor1, bg = "white")
-        help1<-tkbutton(tt1,text='?',command=load.help,bg='white')
+	tt1 <- tkframe(infor1, bg = "white")
+	help1<-tkbutton(tt1,text='?',command=load.help,bg='white')
 	tkgrid(tklabel(tt1, text = "ENTER RECORD INFORMATION", bg = "white", font = fontHeading2),help1)
-        tkgrid(frame.space)
-        tkgrid(tt1)
+	tkgrid(frame.space)
+	tkgrid(tt1)
 
-        tt1 <- tkframe(infor1, bg = "white")
+	# enter station name
+	tt1 <- tkframe(infor1, bg = "white")
 	tkgrid(tklabel(tt1, text = "STATION NAME", bg = "white", font = font_small))
 	textEntryWidget1 <- tkentry(tt1, width = 20, textvariable = station.entry, bg = "white")
-	tkgrid(textEntryWidget1)#, side = "left")
-        frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
-        tkgrid(frame.space)
+	tkgrid(textEntryWidget1)
+	frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
+	tkgrid(frame.space)
 	tkgrid(tt1)
 
 	tt1<-tkframe(infor1,bg="white")
@@ -1315,68 +852,143 @@ load.data.qc <- function() {
 	tkgrid(tklabel(tt1, text = "LATITUDE:", bg = "white", font = font_small),LatEntry,tklabel(tt1, text="LONGITUDE:", bg = "white", font = font_small),LonEntry)
 	tkgrid(tt1)
 
-        tt1<-tkframe(infor1,bg="white")
-        frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
-        lab1<-tklabel(tt1,text=' BASE PERIOD',bg='white',font=font_small)
-        tkgrid(frame.space)
-        tkgrid(frame.space)
+	tt1<-tkframe(infor1,bg="white")
+	frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
+	lab1<-tklabel(tt1,text=' BASE PERIOD',bg='white',font=font_small)
+	tkgrid(frame.space)
+	tkgrid(frame.space)
 	tkgrid(lab1)
-        tkgrid(tt1)
-
-        tt1<-tkframe(infor1,bg="white")
-        lab2<-tklabel(tt1,text=' to ',bg='white',font=font_small)
-        enter1<-tkentry(tt1,width=6,textvariable=base.year.start.tcl,bg='white')
-        enter2<-tkentry(tt1,width=6,textvariable=base.year.end.tcl,bg='white')
-        tkgrid(enter1,lab2,enter2)
-        base.year.start<-as.numeric(tclvalue(base.year.start.tcl));  assign("base.year.start",base.year.start,envir=.GlobalEnv)
-        base.year.end<-as.numeric(tclvalue(base.year.end.tcl));    assign("base.year.end",base.year.end,envir=.GlobalEnv)
-        tkgrid(tt1)
-
-        tt1<-tkframe(infor1,bg="white")
-        frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
-        tkgrid(frame.space)
-	tkgrid(tklabel(tt1, text = "STANDARD DEVIATIONS FOR\nTEMPERATURE OUTLIERS", bg = "white", font = font_small))#, side = "left")
-        tkgrid(tt1)
-        tt1<-tkframe(infor1,bg="white")
-        textEntryWidget2 <- tkentry(tt1, width = 5, textvariable = nstddev, bg = "white")
-	tkgrid(textEntryWidget2)
 	tkgrid(tt1)
-	
-	err2 <- tklabel(tt1, text = err20, font = font_small, bg = "white")
-
-        tt1<-tkframe(infor1,bg="white")
-        tkgrid(tklabel(tt1, text = "    ", bg = "white"));
-        t1=tkbutton(tt1,text='load previous thresholds',command=read.threshold,bg='white',font=fontTextLabel)
-        t2=tkbutton(tt1,text='load SPEI/SPI thresholds',command=read.threshold.spei,bg='white',font=fontTextLabel)
-        tkgrid(t1)
-        msg=tklabel(tt1,text=thres_err,bg='white')
-        tkgrid(msg)
-        tkgrid(tt1)
-
-        tt1<-tkframe(infor1,bg="white")
-        frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
-	tkgrid(tkbutton(tt1, text = "PROCESS AND\nQUALITY CONTROL",command = qcontrol, font = fontHeading2, bg = "white"))
-        tkgrid(frame.space)
-        tkgrid(frame.space)
-        tkgrid(tt1)
-
-#        tt1<-tkframe(infor1,bg="white")
-#        tkgrid(tkbutton(tt1, text = "  Load an additional climate field ",command = additional.data, font = fontTextLabel, bg = "white"))
-#        frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
-#        tkgrid(frame.space)
-#        tkgrid(tt1)
-#        tkpack(tt1)
 
 	tt1<-tkframe(infor1,bg="white")
-	ok1.but<-    tkbutton(tt1,text="    OK    ",command=ok1,bg='white',font=font_small)
-	cancel1.but<-tkbutton(tt1,text="  CANCEL  ",command=cancel1,bg='white',font=font_small)
-	tkgrid(ok1.but,cancel1.but)
-        frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
-        tkgrid(frame.space)
-        tkgrid(tt1)
-} # END OF load.data.qc
+	lab2<-tklabel(tt1,text=' to ',bg='white',font=font_small)
+	enter1<-tkentry(tt1,width=6,textvariable=base.year.start.tcl,bg='white')
+	enter2<-tkentry(tt1,width=6,textvariable=base.year.end.tcl,bg='white')
+	tkgrid(enter1,lab2,enter2)
+	tkgrid(tt1)
 
-# function leapyear
+	tt1<-tkframe(infor1,bg="white")
+	frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
+	tkgrid(frame.space)
+	tkgrid(tkbutton(tt1, text = "PROCESS AND\nQUALITY CONTROL",command=cheat.wrapper, font = fontHeading2, bg = "white"))
+	tkgrid(frame.space)
+	tkgrid(frame.space)
+	tkgrid(tt1)
+
+	tt1<-tkframe(infor1,bg="white")
+	cancel1.but<-tkbutton(tt1,text="  CANCEL  ",command=cancel1,bg='white',font=font_small)
+	frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
+
+	tkgrid(frame.space)
+	tkgrid(frame.space)
+	tkgrid(cancel1.but)
+	frame.space <- tklabel(tt1, text = " ", font = font_small, bg = "white")
+
+	tkgrid(frame.space)
+	tkgrid(frame.space)
+	tkgrid(tt1)
+} # end of draw.step1.interface
+
+# Paint button 1 green and button 2 white.
+green1.white2 <- function() {
+	tkconfigure(start.but,bg="lightgreen",text = "   LOAD AND  \n  CHECK DATA   ", command = load.data.qc, width = 15, font = fontHeading2)
+	tkconfigure(cal.but,bg="white",text = "   CALCULATE \n   INDICES  ", command = draw.step2.interface, width = 15, font = fontHeading2)
+}
+
+# Paint button 1 white and button 2 green.
+white1.green2 <- function() {
+	tkconfigure(start.but,bg="white",text = "   LOAD AND  \n  CHECK DATA   ", command = load.data.qc, width = 15, font = fontHeading2)
+	tkconfigure(cal.but,bg="lightgreen",text = "   CALCULATE \n   INDICES  ", command = draw.step2.interface, width = 15, font = fontHeading2)
+}
+
+# Let the user select a text file through a graphical menu. Return the file name and path.
+get.user.file <- function() {
+	dir.file.name <- tclvalue(tkgetOpenFile(filetypes="{{TEXT Files} {.txt}}"))
+	if (dir.file.name=="") { return(); tkfocus(start1) }
+	return(dir.file.name)
+}
+
+# Given a user's RClimdex text file path, read in, convert -99.9 to NA and return contents as array of 6 columns.
+# The 'graphics' parameter indicates whether a progress bar is drawn to the screen via tcltk
+read.user.file <- function(user.file,graphics=FALSE) {
+# 	if(graphics) { process.pb <<- tkProgressBar("%", "Creating temporary file...",0, 100, 10) }
+	temp.filename = paste(user.file,".temporary",sep="")
+	raw.table = readLines(user.file)
+	newtext = gsub(",","\t",raw.table)
+	cat(newtext,file=temp.filename,sep="\n")
+
+#	if(graphics) { 
+#		setTkProgressBar(process.pb,80,label="								")
+#		setTkProgressBar(process.pb,80,label="Reading data...") 
+#	}
+	
+	data <- tryCatch(read.table(temp.filename,header=F,col.names=c("year","month","day","prcp","tmax","tmin"),colClasses=rep("real",6)),
+			error= function(c) {
+				if(graphics) { tkmessageBox(message = paste("Your input file doesn't appear to be formatted correctly. \n\nError returned was: ",c$message,
+								"\n\nPlease correct your file, see the manual for correct formatting.", sep=""),icon = "warning", title = "ClimPACT2 - warning")
+								close(process.pb)
+								#tkfocus(start1)
+								#load.data.qc()
+				} else { print(paste("INPUT FILE NOT FORMATTED CORRECTLY.\n\n",c$message,sep="")) }
+				} )
+
+	# Replace -99.9 data with NA
+	if(!is.null(data)) { data$prcp[data$prcp==-99.9]=NA ; data[data$tmax==(-99.9),"tmax"]=NA ; data[data$tmin==(-99.9),"tmin"]=NA }
+
+#	if(graphics) { close(process.pb) }
+	return(data)
+}
+
+# Create directories for output. Requires get.file.path to be called beforehand. That functionality was moved to a separate function
+# so that the directory could be modified by the user in the ClimPACT2 GUI.
+# Undesirably these are currently kept as global variables.
+create.dir <- function(user.file) {
+	# create directory names
+	if(length(outdirtmp)<=2) {
+		dirsplit<-strsplit(user.file,":")[[1]][1]
+		outinddir<-paste(dirsplit,"indices",sep=":/")
+		outlogdir<-paste(dirsplit,"qc",sep=":/")
+		outjpgdir<-paste(dirsplit,"plots",sep=":/")
+		outtrddir<-paste(dirsplit,"trend",sep=":/")
+		outthresdir<-paste(dirsplit,"thres",sep=":/")  # to save *_thres.csv files   
+		outqcdir<-paste(dirsplit,"qc",sep=":/")   # save results from extraqc
+	} else{
+		outdir<-outdirtmp[1]
+		for(i in 2:(length(outdirtmp)-1))
+		outdir<-paste(outdir,outdirtmp[i],sep="/")
+		outinddir<-paste(outdir,"indices",sep="/")
+		outlogdir<-paste(outdir,"qc",sep="/")
+		outjpgdir<-paste(outdir,"plots",sep="/")
+		outtrddir<-paste(outdir,"trend",sep="/")
+		outqcdir<-paste(outdir,"qc",sep="/")    # save results from extraqc
+		outthresdir<-paste(outdir,"thres",sep="/")   # to save *_thres.csv files 
+	}
+	
+	# Create subdirectories if non-existent
+	if(!file.exists(paste(outinddir,ofilename,sep="/"))) { dir.create(outinddir,showWarnings=FALSE) ; dir.create(paste(outinddir,ofilename,sep="/")) }
+	if(!file.exists(paste(outlogdir,ofilename,sep="/"))) { dir.create(outlogdir,showWarnings=FALSE) ; dir.create(paste(outlogdir,ofilename,sep="/")) }
+	if(!file.exists(paste(outjpgdir,ofilename,sep="/"))) { dir.create(outjpgdir,showWarnings=FALSE) ; dir.create(paste(outjpgdir,ofilename,sep="/")) }
+	if(!file.exists(paste(outtrddir,ofilename,sep="/"))) { dir.create(outtrddir,showWarnings=FALSE) ; dir.create(paste(outtrddir,ofilename,sep="/")) }
+	if(!file.exists(paste(outqcdir,ofilename,sep="/")))  { dir.create(outqcdir,showWarnings=FALSE) ; dir.create(paste(outqcdir,ofilename,sep="/")) }
+	if(!file.exists(paste(outthresdir,ofilename,sep="/"))) { dir.create(outthresdir,showWarnings=FALSE) ; dir.create(paste(outthresdir,ofilename,sep="/")) }
+	
+	# modify subdirectory names
+	outinddir <- paste(outinddir,ofilename,sep="/")
+	outlogdir <- paste(outlogdir,ofilename,sep="/")
+	outjpgdir <- paste(outjpgdir,ofilename,sep="/")
+	outtrddir <- paste(outtrddir,ofilename,sep="/")
+	outqcdir <- paste(outqcdir,ofilename,sep="/")
+	outthresdir <- paste(outthresdir,ofilename,sep="/")
+	
+	# save the directory as global variable for use somewhere else.
+	assign("outinddir",outinddir,envir=.GlobalEnv)
+	assign("outlogdir",outlogdir,envir=.GlobalEnv)
+	assign("outjpgdir",outjpgdir,envir=.GlobalEnv)
+	assign("outtrddir",outtrddir,envir=.GlobalEnv)
+	assign("outqcdir", outqcdir, envir=.GlobalEnv)
+	assign("outthresdir",outthresdir,envir=.GlobalEnv)
+}
+
 # return True (T) if leapyear, esle F
 leapyear <- function(year)
 {
@@ -1392,16 +1004,17 @@ leapyear <- function(year)
   }
 }
 
-# index.calc1
-# This function houses the beginning screen for "Step 2" in the GUI (i.e. calculating the indices). It reads in user preferences for the indices and calls the index functions for calculation and plotting.
-index.calc1 <- function() {
+# This function houses the beginning screen for "Step 2" in the GUI (i.e. calculating the indices). It reads in user preferences for the indices 
+# and calls the index functions for calculation and plotting.
+draw.step2.interface <- function() {
 	if(is.null(cio)) {
 		tkmessageBox(message = "Please load and \ncheck data first.",
 		icon = "warning", title = "ClimPACT2 - warning")
 		tkfocus(start1)
 		return()
 	}
-
+   
+	if(exists("proc.complete")) tkdestroy(proc.complete)
 	tkdestroy(infor1)
 	infor <- tktoplevel(bg = "white")
 	tkfocus(infor)
@@ -1409,11 +1022,6 @@ index.calc1 <- function() {
 	tkwm.geometry(infor, "+300+200")
 	tkwm.title(infor,"Set Parameter Values")
 	
-	textEntry6  <- Entry6
-	textEntry7  <- Entry7  # show default values
-	textEntry8  <- Entry8
-	textEntry9  <- Entry9
-	textEntry12 <- Entry12
 	textEntry13 <- Entry13
 	textEntry14 <- Entry14
 	textEntry15 <- Entry15
@@ -1424,12 +1032,11 @@ index.calc1 <- function() {
 	textEntry22 <- Entry22
 	textEntry23 <- Entry23
 	textEntry24 <- Entry24
-
 	
 	tkpack(tklabel(infor, text = "User defined parameters for Indices Calculation", font = fontHeading1, bg = "white"), side = "top")
 	
 	help.title<-function(){
-		tkmessageBox(message=paste('# = station name, \n* = index name.\n e.g. If you input "station #, index *"\nYou can get \nstation ',title.station,', index TXx',sep=''),icon='question')
+		tkmessageBox(message=paste('# = station name.\n e.g. If you input "station #"\nYou can get \nstation ',title.station,sep=''),icon='question')
 	}
 	
 	tt1=tkframe(infor,bg='white')   # add a "?" to the current window.
@@ -1446,11 +1053,6 @@ index.calc1 <- function() {
 	
 	tt1<-tkframe(infor,bg='white')
 
-	textEntryWidget6<-tkentry(tt1,width=10,textvariable=textEntry6,bg='white')
-	textEntryWidget7<-tkentry(tt1,width=10,textvariable=textEntry7,bg='white')
-	textEntryWidget8<-tkentry(tt1,width=10,textvariable=textEntry8,bg='white')
-	textEntryWidget9<-tkentry(tt1,width=10,textvariable=textEntry9,bg='white')
-	textEntryWidget12<-tkentry(tt1,width=10,textvariable=textEntry12,bg='white')	
 	textEntryWidget13<-tkentry(tt1,width=10,textvariable=textEntry13,bg='white') # WSDI
 	textEntryWidget14<-tkentry(tt1,width=10,textvariable=textEntry14,bg='white') # CSDI
 	textEntryWidget15<-tkentry(tt1,width=10,textvariable=textEntry15,bg='white') # RX
@@ -1458,26 +1060,12 @@ index.calc1 <- function() {
 	textEntryWidget20<-tkentry(tt1,width=10,textvariable=textEntry20,bg='white') # Tb for HDDheat
 	textEntryWidget21<-tkentry(tt1,width=10,textvariable=textEntry21,bg='white') # Tb for CDDcold
 	textEntryWidget22<-tkentry(tt1,width=10,textvariable=textEntry22,bg='white') # Tb for GDDgrow
-    textEntryWidget17<-tkentry(tt1,width=10,textvariable=textEntry17,bg='white') # Rnnmm
+	textEntryWidget17<-tkentry(tt1,width=10,textvariable=textEntry17,bg='white') # Rnnmm
 	textEntryWidget23<-tkentry(tt1,width=10,textvariable=textEntry23,bg='white')
 	textEntryWidget24<-tkentry(tt1,width=10,textvariable=textEntry24,bg='white')
 
-	rb1 <- tkradiobutton(tt1)
-	rb2 <- tkradiobutton(tt1)
-	rbValue <- tclVar("annual")
-	tkconfigure(rb1,variable=rbValue,value="monthly",bg='white')
-	tkconfigure(rb2,variable=rbValue,value="annual",bg='white')
-	tkgrid(tklabel(tt1,text="Select frequency of output for relevant indices:",bg='white',font=font_small))
-	tkgrid(tklabel(tt1,text="month ",bg='white',font=font_small),rb1)
-	tkgrid(tklabel(tt1,text="annual ",bg='white',font=font_small),rb2)
-
 	tkgrid(tklabel(tt1,text="",bg='white',font=font_small))
-	tkgrid(tklabel(tt1,text="Refer to section 3.6 of ClimPACT2 user guide for help",bg='white',font=font_small_bold))
-#	tkgrid(tklabel(tt1,text="  Count the number of days where maximum temperature > ",bg='white',font=font_small),textEntryWidget6)
-#	tkgrid(tklabel(tt1,text="  Count the number of days where maximum temperature < ",bg='white',font=font_small),textEntryWidget7)
-#	tkgrid(tklabel(tt1,text="  Count the number of days where minimum temperature > ",bg='white',font=font_small),textEntryWidget8)
-#	tkgrid(tklabel(tt1,text="  Count the number of days where minimum temperature < ",bg='white',font=font_small),textEntryWidget9)
-##	tkgrid(tklabel(tt1,text="User defined daily precipitation threshold",bg='white',font=font_small),textEntryWidget12)
+	tkgrid(tklabel(tt1,text="Refer to Section 3.5 of ClimPACT2 user guide for help",bg='white',font=font_small_bold))
 	tkgrid(tklabel(tt1,text="User defined WSDIn Days",bg='white',font=font_small),textEntryWidget13) # 13 wsdi
 	tkgrid(tklabel(tt1,text="User defined CSDIn Days",bg='white',font=font_small),textEntryWidget14) # 14 csdi
 	tkgrid(tklabel(tt1,text="User defined RxnDay Days",bg='white',font=font_small),textEntryWidget15) # 15 rxday
@@ -1503,14 +1091,8 @@ index.calc1 <- function() {
 
 	tkpack(tt1)
 
-	check.then.continue<-function(){   # get user-definded parameters, check if they're valid, and set as global variable.
-		frequency <- as.character(tclvalue(rbValue)) ; assign("frequency",frequency,envir=.GlobalEnv)
-
-		uuu<-as.numeric(tclvalue(textEntry6)); assign("uuu",uuu,envir=.GlobalEnv)
-		ulu<-as.numeric(tclvalue(textEntry7)); assign("uul",ulu,envir=.GlobalEnv)
-		uul<-as.numeric(tclvalue(textEntry8)); assign("ulu",uul,envir=.GlobalEnv)
-		ull<-as.numeric(tclvalue(textEntry9)); assign("ull",ull,envir=.GlobalEnv)
-		
+	check.then.continue<-function()   # get user-definded parameters, check if they're valid, and set as global variable.
+	{
 		ctmp<-as.character(tclvalue(textEntry3))
 		plot.title<-gsub('\\#',title.station,ctmp); assign('plot.title',plot.title,envir=.GlobalEnv)
 		
@@ -1523,23 +1105,24 @@ index.calc1 <- function() {
 		if(Entry15<2 | Entry15>10 ){tkmessageBox(message='RxDay days is incorrect\n\nvalid range is [2, 10]',icon='warning');  return()}
 		Entry16<-as.numeric(tclvalue(textEntry16)); assign("txtn_ud",as.double(Entry16),envir=.GlobalEnv)# txtn_ud
 		if(Entry16<2 | Entry16>10 ){tkmessageBox(message='n in nTXnTN and nTXbnTNb is incorrect\n\nvalid range is [2, 10]',icon='warning');  return()}
-        Entry17<-as.numeric(tclvalue(textEntry17)); assign("rnnmm_ud",as.double(Entry17),envir=.GlobalEnv)# txtn_ud
-        if(Entry17<0 ){tkmessageBox(message='User defined amount of precipitation (mm) for Rnnmm is incorrect\n\nvalid range is [0,Inf)',icon='warning');  return()}
-
+		Entry17<-as.numeric(tclvalue(textEntry17)); assign("rnnmm_ud",as.double(Entry17),envir=.GlobalEnv)# txtn_ud
+		if(Entry17<0 ){tkmessageBox(message='User defined amount of precipitation (mm) for Rnnmm is incorrect\n\nvalid range is [0,Inf)',icon='warning');  return()}
+	
 		Entry20<-as.numeric(tclvalue(textEntry20)); assign("Tb_HDD",as.double(Entry20),envir=.GlobalEnv) # Tb for HDDheat
 		Entry21<-as.numeric(tclvalue(textEntry21)); assign("Tb_CDD",as.double(Entry21),envir=.GlobalEnv) # Tb for HDDcold
 		Entry22<-as.numeric(tclvalue(textEntry22)); assign("Tb_GDD",as.double(Entry22),envir=.GlobalEnv) # Tb for HDDgrow
 		Entry23<-as.numeric(tclvalue(textEntry23)); assign("custom_SPEI",as.double(Entry23),envir=.GlobalEnv) # custom SPEI/SPI time period
-
+	
 		var.choice <- user.var[as.numeric(tclvalue(tcl(comboBox1,"getvalue")))+1]; assign("var.choice",var.choice,envir=.GlobalEnv)
 		op.choice <- user.op[as.numeric(tclvalue(tcl(comboBox2,"getvalue")))+1]; assign("op.choice",op.choice,envir=.GlobalEnv)
 		constant.choice <- as.numeric(tclvalue(textEntry24)); assign("constant.choice",constant.choice,envir=.GlobalEnv)
-
+	
 		tkgrab.release(infor);    tkdestroy(infor)
-		index.calc2()
+		index.calc(metadata,TRUE)
 	}  # end of function check.then.continue
   
-	cancel1<-function() {  # Users don't want to continue, so close this window and return to main window.
+	cancel1<-function() # Users don't want to continue, so close this window and return to main window.
+	{
 		tkdestroy(infor)
 		return()
 	}
@@ -1549,373 +1132,321 @@ index.calc1 <- function() {
 	cancel1.but<-tkbutton(tt1,text="  CANCEL  ",command=cancel1,bg='white',font=font_small)
 	tkgrid(ok1.but,cancel1.but)
 	tkpack(tt1)
-} # end of index.calc1
+} # end of draw.step2.interface
 
 # done
 done<-function(){tkdestroy(start1)}
 
-# index.calc2
-# Final index calculation window and is called from index.calc1. User selects which indices to calculate. Index function calls come from this function.
-index.calc2<-function(){
-	# fucntion index.calc3 is triggered by the OK button
-	# Does all the calculations.
-	index.calc3 <- function(){
-		# pdf file for all plots
-		cbv=rep(0,length.indices)
-		for(i in 1:length.indices) cbv[i]=tclvalue(cbvalue[i])
-		if(all(cbv==0)) {tkmessageBox(message="Please select at least one index to calculate.",title="ClimPACT2", icon='warning') ; return() }
+# This function loops through all indices and calls the appropriate functions to calculate them.
+# It contains functions for some indices that are not kept in climpact2.etsci-functions.r. This is because they are specific to the GUI.
+# The 'graphics' parameter indicates whether a progress bar is drawn to the screen via tcltk
+index.calc<-function(metadata,graphics=TRUE){
+	calculate.custom.index <- function() {
+		print("calculating custom index",quote=FALSE)
+		for (frequency in c("monthly","annual")) {
+			if(var.choice=="DTR") { var.choice2=cio@data$dtr ; mask.choice = cio@namasks[[match.arg(frequency,choices=c("annual","monthly"))]]$tmin * cio@namasks[[match.arg(frequency,choices=c("annual","monthly"))]]$tmax } 
+			else if (var.choice=="TX") { var.choice2=cio@data$tmax ; mask.choice = cio@namasks[[match.arg(frequency,choices=c("annual","monthly"))]]$tmax } 
+			else if (var.choice=="TN") { var.choice2=cio@data$tmin ; mask.choice = cio@namasks[[match.arg(frequency,choices=c("annual","monthly"))]]$tmin }
+			else if (var.choice=="TM") { var.choice2=cio@data$tmean ; mask.choice = cio@namasks[[match.arg(frequency,choices=c("annual","monthly"))]]$tmin }
+			else if (var.choice=="PR") { var.choice2=cio@data$prec ; mask.choice = cio@namasks[[match.arg(frequency,choices=c("annual","monthly"))]]$prec }
+	
+			if(op.choice==">") { op.choice2="gt" }
+			else if(op.choice==">=") { op.choice2="ge" }
+			else if(op.choice=="<") { op.choice2="lt" }
+			else if(op.choice=="<=") { op.choice2="le" }
 
-		# Check 'all' PDF isn't open, then open.
-		if(frequency == "monthly") { pdfname = paste(ofilename,"_MON_all_plots.pdf",sep="") }
-		else if(frequency == "annual") { pdfname = paste(ofilename,"_ANN_all_plots.pdf",sep="") }
+			if(is.null(var.choice2)) return()
+			index.stored <- number.days.op.threshold(var.choice2, cio@date.factors[[match.arg(frequency,choices=c("annual","monthly"))]], constant.choice, op.choice) * mask.choice
+			write.index.csv(index.stored,index.name=paste(var.choice,op.choice2,constant.choice,sep=""),freq=frequency) ; 
+			plot.call(index.stored,index.name=paste(var.choice,op.choice2,constant.choice,sep=""),index.units="days",x.label="Years",sub=paste("Number of days where ",var.choice," ",op.choice," ",constant.choice,sep=""),freq=frequency)
+			cat(file=trend_file,paste(metadata$lat,metadata$lon,paste(var.choice,op.choice2,constant.choice,sep=""),metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
+		}
+	}
+
+	calculate.hw <- function() {
+		# If heatwave previous percentiles have been read in by user then use these in heatwave calculations, otherwise let climdex.hw calculate percentiles using currently loaded data.
+        # #{ tx90p <- hwlist$HW.TX90 ; tn90p <- hwlist$HW.TN90 ; tavg90p <- hwlist$HW.TAVG90 } else {
+			tx90p <<- tn90p <<- tavg90p <<- tavg05p <<- tavg95p <<- NULL #}
+
+			index.stored <- climdex.hw(cio) #,tavg90p=tavg90p,tn90p=tn90p,tx90p=tx90p)
+
+			write.hw.csv(index.stored,index.name=as.character(index.list$ID[i]),header="Heatwave definitions and aspects")
+			plot.hw(index.stored,index.name=as.character(index.list$ID[i]),index.units=as.character(index.list$Units[i]),x.label="Years",metadata=metadata)
+	}
+
+	calculate.spei <- function() {
+		if(all(is.na(cio@data$tmin)) | all(is.na(cio@data$tmax)) | all(is.na(cio@data$prec))) { warning("NOT PLOTTING SPEI: climdex.spei REQUIRES TMIN, TMAX AND PRECIP DATA.") } else {
+		# If SPEI/SPI thresholds have been read in by user then use these in SPEI/SPI calculations.
+		if(exists("speiprec")) { tnraw <- speitmin ; txraw <- speitmax ; praw <- speiprec ; btime <- speidates } else {
+			tnraw <- txraw <- praw <- btime <- NULL }
+
+	        if(!is.null(btime)) computefuture = TRUE else computefuture = FALSE
+		ts.start <- c(as.numeric(date.years[1]),1)
+		ts.end <- c(as.numeric(date.years[length(date.years)]),12)
+
+		# Code related to creating spi* variables aren't needed when relying on climpact2.r. However, due to ostensible issues with CRAN SPEI, this code needs to be rolled into this file in order to call our own SPEI code.
+	        if(computefuture){
+		                # construct dates
+                        beg = as.Date(btime[1])
+                        end = dates[length(dates)]      #as.Date(paste(base.year.end,"12","31",sep="-"))
+                        dat.seq = seq(beg,end,by = "1 day")
+                        spidates = dat.seq
+                        spitmin <- spitmax <- spiprec <- spifactor <- vector(mode="numeric",length=length(spidates))
+                        spitmin[1:length(tnraw)] = tnraw
+                        spitmax[1:length(txraw)] = txraw
+                        spiprec[1:length(praw)] = praw
+
+	                spitmin[(length(spitmin)-length(cio@data$tmin)+1):length(spitmin)] = cio@data$tmin
+	                spitmax[(length(spitmax)-length(cio@data$tmax)+1):length(spitmax)] = cio@data$tmax
+	                spiprec[(length(spiprec)-length(cio@data$prec)+1):length(spiprec)] = cio@data$prec
+	                spifactor = factor(format(spidates,format="%Y-%m"))
+			ts.start <- c(as.numeric(format(beg,format="%Y")),1)
+	        } else {
+	                spitmin = cio@data$tmin
+	                spitmax = cio@data$tmax
+	                spiprec = cio@data$prec
+	                spifactor = cio@date.factors$monthly
+	        }
+	        
+		######################################
+		# Calculate SPEI via old climpact code
+
+	        # get monthly means of tmin and tmax. And monthly total precip.
+	        tmax_monthly <- as.numeric(tapply.fast(spitmax,spifactor,mean,na.rm=TRUE))
+	        tmin_monthly <- as.numeric(tapply.fast(spitmin,spifactor,mean,na.rm=TRUE))
+	        prec_sum <- as.numeric(tapply.fast(spiprec,spifactor,function(x) { if(all(is.na(x))) { return(NA) } else { return(sum(x,na.rm=TRUE)) } } )) # Needed this function since summing a series of NA with na.rm = TRUE results in zero instead of NA.
+	        tmax_monthly[tmax_monthly=="NaN"] <- NA
+	        tmin_monthly[tmin_monthly=="NaN"] <- NA
+
+		# Caclulate evapotranspiration estimate and create time-series object.
+		pet = as.numeric(hargreaves(tmin_monthly,tmax_monthly,lat=latitude,Pre=prec_sum,na.rm=TRUE))
+		dat = ts(prec_sum-pet,freq=12,start=ts.start,end=ts.end)
+		index.store <- array(c(cspei(dat,na.rm=T,scale=c(3),ref.start=c(metadata$base.start,1),ref.end=c(metadata$base.end,12),basetmin=tnraw,basetmax=txraw,baseprec=praw,basetime=btime)$fitted,
+					cspei(dat,na.rm=T,scale=c(6),ref.start=c(metadata$base.start,1),ref.end=c(metadata$base.end,12))$fitted,
+					cspei(dat,na.rm=T,scale=c(12),ref.start=c(metadata$base.start,1),ref.end=c(metadata$base.end,12))$fitted,
+					cspei(dat,na.rm=T,scale=c(custom_SPEI),ref.start=c(metadata$base.start,1),ref.end=c(metadata$base.end,12))$fitted),
+					c(length((cspei(dat,na.rm=T,scale=c(3))$fitted)),4))
+                index.store <- aperm(index.store,c(2,1))
+
+		# End calculating SPEI via old climpact code
+		######################################
+
+		######################################
+		# Calculate SPEI via CRAN SPEI package housed in climpact2.r
+		#			index.store <- climdex.spei(cio,ref.start=c(base.year.start,1),ref.end=c(base.year.end,12),lat=latitude,basetmin=tnraw,basetmax=txraw,baseprec=praw,basetime=btime)
+
+		# Temporary SPEI to mask out values that should be NA
+		#			spiprec = cio@data$prec
+		#        	        spitmin = cio@data$tmin
+		#	                spitmax = cio@data$tmax
+		#                        prec_sum <- as.numeric(tapply.fast(spiprec,cio@date.factors$monthly,function(x) { if(all(is.na(x))) { return(NA) } else { return(sum(x,na.rm=TRUE)) } } ))
+		#        		tmax_monthly <- as.numeric(tapply.fast(spitmax,cio@date.factors$monthly,mean,na.rm=TRUE))
+		#		        tmin_monthly <- as.numeric(tapply.fast(spitmin,cio@date.factors$monthly,mean,na.rm=TRUE))
+		#			pet <- hargreaves(tmin_monthly,tmax_monthly,lat=latitude,Pre=prec_sum,na.rm=TRUE)
+		#			tmpspei = spei(ts(prec_sum-pet,freq=12,start=ts.start,end=ts.end),scale=1,ref.start=c(base.year.start,1),ref.end=c(base.year.end,12),na.rm=TRUE)$fitted
+		#			index.store[,which(is.na(tmpspei))] = NA
+
+		# End calculating SPEI via CRAN SPEI package housed in climpact2.r
+		######################################
+
+		index.store <- ifelse(index.store=="Inf" | index.store=="-Inf" | index.store=="NaN",NA,index.store)
+
+	# - Strip back off all data not part of the original time series.
+	# - Another kludge here relates to an ostensible bug in the SPEI function. When SPEI is fed a series of NA values followed by valid data, it returns values of SPEI/SPI for those NA values, when it shouldn't.
+	#    The author has been alerted to this problem. But this means that when a synthetic time series has been made for scenarios using reference data from a different dataset, the initial SPEI/SPI values need
+	#    to be manually removed. The first 2, 5 and 11 values for each final time series needs NA'ing, corresponding to 3, 6 and 12 month calculation periods.
+	        if(computefuture) {
+	                index.store <- index.store[,(length(index.store[1,])-length(unique(cio@date.factors$monthly))+1):length(index.store[1,])]
+					# remove spurious values that shouldn't exist (but exist anyway due to the synthetic time series we've fed the spei/spi function).
+					index.store[1,1:2] <- NA
+                index.store[2,1:5] <- NA
+                index.store[3,1:11] <- NA
+                index.store[4,1:(custom_SPEI-1)] <- NA
+                spifactor <- spifactor[(length(spifactor)-length((cio@date.factors$monthly))+1):length(spifactor)]
+	        }
+		write.precindex.csv(index.store,index.name=index.list$ID[82],spifactor,header="Standardised Precipitation-Evapotranspiration Index")
+		plot.precindex(index.store,index.name=index.list$ID[82],index.units=index.list$Units[81],x.label="Years",spifactor,sub=as.character(index.list$Definition[82]),times=c(3,6,12,custom_SPEI),metadata=metadata) } 
+	}
 		
-#		check_open(pdfname)
-		tmp = try(pdf(file=paste(outjpgdir,pdfname,sep="/"),height=8,width=11.5))
-		if(class(tmp)=="try-error") { tkmessageBox(message=paste("Error encountered, please check that the file ",pdfname," is not currently open, then select OK to try again.",sep=""),icon='warning'); return() }
-		pdf.dev=dev.cur()
-		assign('pdf.dev',pdf.dev,envir=.GlobalEnv)
+	calculate.spi <- function() {
+			if(all(is.na(cio@data$prec))) warning("NOT PLOTTING SPI: climdex.spi REQUIRES PRECIP DATA.") else {
+                if(exists("speiprec")) { tnraw <- speitmin ; txraw <- speitmax ; praw <- speiprec ; btime <- speidates } else {
+                        tnraw <- txraw <- praw <- btime <- NULL }
 
-		pb <- tkProgressBar("Index calculation progress", "Calculation complete %",0, 100, 10)
-		
-		# trend file
-		trend_file<-paste(outtrddir,paste(ofilename,"_trend.csv",sep=""),sep="/") ; assign('trend_file',trend_file,envir=.GlobalEnv)
-		write_header(trend_file)
-		cat(file=trend_file,paste("Lat","Lon","Indices","SYear","EYear","Slope","STD_of_Slope","P_Value",sep=","),fill=180,append=T)
+                if(!is.null(btime)) computefuture = TRUE else computefuture = FALSE
+                ts.start <- c(as.numeric(date.years[1]),1)
+                ts.end <- c(as.numeric(date.years[length(date.years)]),12)
 
-		index_not_calculated=''   # contains index names that could not be calculated.
-		assign('index_not_calculated',index_not_calculated,envir=.GlobalEnv)
+                # Code related to creating spi* variables aren't needed when relying on climpact2.r. However, due to ostensible issues with CRAN SPEI, this code needs to be rolled into this file in order to call our own SPEI code.
+                if(computefuture){
+                        # construct dates
+                        beg = as.Date(btime[1])
+                        end = dates[length(dates)]
+                        dat.seq = seq(beg,end,by = "1 day")
+                        spidates = dat.seq
 
-		#=============================================================
-		# Calculate selected indices
-		#============================================================
+                        spiprec <- spifactor <- array(NA,length(spidates))
+                        spiprec[1:length(praw)] = praw
 
-		if (cbv[1]==1) { print(paste("calculating",indices[1]),quote=FALSE) ; index.store <- climdex.fd(cio) ; write.index.csv(index.store,index.name=indices[1]) ; plot.call(index.store,index.name=indices[1],index.units=units[1],x.label="Years",sub=subtitle[1]) ;
-		cat(file=trend_file,paste(latitude,longitude,indices[1],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[2]==1) { print(paste("calculating",indices[2]),quote=FALSE) ; index.store <- climdex.fd2(cio) ; write.index.csv(index.store,index.name=indices[2]) ; plot.call(index.store,index.name=indices[2],index.units=units[2],x.label="Years",sub=subtitle[2]) 
-                cat(file=trend_file,paste(latitude,longitude,indices[2],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[3]==1) { print(paste("calculating",indices[3]),quote=FALSE) ; index.store <- climdex.fdm2(cio) ; write.index.csv(index.store,index.name=indices[3]) ; plot.call(index.store,index.name=indices[3],index.units=units[3],x.label="Years",sub=subtitle[3]) 
-                cat(file=trend_file,paste(latitude,longitude,indices[3],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[4]==1) { print(paste("calculating",indices[4]),quote=FALSE) ; index.store <- climdex.fdm20(cio) ; write.index.csv(index.store,index.name=indices[4]) ; plot.call(index.store,index.name=indices[4],index.units=units[4],x.label="Years",sub=subtitle[4]) 
-                cat(file=trend_file,paste(latitude,longitude,indices[4],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[5]==1) { print(paste("calculating",indices[5]),quote=FALSE) ; index.store <- climdex.id(cio) ; write.index.csv(index.store,index.name=indices[5]) ; plot.call(index.store,index.name=indices[5],index.units=units[5],x.label="Years",sub=subtitle[5]) 
-                cat(file=trend_file,paste(latitude,longitude,indices[5],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[6]==1) { print(paste("calculating",indices[6]),quote=FALSE) ; index.store <- climdex.su(cio) ; write.index.csv(index.store,index.name=indices[6]) ; plot.call(index.store,index.name=indices[6],index.units=units[6],x.label="Years",sub=subtitle[6]) 
-                cat(file=trend_file,paste(latitude,longitude,indices[6],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[7]==1) { print(paste("calculating",indices[7]),quote=FALSE) ; index.store <- climdex.tr(cio) ; write.index.csv(index.store,index.name=indices[7]) ; plot.call(index.store,index.name=indices[7],index.units=units[7],x.label="Years",sub=subtitle[7]) 
-                cat(file=trend_file,paste(latitude,longitude,indices[7],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[8]==1) { print(paste("calculating",indices[8]),quote=FALSE) ; if(latitude < 0) cio@northern.hemisphere <<- FALSE ; 
-			index.store <- climdex.gsl(cio) ; write.index.csv(index.store,index.name=indices[8]) ; plot.call(index.store,index.name=indices[8],index.units=units[8],x.label="Years",sub=subtitle[8]) 
-                cat(file=trend_file,paste(latitude,longitude,indices[8],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[9]==1) { print(paste("calculating",indices[9]),quote=FALSE) ; index.store <- climdex.txx(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[9],freq=frequency) ; plot.call(index.store,index.name=indices[9],index.units=units[9],x.label="Years",sub=subtitle[9],freq=frequency) 
-                cat(file=trend_file,paste(latitude,longitude,indices[9],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		setTkProgressBar(pb,20,title="20%")
-		if (cbv[10]==1) { print(paste("calculating",indices[10]),quote=FALSE) ; index.store <- climdex.tnn(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[10],freq=frequency) ; plot.call(index.store,index.name=indices[10],index.units=units[10],x.label="Years",sub=subtitle[10],freq=frequency) 
-                cat(file=trend_file,paste(latitude,longitude,indices[10],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[11]==1) { print(paste("calculating",indices[11]),quote=FALSE) ; index.store <- climdex.tnx(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[11],freq=frequency) ; plot.call(index.store,index.name=indices[11],index.units=units[11],x.label="Years",sub=subtitle[11],freq=frequency)
-                cat(file=trend_file,paste(latitude,longitude,indices[11],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[12]==1) { print(paste("calculating",indices[12]),quote=FALSE) ; index.store <- climdex.txn(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[12],freq=frequency) ; plot.call(index.store,index.name=indices[12],index.units=units[12],x.label="Years",sub=subtitle[12],freq=frequency)
-                cat(file=trend_file,paste(latitude,longitude,indices[12],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[13]==1) { print(paste("calculating",indices[13]),quote=FALSE) ; index.store <- climdex.dtr(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[13],freq=frequency) ; plot.call(index.store,index.name=indices[13],index.units=units[13],x.label="Years",sub=subtitle[13],freq=frequency)
-                cat(file=trend_file,paste(latitude,longitude,indices[13],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[14]==1) { print(paste("calculating",indices[14]),quote=FALSE) ; index.store <- climdex.wsdi(cio) ; write.index.csv(index.store,index.name=indices[14]) ; plot.call(index.store,index.name=indices[14],index.units=units[14],x.label="Years",sub=subtitle[14])
-                cat(file=trend_file,paste(latitude,longitude,indices[14],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[15]==1) { print(paste("calculating",indices[15]),quote=FALSE) ; index.store <- climdex.wsdin(cio,n=wsdi_ud) ; write.index.csv(index.store,index.name=indices[15]) ; plot.call(index.store,index.name=indices[15],index.units=units[15],x.label="Years",sub=subtitle[15])
-                cat(file=trend_file,paste(latitude,longitude,indices[15],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[16]==1) { print(paste("calculating",indices[16]),quote=FALSE) ; index.store <- climdex.csdi(cio) ; write.index.csv(index.store,index.name=indices[16]) ; plot.call(index.store,index.name=indices[16],index.units=units[16],x.label="Years",sub=subtitle[16])
-                cat(file=trend_file,paste(latitude,longitude,indices[16],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[17]==1) { print(paste("calculating",indices[17]),quote=FALSE) ; index.store <- climdex.csdin(cio,n=csdi_ud) ; write.index.csv(index.store,index.name=indices[17]) ; plot.call(index.store,index.name=indices[17],index.units=units[17],x.label="Years",sub=subtitle[17])
-                cat(file=trend_file,paste(latitude,longitude,indices[17],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[18]==1) { print(paste("calculating",indices[18]),quote=FALSE) ; index.store <- climdex.tx50p(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[18],freq=frequency) ; plot.call(index.store,index.name=indices[18],index.units=units[18],x.label="Years",sub=subtitle[18],freq=frequency)
-                cat(file=trend_file,paste(latitude,longitude,indices[18],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[19]==1) { print(paste("calculating",indices[19]),quote=FALSE) ; index.store <- climdex.tx95t(cio) ; write.index.csv(index.store,index.name=indices[19]) ; plot.call(index.store,index.name=indices[19],index.units=units[19],x.label="Years",sub=subtitle[19]) 
-                cat(file=trend_file,paste(latitude,longitude,indices[19],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[20]==1) { print(paste("calculating",indices[20]),quote=FALSE) ; index.store <- climdex.tx10p(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[20],freq=frequency) ; plot.call(index.store,index.name=indices[20],index.units=units[20],x.label="Years",sub=subtitle[20],freq=frequency)
-                cat(file=trend_file,paste(latitude,longitude,indices[20],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[21]==1) { print(paste("calculating",indices[21]),quote=FALSE) ; index.store <- climdex.tx90p(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[21],freq=frequency) ; plot.call(index.store,index.name=indices[21],index.units=units[21],x.label="Years",sub=subtitle[21],freq=frequency)
-                cat(file=trend_file,paste(latitude,longitude,indices[21],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[22]==1) { print(paste("calculating",indices[22]),quote=FALSE) ; index.store <- climdex.tn10p(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[22],freq=frequency) ; plot.call(index.store,index.name=indices[22],index.units=units[22],x.label="Years",sub=subtitle[22],freq=frequency)
-                cat(file=trend_file,paste(latitude,longitude,indices[22],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[23]==1) { print(paste("calculating",indices[23]),quote=FALSE) ; index.store <- climdex.tn90p(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[23],freq=frequency) ; plot.call(index.store,index.name=indices[23],index.units=units[23],x.label="Years",sub=subtitle[23],freq=frequency)
-                cat(file=trend_file,paste(latitude,longitude,indices[23],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[24]==1) { print(paste("calculating",indices[24]),quote=FALSE) ; index.store <- climdex.tm5a(cio) ; write.index.csv(index.store,index.name=indices[24]) ; plot.call(index.store,index.name=indices[24],index.units=units[24],x.label="Years",sub=subtitle[24])
-                cat(file=trend_file,paste(latitude,longitude,indices[24],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[25]==1) { print(paste("calculating",indices[25]),quote=FALSE) ; index.store <- climdex.tm5b(cio) ; write.index.csv(index.store,index.name=indices[25]) ; plot.call(index.store,index.name=indices[25],index.units=units[25],x.label="Years",sub=subtitle[25])
-                cat(file=trend_file,paste(latitude,longitude,indices[25],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[26]==1) { print(paste("calculating",indices[26]),quote=FALSE) ; index.store <- climdex.tm10a(cio) ; write.index.csv(index.store,index.name=indices[26]) ; plot.call(index.store,index.name=indices[26],index.units=units[26],x.label="Years",sub=subtitle[26])
-                cat(file=trend_file,paste(latitude,longitude,indices[26],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[27]==1) { print(paste("calculating",indices[27]),quote=FALSE) ; index.store <- climdex.tm10b(cio) ; write.index.csv(index.store,index.name=indices[27]) ; plot.call(index.store,index.name=indices[27],index.units=units[27],x.label="Years",sub=subtitle[27])
-                cat(file=trend_file,paste(latitude,longitude,indices[27],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[28]==1) { print(paste("calculating",indices[28]),quote=FALSE) ; index.store <- climdex.su30(cio) ; write.index.csv(index.store,index.name=indices[28]) ; plot.call(index.store,index.name=indices[28],index.units=units[28],x.label="Years",sub=subtitle[28])
-                cat(file=trend_file,paste(latitude,longitude,indices[28],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[29]==1) { print(paste("calculating",indices[29]),quote=FALSE) ; index.store <- climdex.su35(cio) ; write.index.csv(index.store,index.name=indices[29]) ; plot.call(index.store,index.name=indices[29],index.units=units[29],x.label="Years",sub=subtitle[29])
-                cat(file=trend_file,paste(latitude,longitude,indices[29],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		if (cbv[30]==1) { print(paste("calculating",indices[30]),quote=FALSE) ; index.store <- climdex.hddheat(cio,Tb=Tb_HDD) ; write.index.csv(index.store,index.name=indices[30]) ; plot.call(index.store,index.name=indices[30],index.units=units[30],x.label="Years",sub=subtitle[30])
-                cat(file=trend_file,paste(latitude,longitude,indices[30],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-		setTkProgressBar(pb,60,title="60%")
-		if (cbv[31]==1) { print(paste("calculating",indices[31]),quote=FALSE) ; index.store <- climdex.cddcold(cio,Tb=Tb_CDD) ; write.index.csv(index.store,index.name=indices[31]) ; plot.call(index.store,index.name=indices[31],index.units=units[31],x.label="Years",sub=subtitle[31])
-                cat(file=trend_file,paste(latitude,longitude,indices[31],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[32]==1) { print(paste("calculating",indices[32]),quote=FALSE) ; index.store <- climdex.gddgrow(cio,Tb=Tb_GDD) ; write.index.csv(index.store,index.name=indices[32]) ; plot.call(index.store,index.name=indices[32],index.units=units[32],x.label="Years",sub=subtitle[32])
-                cat(file=trend_file,paste(latitude,longitude,indices[32],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[33]==1) { print(paste("calculating",indices[33]),quote=FALSE) ; index.store <- climdex.cdd(cio) ; write.index.csv(index.store,index.name=indices[33]) ; plot.call(index.store,index.name=indices[33],index.units=units[33],x.label="Years",sub=subtitle[33])
-                cat(file=trend_file,paste(latitude,longitude,indices[33],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[34]==1) { print(paste("calculating",indices[34]),quote=FALSE) ; index.store <- climdex.cwd(cio) ; write.index.csv(index.store,index.name=indices[34]) ; plot.call(index.store,index.name=indices[34],index.units=units[34],x.label="Years",sub=subtitle[34])
-                cat(file=trend_file,paste(latitude,longitude,indices[34],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[35]==1) { print(paste("calculating",indices[35]),quote=FALSE) ; index.store <- climdex.r10mm(cio) ; write.index.csv(index.store,index.name=indices[35]) ; plot.call(index.store,index.name=indices[35],index.units=units[35],x.label="Years",sub=subtitle[35])
-                cat(file=trend_file,paste(latitude,longitude,indices[35],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[36]==1) { print(paste("calculating",indices[36]),quote=FALSE) ; index.store <- climdex.r20mm(cio) ; write.index.csv(index.store,index.name=indices[36]) ; plot.call(index.store,index.name=indices[36],index.units=units[36],x.label="Years",sub=subtitle[36])
-                cat(file=trend_file,paste(latitude,longitude,indices[36],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[37]==1) { print(paste("calculating",indices[37]),quote=FALSE) ; index.store <- climdex.rx1day(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[37],freq=frequency) ; plot.call(index.store,index.name=indices[37],index.units=units[37],x.label="Years",sub=subtitle[37],freq=frequency)
-                cat(file=trend_file,paste(latitude,longitude,indices[37],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[38]==1) { print(paste("calculating",indices[38]),quote=FALSE) ; index.store <- climdex.rx5day(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[38],freq=frequency) ; plot.call(index.store,index.name=indices[38],index.units=units[38],x.label="Years",sub=subtitle[38],freq=frequency)
-                cat(file=trend_file,paste(latitude,longitude,indices[38],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[39]==1) { print(paste("calculating",indices[39]),quote=FALSE) ; index.store <- climdex.prcptot(cio,freq=frequency) ; write.index.csv(index.store,index.name=indices[39],freq=frequency) ; plot.call(index.store,index.name=indices[39],index.units=units[39],x.label="Years",sub=subtitle[39],freq=frequency)
-                cat(file=trend_file,paste(latitude,longitude,indices[39],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[40]==1) { print(paste("calculating",indices[40]),quote=FALSE) ; index.store <- climdex.sdii(cio) ; write.index.csv(index.store,index.name=indices[40]) ; plot.call(index.store,index.name=indices[40],index.units=units[40],x.label="Years",sub=subtitle[40])
-                cat(file=trend_file,paste(latitude,longitude,indices[40],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[41]==1) { print(paste("calculating",indices[41]),quote=FALSE) ; index.store <- climdex.r95p(cio) ; write.index.csv(index.store,index.name=indices[41]) ; plot.call(index.store,index.name=indices[41],index.units=units[41],x.label="Years",sub=subtitle[41])
-                cat(file=trend_file,paste(latitude,longitude,indices[41],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[42]==1) { print(paste("calculating",indices[42]),quote=FALSE) ; index.store <- climdex.r99p(cio) ; write.index.csv(index.store,index.name=indices[42]) ; plot.call(index.store,index.name=indices[42],index.units=units[42],x.label="Years",sub=subtitle[42])
-                cat(file=trend_file,paste(latitude,longitude,indices[42],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[43]==1) { print(paste("calculating",indices[43]),quote=FALSE) ; index.store <- climdex.r95ptot(cio) ; write.index.csv(index.store,index.name=indices[43]) ; plot.call(index.store,index.name=indices[43],index.units=units[43],x.label="Years",sub=subtitle[43])
-                cat(file=trend_file,paste(latitude,longitude,indices[43],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[44]==1) { print(paste("calculating",indices[44]),quote=FALSE) ; index.store <- climdex.r99ptot(cio) ; write.index.csv(index.store,index.name=indices[44]) ; plot.call(index.store,index.name=indices[44],index.units=units[44],x.label="Years",sub=subtitle[44])
-                cat(file=trend_file,paste(latitude,longitude,indices[44],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[45]==1) { print(paste("calculating",indices[45]),quote=FALSE) ; index.store <- climdex.rxnday(cio,n=rx_ud,freq=frequency) ; write.index.csv(index.store,index.name=indices[45],freq=frequency) ; plot.call(index.store,index.name=indices[45],index.units=units[45],x.label="Years",sub=subtitle[45],freq=frequency)
-                cat(file=trend_file,paste(latitude,longitude,indices[45],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[46]==1) { print(paste("calculating",indices[46]),quote=FALSE) ; user.ind46 = paste("r",rnnmm_ud,"mm",sep="") ; 
-                index.store <- climdex.rnnmm(cio,rnnmm_ud) ; write.index.csv(index.store,index.name=user.ind46) ; plot.call(index.store,index.name=user.ind46,index.units=units[46],x.label="Years",sub=paste("Annual number of days when precipitation >= ",rnnmm_ud,sep=""))
-                cat(file=trend_file,paste(latitude,longitude,indices[46],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[47]==1) { print(paste("calculating",indices[47]),quote=FALSE) ; index.store <- climdex.ntxntn(cio,n=txtn_ud) ; write.index.csv(index.store,index.name=indices[47]) ; plot.call(index.store,index.name=indices[47],index.units=units[47],x.label="Years",sub=subtitle[47])
-                cat(file=trend_file,paste(latitude,longitude,indices[47],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[48]==1) { print(paste("calculating",indices[48]),quote=FALSE) ; index.store <- climdex.ntxbntnb(cio,n=txtn_ud) ; write.index.csv(index.store,index.name=indices[48]) ; plot.call(index.store,index.name=indices[48],index.units=units[48],x.label="Years",sub=subtitle[48])
-                cat(file=trend_file,paste(latitude,longitude,indices[48],years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-                if (cbv[49]==1) { print(paste("calculating",indices[49]),quote=FALSE) ; if(all(is.na(cio@data$tmin)) | all(is.na(cio@data$tmax))) { warning("NOT PLOTTING HEATWAVE INDICES: Requires tmin and tmax.") } else {
-			setTkProgressBar(pb,90,title="90%")
-			# If heatwave previous percentiles have been read in by user then use these in heatwave calculations, otherwise let climdex.hw calculate percentiles using currently loaded data.
-                        if(!is.null(temp.quantiles)) { #{ tx90p <- hwlist$HW.TX90 ; tn90p <- hwlist$HW.TN90 ; tavg90p <- hwlist$HW.TAVG90 } else {
-				tx90p <<- tn90p <<- tavg90p <<- tavg05p <<- tavg95p <<- NULL }
-				index.store <- climdex.hw(cio,lat=latitude,base.range=c(base.year.start,base.year.end),tavg90p=tavg90p,tn90p=tn90p,tx90p=tx90p)
+                        spiprec[(length(spiprec)-length(cio@data$prec)+1):length(spiprec)] = cio@data$prec
+                        spifactor = factor(format(spidates,format="%Y-%m"))
 
-				write.hw.csv(index.store,index.name=indices[49])
-				plot.hw(index.store,index.name=indices[49],index.units=units[49],x.label="Years")
-			} }
-                if (cbv[50]==1) { print(paste("calculating",indices[50]),quote=FALSE) ; if(all(is.na(cio@data$tmin)) | all(is.na(cio@data$tmax)) | all(is.na(cio@data$prec))) { warning("NOT PLOTTING SPEI: climdex.spei REQUIRES TMIN, TMAX AND PRECIP DATA.") } else {
-			setTkProgressBar(pb,95,title="95%")
-			# If SPEI/SPI thresholds have been read in by user then use these in SPEI/SPI calculations.
-			if(exists("speiprec")) { tnraw <- speitmin ; txraw <- speitmax ; praw <- speiprec ; btime <- speidates } else {
-				tnraw <- txraw <- praw <- btime <- NULL }
+                        ts.start <- c(as.numeric(format(beg,format="%Y")),1)
+                } else {
+                        spiprec = cio@data$prec
+                        spifactor = cio@date.factors$monthly
+                }
 
-		        if(!is.null(btime)) computefuture = TRUE else computefuture = FALSE
-			ts.start <- c(as.numeric(date.years[1]),1)
-			ts.end <- c(as.numeric(date.years[length(date.years)]),12)
+		######################################
+		# Calculate SPI via old climpact code
 
-			# Code related to creating spi* variables aren't needed when relying on climpact2.r. However, due to ostensible issues with CRAN SPEI, this code needs to be rolled into this file in order to call our own SPEI code.
-		        if(computefuture){
-			                # construct dates
-                                beg = as.Date(btime[1])
-                                end = dates[length(dates)]      #as.Date(paste(base.year.end,"12","31",sep="-"))
-                                dat.seq = seq(beg,end,by = "1 day")
-                                spidates = dat.seq
-                                spitmin <- spitmax <- spiprec <- spifactor <- vector(mode="numeric",length=length(spidates))
-                                spitmin[1:length(tnraw)] = tnraw
-                                spitmax[1:length(txraw)] = txraw
-                                spiprec[1:length(praw)] = praw
+		# get monthly total precip.
+		prec_sum <- as.numeric(tapply.fast(spiprec,spifactor,function(x) { if(all(is.na(x))) { return(NA) } else { return(sum(x,na.rm=TRUE)) } } )) # Needed this function since summing a series of NA with na.rm = TRUE results in zero instead of NA.
 
-		                spitmin[(length(spitmin)-length(cio@data$tmin)+1):length(spitmin)] = cio@data$tmin
-		                spitmax[(length(spitmax)-length(cio@data$tmax)+1):length(spitmax)] = cio@data$tmax
-		                spiprec[(length(spiprec)-length(cio@data$prec)+1):length(spiprec)] = cio@data$prec
-		                spifactor = factor(format(spidates,format="%Y-%m"))
-				ts.start <- c(as.numeric(format(beg,format="%Y")),1)
-		        } else {
-		                spitmin = cio@data$tmin
-		                spitmax = cio@data$tmax
-		                spiprec = cio@data$prec
-		                spifactor = cio@date.factors$monthly
-		        }
-		        
-######################################
-# Calculate SPEI via old climpact code
+		# Create time-series object.
+		dat <- ts(prec_sum,freq=12,start=ts.start,end=ts.end)
+                index.store <- array(c(cspi(dat,na.rm=T,scale=3,ref.start=c(metadata$base.start,1),ref.end=c(metadata$base.end,12))$fitted,
+					cspi(dat,na.rm=T,scale=6,ref.start=c(metadata$base.start,1),ref.end=c(metadata$base.end,12))$fitted,
+					cspi(dat,na.rm=T,scale=12,ref.start=c(metadata$base.start,1),ref.end=c(metadata$base.end,12))$fitted,
+					cspi(dat,na.rm=T,scale=custom_SPEI,ref.start=c(metadata$base.start,1),ref.end=c(metadata$base.end,12))$fitted),
+					c(length((cspi(prec_sum,na.rm=T,scale=c(3))$fitted)),4))
+                index.store <- aperm(index.store,c(2,1))
 
-		        # get monthly means of tmin and tmax. And monthly total precip.
-		        tmax_monthly <- as.numeric(tapply.fast(spitmax,spifactor,mean,na.rm=TRUE))
-		        tmin_monthly <- as.numeric(tapply.fast(spitmin,spifactor,mean,na.rm=TRUE))
-		        prec_sum <- as.numeric(tapply.fast(spiprec,spifactor,function(x) { if(all(is.na(x))) { return(NA) } else { return(sum(x,na.rm=TRUE)) } } )) # Needed this function since summing a series of NA with na.rm = TRUE results in zero instead of NA.
-		        tmax_monthly[tmax_monthly=="NaN"] <- NA
-		        tmin_monthly[tmin_monthly=="NaN"] <- NA
+		# End calculating SPI via old climpact code
+		######################################
 
-			# Caclulate evapotranspiration estimate and create time-series object.
-			pet = as.numeric(hargreaves(tmin_monthly,tmax_monthly,lat=latitude,Pre=prec_sum,na.rm=TRUE))
-			dat = ts(prec_sum-pet,freq=12,start=ts.start,end=ts.end)
-			index.store <- array(c(cspei(dat,na.rm=T,scale=c(3),ref.start=c(base.year.start,1),ref.end=c(base.year.end,12),basetmin=tnraw,basetmax=txraw,baseprec=praw,basetime=btime)$fitted,
-						cspei(dat,na.rm=T,scale=c(6),ref.start=c(base.year.start,1),ref.end=c(base.year.end,12))$fitted,
-						cspei(dat,na.rm=T,scale=c(12),ref.start=c(base.year.start,1),ref.end=c(base.year.end,12))$fitted,
-						cspei(dat,na.rm=T,scale=c(custom_SPEI),ref.start=c(base.year.start,1),ref.end=c(base.year.end,12))$fitted),
-						c(length((cspei(dat,na.rm=T,scale=c(3))$fitted)),4))
-                        index.store <- aperm(index.store,c(2,1))
+                index.store <- ifelse(index.store=="Inf" | index.store=="-Inf" | index.store=="NaN",NA,index.store)
 
-# End calculating SPEI via old climpact code
-######################################
-
-######################################
-# Calculate SPEI via CRAN SPEI package housed in climpact2.r
-#			index.store <- climdex.spei(cio,ref.start=c(base.year.start,1),ref.end=c(base.year.end,12),lat=latitude,basetmin=tnraw,basetmax=txraw,baseprec=praw,basetime=btime)
-
-# Temporary SPEI to mask out values that should be NA
-#			spiprec = cio@data$prec
-#        	        spitmin = cio@data$tmin
-#	                spitmax = cio@data$tmax
-#                        prec_sum <- as.numeric(tapply.fast(spiprec,cio@date.factors$monthly,function(x) { if(all(is.na(x))) { return(NA) } else { return(sum(x,na.rm=TRUE)) } } ))
-#        		tmax_monthly <- as.numeric(tapply.fast(spitmax,cio@date.factors$monthly,mean,na.rm=TRUE))
-#		        tmin_monthly <- as.numeric(tapply.fast(spitmin,cio@date.factors$monthly,mean,na.rm=TRUE))
-#			pet <- hargreaves(tmin_monthly,tmax_monthly,lat=latitude,Pre=prec_sum,na.rm=TRUE)
-#			tmpspei = spei(ts(prec_sum-pet,freq=12,start=ts.start,end=ts.end),scale=1,ref.start=c(base.year.start,1),ref.end=c(base.year.end,12),na.rm=TRUE)$fitted
-#			index.store[,which(is.na(tmpspei))] = NA
-
-# End calculating SPEI via CRAN SPEI package housed in climpact2.r
-######################################
-
-			index.store <- ifelse(index.store=="Inf" | index.store=="-Inf" | index.store=="NaN",NA,index.store)
-
-		# - Strip back off all data not part of the original time series.
-		# - Another kludge here relates to an ostensible bug in the SPEI function. When SPEI is fed a series of NA values followed by valid data, it returns values of SPEI/SPI for those NA values, when it shouldn't.
-		#    The author has been alerted to this problem. But this means that when a synthetic time series has been made for scenarios using reference data from a different dataset, the initial SPEI/SPI values need
-		#    to be manually removed. The first 2, 5 and 11 values for each final time series needs NA'ing, corresponding to 3, 6 and 12 month calculation periods.
-		        if(computefuture) {
-		                index.store <- index.store[,(length(index.store[1,])-length(unique(cio@date.factors$monthly))+1):length(index.store[1,])]
-						# remove spurious values that shouldn't exist (but exist anyway due to the synthetic time series we've fed the spei/spi function).
-						index.store[1,1:2] <- NA
+	# - Strip back off all data not part of the original time series.
+	# - Another kludge here relates to an ostensible bug in the SPEI function. When SPEI is fed a series of NA values followed by valid data, it returns values of SPEI/SPI for those NA values, when it shouldn't.
+	#    The author has been alerted to this problem. But this means that when a synthetic time series has been made for scenarios using reference data from a different dataset, the initial SPEI/SPI values need
+	#    to be manually removed. The first 2, 5 and 11 values for each final time series needs NA'ing, corresponding to 3, 6 and 12 months calculation periods.
+                if(computefuture) {
+                        index.store <- index.store[,(length(index.store[1,])-length(unique(cio@date.factors$monthly))+1):length(index.store[1,])]
+                        # remove spurious values that shouldn't exist (but exist anyway due to the synthetic time series we've fed the spei/spi function).
+                        index.store[1,1:2] <- NA
                         index.store[2,1:5] <- NA
                         index.store[3,1:11] <- NA
-                        index.store[4,1:(custom_SPEI-1)] <- NA
+							index.store[4,1:(custom_SPEI-1)] <- NA
                         spifactor <- spifactor[(length(spifactor)-length((cio@date.factors$monthly))+1):length(spifactor)]
-		        }
-			write.precindex.csv(index.store,index.name=indices[50],spifactor)
-			plot.precindex(index.store,index.name=indices[50],index.units=units[50],x.label="Years",spifactor,sub=subtitle[50],times=c(3,6,12,custom_SPEI)) } }
+                }
+		write.precindex.csv(index.store,index.name=index.list$ID[83],spifactor,header="Standardised Precipitation Index")
+		plot.precindex(index.store,index.name=index.list$ID[83],index.units=index.list$Units[82],x.label="Years",spifactor,sub=as.character(index.list$Definition[83]),times=c(3,6,12,custom_SPEI),metadata=metadata) } 
+	}
 
-                if (cbv[51]==1) { print(paste("calculating",indices[51]),quote=FALSE) ; if(all(is.na(cio@data$prec))) warning("NOT PLOTTING SPI: climdex.spi REQUIRES PRECIP DATA.") else {
-			setTkProgressBar(pb,99,title="99%")
-                        if(exists("speiprec")) { tnraw <- speitmin ; txraw <- speitmax ; praw <- speiprec ; btime <- speidates } else {
-                                tnraw <- txraw <- praw <- btime <- NULL }
+	# pdf file for all plots
+	# Check 'all' PDF isn't open, then open.
+	pdfname = paste(ofilename,"_all_plots.pdf",sep="")
 
-                        if(!is.null(btime)) computefuture = TRUE else computefuture = FALSE
-                        ts.start <- c(as.numeric(date.years[1]),1)
-                        ts.end <- c(as.numeric(date.years[length(date.years)]),12)
+	tmp = try(pdf(file=paste(outjpgdir,pdfname,sep="/"),height=8,width=11.5))
+	if(class(tmp)=="try-error") { tkmessageBox(message=paste("Error encountered, please check that the file ",pdfname," is not currently open, then select OK to try again.",sep=""),icon='warning'); return() }
+	pdf.dev=dev.cur()
+	assign('pdf.dev',pdf.dev,envir=.GlobalEnv)
+	
+	# trend file
+	trend_file<-paste(outtrddir,paste(ofilename,"_trend.csv",sep=""),sep="/") ; assign('trend_file',trend_file,envir=.GlobalEnv)
+	write_header(trend_file,"Linear trend statistics")
+	cat(file=trend_file,paste("Indices","StartYear","EndYear","Slope","STD_of_Slope","P_Value",sep=","),fill=180,append=T)
 
-                        # Code related to creating spi* variables aren't needed when relying on climpact2.r. However, due to ostensible issues with CRAN SPEI, this code needs to be rolled into this file in order to call our own SPEI code.
-                        if(computefuture){
-                                # construct dates
-                                beg = as.Date(btime[1])
-                                end = dates[length(dates)]
-                                dat.seq = seq(beg,end,by = "1 day")
-                                spidates = dat.seq
+	index_not_calculated=''   # contains index names that could not be calculated.
+	assign('index_not_calculated',index_not_calculated,envir=.GlobalEnv)
 
-                                spiprec <- spifactor <- array(NA,length(spidates))
-                                spiprec[1:length(praw)] = praw
+	# Read in index .csv file
+	index.list <- read.csv("ancillary/climate.indices.csv",header=T,sep=',')
 
-                                spiprec[(length(spiprec)-length(cio@data$prec)+1):length(spiprec)] = cio@data$prec
-                                spifactor = factor(format(spidates,format="%Y-%m"))
+	# create a list of indices that do not require a 'frequency' parameter
+	no.freq.list = c("r95ptot","r99ptot","sdii","hddheat","cddcold","gddgrow","r95p","r99p","gsl","spi","spei","hw","wsdi","wsdin","csdi","csdin","ntxntn","ntxbntnb")
 
-                                ts.start <- c(as.numeric(format(beg,format="%Y")),1)
-                        } else {
-                                spiprec = cio@data$prec
-                                spifactor = cio@date.factors$monthly
-                        }
+	#####################################
+	# MEAT DONE HERE
+	# Loop through and calculate and plot each index
+	if(graphics) pb <- tkProgressBar("Index calculation progress", "Calculation complete %",0, 100, 10)
 
-######################################
-# Calculate SPI via old climpact code
-
-			# get monthly total precip.
-			prec_sum <- as.numeric(tapply.fast(spiprec,spifactor,function(x) { if(all(is.na(x))) { return(NA) } else { return(sum(x,na.rm=TRUE)) } } )) # Needed this function since summing a series of NA with na.rm = TRUE results in zero instead of NA.
-
-			# Create time-series object.
-			dat <- ts(prec_sum,freq=12,start=ts.start,end=ts.end)
-                        index.store <- array(c(cspi(dat,na.rm=T,scale=3,ref.start=c(base.year.start,1),ref.end=c(base.year.end,12))$fitted,
-						cspi(dat,na.rm=T,scale=6,ref.start=c(base.year.start,1),ref.end=c(base.year.end,12))$fitted,
-						cspi(dat,na.rm=T,scale=12,ref.start=c(base.year.start,1),ref.end=c(base.year.end,12))$fitted,
-						cspi(dat,na.rm=T,scale=custom_SPEI,ref.start=c(base.year.start,1),ref.end=c(base.year.end,12))$fitted),
-						c(length((cspi(prec_sum,na.rm=T,scale=c(3))$fitted)),4))
-                        index.store <- aperm(index.store,c(2,1))
-
-# End calculating SPI via old climpact code
-######################################
-
-                        index.store <- ifelse(index.store=="Inf" | index.store=="-Inf" | index.store=="NaN",NA,index.store)
-
-		# - Strip back off all data not part of the original time series.
-		# - Another kludge here relates to an ostensible bug in the SPEI function. When SPEI is fed a series of NA values followed by valid data, it returns values of SPEI/SPI for those NA values, when it shouldn't.
-		#    The author has been alerted to this problem. But this means that when a synthetic time series has been made for scenarios using reference data from a different dataset, the initial SPEI/SPI values need
-		#    to be manually removed. The first 2, 5 and 11 values for each final time series needs NA'ing, corresponding to 3, 6 and 12 months calculation periods.
-                        if(computefuture) {
-                                index.store <- index.store[,(length(index.store[1,])-length(unique(cio@date.factors$monthly))+1):length(index.store[1,])]
-                                # remove spurious values that shouldn't exist (but exist anyway due to the synthetic time series we've fed the spei/spi function).
-                                index.store[1,1:2] <- NA
-                                index.store[2,1:5] <- NA
-                                index.store[3,1:11] <- NA
-								index.store[4,1:(custom_SPEI-1)] <- NA
-                                spifactor <- spifactor[(length(spifactor)-length((cio@date.factors$monthly))+1):length(spifactor)]
-                        }
-			write.precindex.csv(index.store,index.name=indices[51],spifactor)
-			plot.precindex(index.store,index.name=indices[51],index.units=units[51],x.label="Years",spifactor,sub=subtitle[51],times=c(3,6,12,custom_SPEI)) } }
+	for (i in 1:length(index.list$ID)) {
+		print(paste("calculating",index.list$ID[i]),quote=FALSE)
+		tmp.index.name = as.character(index.list$ID[i])
+		tmp.index.def = as.character(index.list$Definition[i])
+		# Set frequency if relevant to current index
+		if(is.na(index.list$Annual.flag[i])) frequency = NA
+		else {
+			if(index.list$Annual.flag[i]==TRUE) frequency = "annual"
+			else frequency = "monthly"
+		}
+		
+		if(!as.character(index.list$ID[i]) %in% no.freq.list) index.parameter = paste("cio,freq=\"",frequency,"\"",sep="")
+		else index.parameter = paste("cio",sep="")
+		
+		if(index.list$ID[i]=="hw") { calculate.hw() ; next }
+		else if (index.list$ID[i]=="spei") { calculate.spei() ; next }
+		else if (index.list$ID[i]=="spi") { calculate.spi() ; next }
+		else if (index.list$ID[i]=="rnnmm") {
+			tmp.index.name = paste("r",rnnmm_ud,"mm",sep="")
+			index.parameter = paste(index.parameter,rnnmm_ud,sep=",")
+			tmp.index.def = paste("Number of days when precipitation >= ",rnnmm_ud,sep="") }
+		else if (index.list$ID[i]=="wsdid") {
+			tmp.index.name = paste("wsdi",wsdi_ud,sep="")
+			index.parameter = paste("cio,n=",wsdi_ud,sep="")
+			tmp.index.def = paste("Annual number of days with at least ",rnnmm_ud," consecutive days when TX > 90th percentile",sep="") }
+		else if (index.list$ID[i]=="csdid") {
+			tmp.index.name = paste("csdi",csdi_ud,sep="")
+			index.parameter = paste("cio,n=",csdi_ud,sep="")
+			tmp.index.def = paste("Annual number of days with at least ",csdi_ud," consecutive days when TN < 10th percentile",sep="") }
+		else if (index.list$ID[i]=="txdtnd") {
+			tmp.index.name = paste("tx",txtn_ud,"tn",txtn_ud,sep="")
+			index.parameter = paste("cio,n=",txtn_ud,sep="")
+			tmp.index.def = paste("Number of ",txtn_ud," consecutive days where both TX > 95th percentile and TN > 95th percentile",sep="") }
+		else if (index.list$ID[i]=="txbdtnbd") {
+			tmp.index.name = paste("txb",txtn_ud,"tnb",txtn_ud,sep="")
+			index.parameter = paste("cio,n=",txtn_ud,sep="")
+			tmp.index.def = paste("Number of ",txtn_ud," consecutive days where both TX < 5th percentile and TN < 5th percentile",sep="") }
+		else if (index.list$ID[i]=="rxdday") {
+			tmp.index.name = paste("rx",rx_ud,"day",sep="")
+			index.parameter = paste(index.parameter,",n=",rx_ud,sep="")
+			tmp.index.def = paste("Maximum ",rx_ud,"-day precipitation total",sep="") }
+		else if (index.list$ID[i]=="hddheatn") {
+			tmp.index.name = paste("hddheat",Tb_HDD,sep="")
+			index.parameter = paste("cio,Tb=",Tb_HDD,sep="")
+			tmp.index.def = paste("Annual sum of ",Tb_HDD," - TM",sep="") }
+		else if (index.list$ID[i]=="cddcoldn") {
+			tmp.index.name = paste("cddcold",Tb_CDD,sep="")
+			index.parameter = paste("cio,Tb=",Tb_CDD,sep="")
+			tmp.index.def = paste("Annual sum of TM - ",Tb_CDD,sep="") }
+		else if (index.list$ID[i]=="gddgrown") {
+			tmp.index.name = paste("gddgrow",Tb_GDD,sep="")
+			index.parameter = paste("cio,Tb=",Tb_GDD,sep="")
+			tmp.index.def = paste("Annual sum of TM - ",Tb_GDD,sep="") }
 			
-			if(cbv[52]==1) { user.ind52 = paste("su",uuu,sep="") ; print(paste("calculating",user.ind52),quote=FALSE) ; index.store <- (number.days.op.threshold(cio@data$tmax,cio@date.factors$annual,uuu,">")* cio@namasks$annual$tmax) ; write.index.csv(index.store,index.name=user.ind52) ; 
-			plot.call(index.store,index.name=user.ind52,index.units="days",x.label="Years",sub=paste("Number of days where TX is greater than ",uuu,"°C",sep=""))
-                cat(file=trend_file,paste(latitude,longitude,user.ind52,years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-			if(cbv[53]==1) { user.ind53 = paste("id",uul,sep="") ; print(paste("calculating",user.ind53),quote=FALSE) ; index.store <- (number.days.op.threshold(cio@data$tmax,cio@date.factors$annual,uul,"<")* cio@namasks$annual$tmax) ; write.index.csv(index.store,index.name=user.ind53) ; 
-			plot.call(index.store,index.name=user.ind53,index.units="days",x.label="Years",sub=paste("Number of days where TX is less than ",uul,"°C",sep=""))
-                cat(file=trend_file,paste(latitude,longitude,user.ind53,years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-			if(cbv[54]==1) { user.ind54 = paste("tr",ulu,sep="") ; print(paste("calculating",user.ind54),quote=FALSE) ; index.store <- (number.days.op.threshold(cio@data$tmin,cio@date.factors$annual,ulu,">")* cio@namasks$annual$tmin) ; write.index.csv(index.store,index.name=user.ind54) ; 
-			plot.call(index.store,index.name=user.ind54,index.units="days",x.label="Years",sub=paste("Number of days where TN is greater than ",ulu,"°C",sep=""))
-                cat(file=trend_file,paste(latitude,longitude,user.ind54,years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
-			if(cbv[55]==1) { user.ind55 = paste("fd",ull,sep="") ; print(paste("calculating",user.ind55),quote=FALSE) ; index.store <- (number.days.op.threshold(cio@data$tmin,cio@date.factors$annual,ull,"<")* cio@namasks$annual$tmin) ; write.index.csv(index.store,index.name=user.ind55) ; 
-			plot.call(index.store,index.name=user.ind55,index.units="days",x.label="Years",sub=paste("Number of days where TN is less than ",ull,"°C",sep=""))
-                cat(file=trend_file,paste(latitude,longitude,user.ind55,years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
- 			if(cbv[56]==1) { print("calculating mean TM",quote=FALSE) ; index.store <- climdex.mean.temp(cio,freq=frequency) ; write.index.csv(index.store,index.name="TMm",freq=frequency) ; 
-			plot.call(index.store,index.name="TMm",index.units="°C",x.label="Years",sub="Mean daily mean temperature",freq=frequency)
-                cat(file=trend_file,paste(latitude,longitude,"TMm",years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
- 			if(cbv[57]==1) { print("calculating mean TN",quote=FALSE) ; index.store <- climdex.mean.min.temp(cio,freq=frequency) ; write.index.csv(index.store,index.name="TNm",freq=frequency) ; 
-			plot.call(index.store,index.name="TNm",index.units="°C",x.label="Years",sub="Mean daily minimum temperature",freq=frequency)
-                cat(file=trend_file,paste(latitude,longitude,"TNm",years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) }
- 			if(cbv[58]==1) { print("calculating mean TX",quote=FALSE) ; index.store <- climdex.mean.max.temp(cio,freq=frequency) ; write.index.csv(index.store,index.name="TXm",freq=frequency) ; 
-			plot.call(index.store,index.name="TXm",index.units="°C",x.label="Years",sub="Mean daily maximum temperature",freq=frequency)
-                cat(file=trend_file,paste(latitude,longitude,"TXm",years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) } 
- 			if(cbv[59]==1) { print("calculating custom index",quote=FALSE) ; 
-				if(length(op.choice)==0 || length(var.choice)==0) { print("no custom index to calculate",quote=FALSE) } else {
+		index.stored <- eval(parse(text=paste("climdex.",as.character(index.list$ID[i]),"(",index.parameter,")",sep=""))) #index.function(cio)
+		write.index.csv(index.stored,index.name=tmp.index.name,freq=frequency,header=tmp.index.def)
+		plot.call(index.stored,index.name=tmp.index.name,index.units=as.character(index.list$Units[i]),x.label="Years",sub=tmp.index.def,freq=frequency)
+		cat(file=trend_file,paste(tmp.index.name,metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
+		remove(index.parameter)
 
-					freq=frequency
-					if(var.choice=="DTR") { var.choice2=cio@data$dtr ; mask.choice = cio@namasks[[match.arg(freq,choices=c("annual","monthly"))]]$tmin * cio@namasks[[match.arg(freq,choices=c("annual","monthly"))]]$tmax } 
-					else if (var.choice=="TX") { var.choice2=cio@data$tmax ; mask.choice = cio@namasks[[match.arg(freq,choices=c("annual","monthly"))]]$tmax } 
-					else if (var.choice=="TN") { var.choice2=cio@data$tmin ; mask.choice = cio@namasks[[match.arg(freq,choices=c("annual","monthly"))]]$tmin }
-					else if (var.choice=="TM") { var.choice2=cio@data$tmean ; mask.choice = cio@namasks[[match.arg(freq,choices=c("annual","monthly"))]]$tmin }
-					else if (var.choice=="PR") { var.choice2=cio@data$prec ; mask.choice = cio@namasks[[match.arg(freq,choices=c("annual","monthly"))]]$prec }
+		if(graphics) {
+			progress = round(as.numeric(i/length(index.list$ID))*100,0)
+			setTkProgressBar(pb,progress,title=paste(progress,"%",sep=""))
+		}
+	}
+	if(length(op.choice)==0 || length(var.choice)==0) { print("no custom index to calculate",quote=FALSE) } else { calculate.custom.index() }
+	dev.off(pdf.dev)
 
-					if(op.choice==">") { op.choice2="gt" }
-					else if(op.choice==">=") { op.choice2="ge" }
-					else if(op.choice=="<") { op.choice2="lt" }
-					else if(op.choice=="<=") { op.choice2="le" }
-
-					if(is.null(var.choice2)) return()
-					index.store <- number.days.op.threshold(var.choice2, cio@date.factors[[match.arg(freq,choices=c("annual","monthly"))]], constant.choice, op.choice) * mask.choice
-					write.index.csv(index.store,index.name=paste(var.choice,op.choice2,constant.choice,sep=""),freq=frequency) ; 
-					plot.call(index.store,index.name=paste(var.choice,op.choice2,constant.choice,sep=""),index.units="days",x.label="Years",sub=paste("Number of days where ",var.choice," ",op.choice," ",constant.choice,sep=""),freq=frequency)
-					cat(file=trend_file,paste(latitude,longitude,paste(var.choice,op.choice2,constant.choice,sep=""),years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T) } }
-
-		dev.off(pdf.dev)
+	# Show message complete window and locations to output
+	if(graphics) 
+	{
+		close(pb)
 		graphics.off()  # close the pdf file, so you can open to view it now.
 
-		# new window - calculation done
 		nstation<-tktoplevel(bg='white')
 		tkwm.geometry(nstation, "+300+200") # position in upper left corner of screen
 		tkwm.title(nstation,"ClimPACT2 - Done")
-                tkfocus(nstation)
-                close(pb)
-		
+        tkfocus(nstation)
+	
 		okk<-function(){tkdestroy(nstation);tkfocus(start1)}  # all are done, return to main window.
 		textlabel0<-tklabel(nstation,text="     ",bg='white')  # message showing all are done, showing directory.
 		textlabel1<-tklabel(nstation,text="Indices calculation completed",font=fontHeading1,bg='white')
 		textlabel2<-tklabel(nstation,text=paste("   Plots are in ",outjpgdir,"   ",sep=" "),font=fontHeading2,bg='white')
-                textlabel3<-tklabel(nstation,text=paste("   Data are in ",outinddir,"   ",sep=" "),font=fontHeading2,bg='white')
-	
-		## Will add one more part here, to show which indices were not calculated...
+		textlabel3<-tklabel(nstation,text=paste("   Data are in ",outinddir,"   ",sep=" "),font=fontHeading2,bg='white')
+
 		okk.but<-tkbutton(nstation,text="   OK   ",command=okk,width=20,bg='white')
 		tkpack(textlabel1)
 		tkpack(textlabel2)
@@ -1923,31 +1454,29 @@ index.calc2<-function(){
 		tkpack(textlabel0)
 		tkpack(okk.but)
 	}
-
-        selectAll()
-        index.calc3()
 }
-# end of index.calc2  
+# end of index.calc 
 
 # write.index.csv
 # takes a time series of a given index and writes to file
-write.index.csv <- function(index=NULL,index.name=NULL,freq="annual") {
+write.index.csv <- function(index=NULL,index.name=NULL,freq="annual",header="") {
 	if(is.null(index.name) | is.null(index)) stop("Need index data and index.name in order to write CSV file.")
 
-	if(freq=="monthly") { freq="MON" }
-	else if(freq=="annual") { freq="ANN" }
-	else {}
-	if(index.name=="tx95t") { freq="DAY" }
-	
+	if(index.name=="tx95t") { freq="DAY" } 
+	else {
+		if(freq=="monthly") { freq="MON" }
+		else if(freq=="annual") { freq="ANN" }
+	}
+
 	if(index.name=="wsdin") { tmp.name=paste("wsdi",wsdi_ud,sep="") } 
-	else if (index.name=="csdin") { tmp.name=paste("csdi",csdi_ud,sep="") }
-	else if (index.name=="rxnday") { tmp.name=paste("rx",rx_ud,"day",sep="") }
+	else if (index.name=="csdid") { tmp.name=paste("csdi",csdi_ud,sep="") }
+	else if (index.name=="rxdday") { tmp.name=paste("rx",rx_ud,"day",sep="") }
 	else if (index.name=="rnnmm") { tmp.name=paste("r",rnnmm_ud,"mm",sep="") }
-	else if (index.name=="ntxntn") { tmp.name=paste(txtn_ud,"tx",txtn_ud,"tn",sep="") }
-	else if (index.name=="ntxbntnb") { tmp.name=paste(txtn_ud,"txb",txtn_ud,"tnb",sep="") }
+	else if (index.name=="txdtnd") { tmp.name=paste("tx",txtn_ud,"tn",txtn_ud,sep="") }
+	else if (index.name=="txbdtnbd") { tmp.name=paste("txb",txtn_ud,"tnb",txtn_ud,sep="") }
 	else { tmp.name = index.name }
 	nam1 <- paste(outinddir, paste(ofilename, "_", tmp.name,"_",freq, ".csv", sep = ""), sep = "/")
-	write_header(nam1)
+	write_header(nam1,header)
 	index=c(tmp.name,index)
 	names(index)[1]="time"
 	
@@ -1964,59 +1493,68 @@ write.index.csv <- function(index=NULL,index.name=NULL,freq="annual") {
 
 # write.hw.csv
 # takes a time series of hw and writes to file
-write.hw.csv <- function(index=NULL,index.name=NULL) {
+write.hw.csv <- function(index=NULL,index.name=NULL,header="") {
         if(is.null(index)) stop("Need heatwave data to write CSV file.")
 
 		# print each definition in a separate .csv. Thus each .csv will have columns of time, HWA, HWM, HWF, HWD, HWN.
 		aspect.names <- list("time","HWM","HWA","HWN","HWD","HWF")
-		
+		aspect.names.ECF <- list("time","CWM","CWA","CWN","CWD","CWF")
+
 		# write Tx90 heatwave data
         nam1 <- paste(outinddir, paste(ofilename, "_Tx90_heatwave_ANN.csv", sep = ""), sep = "/")
-		write_header(nam1)
+		write_header(nam1,header)
 		write.table(aspect.names, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
         write.table(cbind((date.years),aperm(index[1,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 
         # write Tn90 heatwave data
         nam1 <- paste(outinddir, paste(ofilename, "_Tn90_heatwave_ANN.csv", sep = ""), sep = "/")
-        write_header(nam1)
+        write_header(nam1,header)
         write.table(aspect.names, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
         write.table(cbind((date.years),aperm(index[2,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 
         # write EHF heatwave data
         nam1 <- paste(outinddir, paste(ofilename, "_EHF_heatwave_ANN.csv", sep = ""), sep = "/")
-        write_header(nam1)
+        write_header(nam1,header)
         write.table(aspect.names, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
         write.table(cbind((date.years),aperm(index[3,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 
         # write ECF coldwave data
         nam1 <- paste(outinddir, paste(ofilename, "_ECF_heatwave_ANN.csv", sep = ""), sep = "/")
-        write_header(nam1)
-        write.table(aspect.names, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
+        write_header(nam1,header)
+        write.table(aspect.names.ECF, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
         write.table(cbind((date.years),aperm(index[4,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 }
 
 # plot.hw
-plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) {
+plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,metadata) {
         if(is.null(index)) stop("Need heatwave data to plot.")
 
 	definitions <- c("Tx90","Tn90","EHF","ECF")
 	aspects <- c("HWM","HWA","HWN","HWD","HWF")
-	units <- c("°C","°C","heat waves","days","days")
+	units <- c("°C","°C","heatwaves","days","days")
 	Encoding(units) <- "UTF-8"
 
 	for (def in 1:length(definitions)) {
 		for (asp in 1:length(aspects)) {
-			if(all(is.na(index[def,asp,]))) { warning(paste("All NA values detected, not plotting ",definitions[def],", ",aspects[asp],".",sep="")) ; next }
+			if(all(is.na(index[def,asp,]))) { warning(paste("All NA values detected, not plotting ",aspects[asp],", ",definitions[def],".",sep="")) ; next }
+
 			plot.title <- paste("Station: ",title.station,sep="")
-			namp <- paste(outjpgdir, paste(ofilename, "_", definitions[def],"_",aspects[asp], "_ANN.jpg", sep = ""), sep = "/")
+			if(definitions[def]=="ECF") { namp <- paste(outjpgdir, paste(ofilename, "_", gsub("H","C",aspects[asp]),"_",definitions[def], "_ANN.jpg", sep = ""), sep = "/") }
+			else { namp <- paste(outjpgdir, paste(ofilename, "_",aspects[asp],"_",definitions[def], "_ANN.jpg", sep = ""), sep = "/") }
 			jpeg(file = namp, width = 1024, height = 768)
 			dev0 = dev.cur()
 
-			if(aspects[asp]=="HWM") { sub=paste("Index: ",definitions[def],"-",aspects[asp],". Heat wave magnitude (mean temperature of all heat wave events)",sep="") } 
-			else if(aspects[asp]=="HWA"){ sub=paste("Index: ",definitions[def],"-",aspects[asp],". Heat wave amplitude (peak temperature of the hottest heat wave event)",sep="") }
-			else if(aspects[asp]=="HWD"){ sub=paste("Index: ",definitions[def],"-",aspects[asp],". Heat wave duration (length of longest heat wave event)",sep="") }
-			else if(aspects[asp]=="HWF"){ sub=paste("Index: ",definitions[def],"-",aspects[asp],". Heat wave frequency (number of days contributing to heat wave event)",sep="") }
-			else if(aspects[asp]=="HWN"){ sub=paste("Index: ",definitions[def],"-",aspects[asp],". Heat wave number (number of discreet heat wave events)",sep="") }
+			if(aspects[asp]=="HWM" && !definitions[def] == "ECF") { sub=paste("Index: ",aspects[asp],"-",definitions[def],". Heatwave Magnitude (mean temperature of all heatwave events)",sep="") } 
+			else if(aspects[asp]=="HWA" && !definitions[def] == "ECF"){ sub=paste("Index: ",aspects[asp],"-",definitions[def],". Heatwave Amplitude (peak temperature of the hottest heatwave event)",sep="") }
+			else if(aspects[asp]=="HWD" && !definitions[def] == "ECF"){ sub=paste("Index: ",aspects[asp],"-",definitions[def],". Heatwave Duration (length of longest heatwave event)",sep="") }
+			else if(aspects[asp]=="HWF" && !definitions[def] == "ECF"){ sub=paste("Index: ",aspects[asp],"-",definitions[def],". Heatwave Frequency (number of days contributing to heatwave events)",sep="") }
+			else if(aspects[asp]=="HWN" && !definitions[def] == "ECF"){ sub=paste("Index: ",aspects[asp],"-",definitions[def],". Heatwave Number (number of discreet heatwave events)",sep="") }
+
+			if(aspects[asp]=="HWM" && definitions[def] == "ECF") { sub=paste("Index: ",gsub("H","C",aspects[asp]),"-",definitions[def],". Coldwave Magnitude (mean temperature of all coldwave events)",sep="") } 
+			else if(aspects[asp]=="HWA" && definitions[def] == "ECF"){ sub=paste("Index: ",gsub("H","C",aspects[asp]),"-",definitions[def],". Coldwave Amplitude (minimum temperature of the coldest coldwave event)",sep="") }
+			else if(aspects[asp]=="HWD" && definitions[def] == "ECF"){ sub=paste("Index: ",gsub("H","C",aspects[asp]),"-",definitions[def],". Coldwave Duration (length of longest coldwave event)",sep="") }
+			else if(aspects[asp]=="HWF" && definitions[def] == "ECF"){ sub=paste("Index: ",gsub("H","C",aspects[asp]),"-",definitions[def],". Coldwave Frequency (number of days contributing to coldwave events)",sep="") }
+			else if(aspects[asp]=="HWN" && definitions[def] == "ECF"){ sub=paste("Index: ",gsub("H","C",aspects[asp]),"-",definitions[def],". Coldwave Number (number of discreet coldwave events)",sep="") }
 
 			if((definitions[def]=="EHF" || definitions[def]=="ECF") && any(aspects[asp]=="HWM",aspects[asp]=="HWA")) { unit = "°C^2" ; Encoding(unit) <- "UTF-8" } else unit = units[asp]
 			plotx((date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label,index.name=index.name,sub=sub)
@@ -2028,44 +1566,44 @@ plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL) {
 
 			fit1<-suppressWarnings(lsfit((date.years),index[def,asp,]))
 			out1<<-ls.print(fit1,print.it=F)
-			cat(file=trend_file,paste(latitude,longitude,paste(definitions[def],aspects[asp],sep="."),years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
+			cat(file=trend_file,paste(latitude,longitude,paste(definitions[def],aspects[asp],sep="."),metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
 		}
 	}
 }
 
 # write.precindex.csv
-write.precindex.csv <- function(index=NULL,index.name=NULL,spifactor=NULL) {
+write.precindex.csv <- function(index=NULL,index.name=NULL,spifactor=NULL,header="") {
         if(is.null(index)) stop("Need SPEI data to write CSV file.")
 		colnames <- list("time",index.name)
 
         # write 3 month data
         nam1 <- paste(outinddir, paste(ofilename, "_3month_",index.name,"_MON.csv", sep = ""), sep = "/")
-        write_header(nam1)
+        write_header(nam1,header)
         write.table(colnames, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
         write.table(cbind(unique(as.character(spifactor)),index[1,]), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 
         # write 6 month data
         nam1 <- paste(outinddir, paste(ofilename, "_6month_",index.name,"_MON.csv", sep = ""), sep = "/")
-        write_header(nam1)
+        write_header(nam1,header)
         write.table(colnames, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
         write.table(cbind(unique(as.character(spifactor)),index[2,]), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 
         # write 12 month data
         nam1 <- paste(outinddir, paste(ofilename, "_12month_",index.name,"_MON.csv", sep = ""), sep = "/")
-        write_header(nam1)
+        write_header(nam1,header)
         write.table(colnames, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
         write.table(cbind(unique(as.character(spifactor)),index[3,]), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
         
         # write custom-period data
         nam1 <- paste(outinddir, paste(ofilename,"_",custom_SPEI, "month_",index.name,"_MON.csv", sep = ""), sep = "/")
-        write_header(nam1)
+        write_header(nam1,header)
         write.table(colnames, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
         write.table(cbind(unique(as.character(spifactor)),index[4,]), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 }
 
 # plot.precindex
 # not sure how generic this process can be
-plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,spifactor=NULL,sub="",times="") {
+plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,spifactor=NULL,sub="",times="",metadata) {
         if(is.null(index)) stop("Need precip data to plot.")
 		Encoding(sub) <- "UTF-8"
 
@@ -2086,7 +1624,7 @@ plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=N
 
             fit1<-suppressWarnings(lsfit(1:length(unique(spifactor)),index[time,]))
             out1<<-ls.print(fit1,print.it=F)
-            cat(file=trend_file,paste(latitude,longitude,paste(index.name,times[time],"month",sep="."),years,yeare,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
+            cat(file=trend_file,paste(latitude,longitude,paste(index.name,times[time],"month",sep="."),metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
         }
 }
 
@@ -2099,8 +1637,8 @@ plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,s
 #	plot.title <- paste(title.station,index.name,sep=", ")
 	if(index.name=="wsdin") { tmp.name=paste("wsdi",wsdi_ud,sep="") ; sub=paste("Index: ",tmp.name,". Annual number of days with at least ",wsdi_ud," consecutive days when TX > 90th percentile",sep="") } 
 	else if (index.name=="csdin") { tmp.name=paste("csdi",csdi_ud,sep="") ; sub=paste("Index: ",tmp.name,". Annual number of days with at least ",csdi_ud," consecutive days when TN < 10th percentile",sep="")  }
-	else if (index.name=="rxnday") { tmp.name=paste("rx",rx_ud,"day",sep="") ; sub=paste("Index: ",tmp.name,". Maximum ",rx_ud,"-day precipitation total",sep="")  }
-	else if (index.name=="rnnmm") { tmp.name=paste("r",rnnmm_ud,"mm",sep="") ; sub=paste("Index: ",tmp.name,". Annual number of days when precipitation >= ",rnnmm_ud,"mm",sep="")  }
+	else if (index.name=="rxnday") { tmp.name=paste("rx",rx_ud,"day",sep="") ; sub=paste("Index: ",tmp.name,". Maximum ",freq," ",rx_ud,"-day precipitation total",sep="")  }
+	else if (index.name=="rnnmm") { tmp.name=paste("r",rnnmm_ud,"mm",sep="") ; sub=paste("Index: ",tmp.name,". ",freq," number of days when precipitation >= ",rnnmm_ud,"mm",sep="")  }
 	else if (index.name=="ntxntn") { tmp.name=paste(txtn_ud,"tx",txtn_ud,"tn",sep="") ; sub=paste("Index: ",tmp.name,". Annual number of ",txtn_ud," consecutive days where both TX > 95th percentile and TN > 95th percentile",sep="")  }
 	else if (index.name=="ntxbntnb") { tmp.name=paste(txtn_ud,"txb",txtn_ud,"tnb",sep="") ; sub=paste("Index: ",tmp.name,". Annual number of ",txtn_ud," consecutive days where both TX < 5th percentile and TN < 5th percentile",sep="")  }
 	else if (index.name=="cddcold") { tmp.name=index.name ; sub=paste("Index: ",tmp.name,". Annual sum of TM - ",Tb_CDD,"°C (where ",Tb_CDD,"°C is a user-defined base temperature and should be smaller than TM)",sep="")  }
@@ -2108,11 +1646,11 @@ plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,s
 	else if (index.name=="gddgrow") { tmp.name=index.name ; sub=paste("Index: ",tmp.name,". Annual sum of TM - ",Tb_GDD,"°C (where ",Tb_GDD,"°C is a user-defined base temperature and should be smaller than TM)",sep="")  }
 	else { tmp.name = index.name ; sub=paste("Index: ",tmp.name,". ",sub,sep="") }
 
-	if(freq=="monthly") { freq="MON" }
-	else if(freq=="annual") { freq="ANN" }
-	else {}
-	
-	if(index.name=="tx95t") { freq="DAY" }
+	if(index.name=="tx95t") { freq="DAY" } 
+	else {
+		if(freq=="monthly") { freq="MON" }
+		else if(freq=="annual") { freq="ANN" }
+	}
 	
 	namp <- paste(outjpgdir, paste(ofilename, "_", tmp.name, "_", freq,".jpg", sep = ""), sep = "/")
 	jpeg(file = namp, width = 1024, height = 768)
@@ -2381,8 +1919,7 @@ cspei <- function(data, scale, kernel=list(type='rectangular',shift=0),
 cspi <- function(x, y,...) UseMethod('cspi')
 
 # Fit SPI (previously spi() function). Default method.
-cspi <-
-function(data, scale, kernel=list(type='rectangular',shift=0),
+cspi <- function(data, scale, kernel=list(type='rectangular',shift=0),
 	distribution='Gamma', fit='ub-pwm', na.rm=TRUE,
 	ref.start=NULL, ref.end=NULL, x=FALSE, ...) {
 	return(cspei(data, scale, kernel, distribution, fit, na.rm,
@@ -2400,11 +1937,11 @@ about <- function(){
 
         ab <<- tktoplevel(bg = "white")
         tkfocus(ab)
-        tkwm.title(ab, "\tClimPACT2 - About\t")
+        tkwm.title(ab, "\tClimPACT2 - Credits\t")
         tt2 <- tkframe(ab,bg="white")
         frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
         tkgrid(frame.space)
-        tkgrid(tklabel(tt2, text = "About ClimPACT2", bg = "white", font = fontHeading2),columnspan=1)
+        tkgrid(tklabel(tt2, text = "Credits", bg = "white", font = fontHeading2),columnspan=1)
         tkgrid(frame.space)
         tkgrid(tt2)
 
@@ -2412,13 +1949,20 @@ about <- function(){
         frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
         tkgrid(frame.space)
         tkgrid(tklabel(tt2,text=
-"Developed by lots of people including Nicholas Herold, Lisa Alexander, Hongang Yang, 
-James Goldie, Sarah Perkins. Based on the RClimDEX software developed by the joint WMO 
-CCl/CLIVAR/JCOMM Expert Team on Climate Change Detection and Indies (ETCCDI). 
-ClimPACT2 uses the R package climdex.pcic, developed by the Pacific Climate Impacts 
-Consortium (PCIC), to calculate the majority of indices. For any comments, questions
-or suggestions, e-mail nicholas.herold@unsw.edu.au"
-,bg='white',font=font_small,width=90),sticky="nsew")
+" Oversight: World Meteorological Organisation (WMO), the Expert Team 
+ on Sector Climate Indices (ET-SCI).
+  
+ Design and documentation: Lisa Alexander and Nicholas Herold.
+  
+ GUI: Nicholas Herold, James Goldie, Hongang Yang, Yang Feng and Yujun Ouyang.
+  
+ NetCDF calculation: Pacific Climate Impacts Consortium (David Bronaugh, 
+ James Hiebert), Nicholas Herold.
+  
+ Batch processing: Nicholas Herold.
+
+ For any comments, questions or suggestions, e-mail nicholas.herold@unsw.edu.au"
+,bg='white',font=font_small,width=90,justify="left"),sticky="nsew")
         tkgrid(frame.space)
         tkgrid(tt2)
 
@@ -2439,10 +1983,10 @@ or suggestions, e-mail nicholas.herold@unsw.edu.au"
 }
 
 license <- function(){
-        lic.done <- function(){
-                tkdestroy(lic)
-                tkfocus(start1)
-        }
+	lic.done <- function(){
+		tkdestroy(lic)
+		tkfocus(start1)
+	}
 
 	lic <<- tktoplevel(bg = "white")
 	tkfocus(lic)
@@ -2450,7 +1994,6 @@ license <- function(){
 	tt2 <- tkframe(lic,bg="white")
 	frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
 	tkgrid(frame.space)
-	tkgrid(tklabel(tt2, text = "ClimPACT2 license agreement", bg = "white", font = fontHeading2),columnspan=1)
 	tkgrid(frame.space)
 	tkgrid(tt2)
 	
@@ -2458,34 +2001,39 @@ license <- function(){
 	frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
 	tkgrid(frame.space)
 	tkgrid(tklabel(tt2,text=
-"This software is distributed as open source, anyone is free to modify and redistribute this software under 
-the following conditions; that acknowledgement is given the original authors (see \"About\") and the 
-World Meteorological Organisation, and that it is acknowledged that any changes to the ETCCDI or ETSCI 
-indices as they are calculated here will no longer be considered official. The indices as they are 
-calculated in ClimPACT2 are considered the official implementation (and are subject to change only by 
-members of the ETSCI or ETCCDI). Lastly, this software is provided as-is and the authors nor their 
-host institutions take any responsibility for the accuracy of the data produced by it.",bg='white',font=font_small,width=90),sticky="nsew")
-        tkgrid(frame.space)
+" Copyright (C) 2016 University of New South Wales
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, version 3 of the License.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.txt.",bg='white',font=font_small,width=90),sticky="nsew")
+	tkgrid(frame.space)
 	tkgrid(tt2)
-
-        tt2 <- tkframe(lic,bg="white")
-        frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
-        tkgrid(frame.space)
-        tkgrid(tt2)
-
-		tt2 <- tkframe(lic,bg="white")
-		ok1.but<-tkbutton(tt2,text="    Done    ",command=lic.done,bg='white',font=font_small)
-		tkgrid(ok1.but)
-		tkgrid(tt2)
-
-        tt3 <- tkframe(lic,bg="white")
-        frame.space <- tklabel(tt3, text = " ", font = font_small, bg = "white")
-        tkgrid(frame.space)
-        tkgrid(tt3)
+	
+	tt2 <- tkframe(lic,bg="white")
+	frame.space <- tklabel(tt2, text = " ", font = font_small, bg = "white")
+	tkgrid(frame.space)
+	tkgrid(tt2)
+	
+	tt2 <- tkframe(lic,bg="white")
+	ok1.but<-tkbutton(tt2,text="    Done    ",command=lic.done,bg='white',font=font_small)
+	tkgrid(ok1.but)
+	tkgrid(tt2)
+	
+	tt3 <- tkframe(lic,bg="white")
+	frame.space <- tklabel(tt3, text = " ", font = font_small, bg = "white")
+	tkgrid(frame.space)
+	tkgrid(tt3)
 }
 
-# package.check
-# Check for required packages and installs if necessary
+# Check for required packages and install if necessary
 package.check <- function() {
 	gui.packages <- c("bitops","Rcpp","caTools","PCICt","SPEI","climdex.pcic")
 	new.packages <- gui.packages[!(gui.packages %in% installed.packages()[,"Package"])]
@@ -2497,31 +2045,68 @@ package.check <- function() {
 	        install.packages(new.packages) 
 	}
 
-	# Install Linux-specific packages
-	if(.Platform$OS.type == "unix") {
-                linux.packages <- c("ncdf4","foreach","doParallel","abind")
-                new.linux.packages <- linux.packages[!(linux.packages %in% installed.packages()[,"Package"])]
-
-		if(length(new.linux.packages)) {
-	                print("******************************")
-        	        print(paste("Installing the following required packages...",new.packages,sep=""))
-			install.packages(new.linux.packages) } 
-	}
-
 	print(paste("R version ",as.character(getRversion())," detected.",sep=""),quote=FALSE)
 }
 
-# startss
-# Main function. Initiates GUI.
-startss <- function(){
+# Define global variables. The use of global variables is undesirable from a programming point of view
+# but for historical purposes is still used in this code.
+global.vars <- function() {
+	# Nullify objects globally to avoid warning messages.
+	reading.pb <<- process.pb <<- pb <<- orig.name.user <<- qc.yes <<- outthresdir <<- quantiles <<- cio <<- ofilename <<- infor1 <<- orig.name <<- title.station <<- outlogdir <<- thres.calc <<- 
+	add.data <<- add.data.name <<- out <<- ref.start <<- ts.end <<- basetmin <<- basetmax <<- baseprec <<- start.but <<- cal.but <<- ttmp <<- outqcdir <<- NULL
+	
+	start1<<-tktoplevel(bg='white')
+	version.climpact <<- software_id
+	
+	# Fonts 
+	fontHeading     <<- tkfont.create(family = "times", size = 40, weight = "bold", slant = "italic")
+	fontHeading1    <<- tkfont.create(family = "times", size = 18)
+	fontHeading2    <<- tkfont.create(family = "times", size = 14, weight = "bold")
+	fontTextLabel   <<- tkfont.create(family = "arial", size = 12)
+	font_small  <<- "arial 12"
+	font_small_bold  <<- "arial 12 bold"
+	font_err    <<- "times 13 bold"
+	grey_font <<- tkfont.create(family = "arial", size = 30, weight = "bold", slant = "italic") #'times 20 grey bold'
+	
+	# Global variables
+	running.zero.allowed.in.temperature <<- 4
+	temp.quantiles <<- c(0.05,0.1,0.5,0.9,0.95)
+	prec.quantiles <<- c(0.05,0.1,0.5,0.9,0.95,0.99)
+	barplot_flag    <<- TRUE
+	loaded <<- FALSE
+	min_trend     <<- 10	# minimum number of data points for plotting a linear trend
+	
+	# Initial index parameter values
+	stations<<-tclVar(paste(" "))
+	base.year.start.tcl<<-tclVar(paste("1971"));base.year.end.tcl<<-tclVar(paste("2000"))
+	latentry<<-tclVar(''); lonentry<<-tclVar('') ; add.data.name.entry <<-tclVar('')
+	Entry4<<-tclVar(paste("0"))
+	Entry5<<-tclVar(paste("0"))
+	Entry13<<-tclVar(paste("2"))
+	Entry14<<-tclVar(paste("2"))
+	Entry15<<-tclVar(paste("3"))
+	Entry16<<-tclVar(paste("2"))
+	Entry17<<-tclVar(paste("30"))
+	Entry20<<-tclVar(paste("18"))
+	Entry21<<-tclVar(paste("18"))
+	Entry22<<-tclVar(paste("10"))
+	Entry23<<-tclVar(paste("24"))
+	Entry24<<-tclVar(paste("0"))
+}
+
+# Main GUI function. Initiates GUI.
+startss <- function() {
+	package.check()
+	library(tcltk)
+	tclRequire("BWidget")
+	source("ancillary/climpact2.etsci-functions.r")
+	global.vars()
 	logo_require <- FALSE
 	
 	# search logo files in current working directory.
 	no.logo <- FALSE;
 	dir0 <- getwd();
-	logo1 <- "WMOLogo.gif";
-	logo2 <- "UNSW.gif";
-	logo3 <- "coess_unsw.gif";
+	logo1 <- "user_guide/images/coess_unsw.gif";
 	
 	if (logo_require == TRUE)
 	{  # Users want to search another directory for the logo files.
@@ -2535,9 +2120,7 @@ startss <- function(){
 			}
 		}
 	}
-	if (file.exists(paste(dir0, "/", logo1, sep = "")) == FALSE |
-	    file.exists(paste(dir0, "/", logo2, sep = "")) == FALSE |
-	    file.exists(paste(dir0, "/", logo3, sep = "")) == FALSE) no.logo <- TRUE; # find logos?
+	if (file.exists(paste(dir0, "/", logo1, sep = "")) == FALSE) no.logo <- TRUE; # find logos?
 	
 	tkwm.geometry(start1, "+400+200"); # position in upper left corner of screen
 	tkwm.title(start1, paste("ClimPACT2",sep=" "));
@@ -2546,23 +2129,14 @@ startss <- function(){
 	if (no.logo == FALSE)
 	{  # with logos
 	  logo1 <- paste(dir0, "/", logo1, sep = "");
-	  logo2 <- paste(dir0, "/", logo2, sep = "");
-	  logo3 <- paste(dir0, "/", logo3, sep = "");
-	
 	  img  <- tkimage.create("photo", file = logo1);
-	  img2 <- tkimage.create("photo", file = logo2, width = 0);
-	  img3 <- tkimage.create("photo", file = logo3, width = 0);
-	
-	  right <- tklabel(start1, image = img3);
+	  right <- tklabel(start1, image = img);
 	  tkgrid(right,columnspan=3)
 	} else
 	{    # no logos, show a help button.
 	  help.logo <- function()
 	  {
-	    tkmessageBox(message=paste('You can see this help because the logo files are not in the working directory of R!\n\nThree files are needed for the logos:\n',
-	      logo1,', ',logo2,', and ',logo3,'\nAnd they must be in the working directory of R.\n\n',
-	      'If you have those files, you can put them in the working directory, or set "logo_require=T" in line 57 of the source code and try again... ',
-	      sep = ''), icon = 'question');
+	    tkmessageBox(message=paste('You can see this help because the logo files are not in the working directory of R!',sep = ''), icon = 'question');
 	  }
 	
 	  right <- tkbutton(start1, text = " ? ", command = help.logo, bg = "white", foreground = "light grey", width = 2);
@@ -2578,7 +2152,7 @@ startss <- function(){
 	tkgrid(tklabel(start1, text = "    ", bg = "white"));
 
 	start.but   <<- tkbutton(start1, text = "   LOAD AND  \n  CHECK DATA   ", command = load.data.qc, width = 15, font = fontHeading2, bg = "lightgreen") 
-	cal.but     <<- tkbutton(start1, text = "   CALCULATE \n   INDICES  ", command = index.calc1, width = 15, font = fontHeading2, bg = "white")
+	cal.but     <<- tkbutton(start1, text = "   CALCULATE \n   INDICES  ", command = draw.step2.interface, width = 15, font = fontHeading2, bg = "white")
 	
 	tkgrid(tklabel(start1, text = " STEP. 1", bg = "white",font=fontHeading1,width=8), columnspan =3)
 	tkgrid(start.but, columnspan =3)
@@ -2588,7 +2162,7 @@ startss <- function(){
 
 
 	cancel.but  <- tkbutton(start1, text = " Exit ", command = done, width = 7, font = fontHeading2, bg = "white");
-	help.but    <- tkbutton(start1, text = " About ", command = about, width = 7, font = fontHeading2, bg = "white");
+#	help.but    <- tkbutton(start1, text = " About ", command = about, width = 7, font = fontHeading2, bg = "white");
 	license.but <- tkbutton(start1, text = " License ", command = license, width = 7, font = fontHeading2, bg = "white");
 
 	gap = tklabel(start1,width=5,text="",bg="white")
@@ -2596,7 +2170,7 @@ startss <- function(){
 	tkgrid(tklabel(start1, text = "    ", bg = "white"));
 	tkgrid(tklabel(start1, text = "    ", bg = "white"));
 
-	tkgrid(help.but, columnspan = 3)
+#	tkgrid(help.but, columnspan = 3)
 	tkgrid(license.but, columnspan = 3)
 	tkgrid(cancel.but, columnspan = 3)
 	tkgrid(tklabel(start1, text = "", bg = "white"))
@@ -2605,10 +2179,9 @@ startss <- function(){
 	tkfocus(start1)
 }
 
-#================================================
-#  This checks for required packages and runs the program
-#================================================
-package.check()
-source("climpact2.r") # source climpact code and load data from ascii file into climdex object
-version.climpact <- software_id
-startss()
+# Call function to start the program.
+# This IF function is a hack to allow functionality in this file to be sourced without having to run the GUI itself.
+# A more elegant solution likely exists. This IF statement requires that for startss() NOT to be called, some command-line
+# parameters must have been specified (which is precisely what happens when calling the batch processing code).
+#print(commandArgs())
+if(length(commandArgs())==1) startss()

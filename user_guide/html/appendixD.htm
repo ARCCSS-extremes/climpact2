@@ -1,0 +1,266 @@
+<html>
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=Generator content="Microsoft Word 15 (filtered)">
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin-top:0cm;
+	margin-right:0cm;
+	margin-bottom:8.0pt;
+	margin-left:0cm;
+	line-height:106%;
+	font-size:12.0pt;
+	font-family:"Times New Roman",serif;}
+a:link, span.MsoHyperlink
+	{color:#0563C1;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:#954F72;
+	text-decoration:underline;}
+.MsoChpDefault
+	{font-size:12.0pt;}
+@page WordSection1
+	{size:595.3pt 841.9pt;
+	margin:72.0pt 72.0pt 72.0pt 72.0pt;}
+div.WordSection1
+	{page:WordSection1;}
+.auto-style1 {
+	text-decoration: underline;
+	font-size: 14pt;
+	font-family: "Times New Roman", Times, serif;
+}
+.auto-style2 {
+	font-size: 14pt;
+	font-family: "Times New Roman", Times, serif;
+}
+.auto-style3 {
+	font-size: 14pt;
+	font-weight: bold;
+	font-family: "Times New Roman", Times, serif;
+}
+.auto-style7 {
+	font-size: 14pt;
+	font-family: "Times New Roman", Times, serif;
+	line-height: 150%;
+	margin-top: 0;
+	margin-bottom: 0;
+}
+.auto-style8 {
+	line-height: 150%;
+	margin-top: 0;
+	margin-bottom: 0;
+}
+-->
+</style>
+
+<title>Appendix D</title>
+
+</head>
+
+<body lang=EN-AU link="#0563C1" vlink="#954F72">
+
+<div class=WordSection1>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center'><b><i><span
+style='font-size:38.0pt;line-height:106%;color:#2F5597'>ClimPACT2</span></i></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center'><b><span
+style='font-size:19.0pt;line-height:106%'>Appendix D: Heatwave and coldwave calculations</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:16.0pt;line-height:106%'>&lt; <a href="appendixC.htm">Prev.</a> | 
+<a href="../ClimPACT2_user_guide.htm">Home</a> | <a href="appendixE.htm">Next</a> &gt;</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class="auto-style8"><span class="auto-style2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+<span class="auto-style1">D.1 Heatwave (HW) definitions and aspects</span></p>
+	<p class=auto-style7>The HW calculations used in ClimPACT2 are based off
+Perkins and Alexander (2013), hereafter PA13, with some slight modifications to
+the Excess Heat Factor (EHF; Perkins personal comms 2015). See PA13 for background information.</p>
+
+<p class=auto-style7>Corresponding to the framework of PA13, three HW definitions are used in ClimPACT2. Neither is more ‘correct’ than the other,
+and all are provided for the user to interpret with the appropriate discretion.
+These definitions are based on the 90th percentile of TN (minimum daily
+temperature) designated Tn90, the 90th percentile of TX (maximum daily
+temperature) designated Tx90, and the EHF (see D.3 below).</p>
+
+<p class=auto-style8><span class="auto-style2">According to the above </span>
+<span class="auto-style3">three HW definitions (Tn90, Tx90
+and EHF)</span><span class="auto-style2"> a HW event is defined as any length of three or more days where 
+one of the following conditions is met.</span></p>
+
+	<ol>
+		<li>
+		<p class=auto-style7>TN &gt; 90th percentile of TN.</p>
+		</li>
+		<li>
+		<p class=auto-style7>TX &gt; 90th percentile of TX.</p>
+		</li>
+		<li>
+		<p class=auto-style7>the EHF is positive.</p>
+		</li>
+	</ol>
+
+<p class=auto-style7>The percentiles for Tn90 and Tx90 are calculated within a
+user-specified base period and for each calendar day using a 15 day running 
+window.</p>
+	<p class=auto-style7>All HW definitions in ClimPACT2 are calculated over the 
+	extended summer period (with the exceptions of 
+	the Excess Heat Factor (EHF) and Excess Cold Factor (ECF) as defined by 
+	Nairn and Fawcett (2013), see below). In the southern hemisphere the 
+	extended summer season 
+	includes November to March, in the northern hemisphere it includes May to 
+	September.</p>
+	<p class=auto-style7>&nbsp;</p>
+	<p class=auto-style7>For each of the above three HW definitions there are
+	<strong>five HW Aspects</strong> that are calculated for each year or 
+	summer.</p>
+	<ol>
+		<li>
+		<p class=auto-style7>HW Number (HWN): The number of HW events (&gt;= 3 HW days) 
+		that begin in the period of interest in addition to those that start 
+		prior to but continue into the period of interest. </p>
+		</li>
+		<li>
+		<p class=auto-style7>HW Frequency (HWF): The number of days that 
+		contribute to HWs defined by HWN (these are termed 'HW days'). For HW’s 
+		that begin prior to the period of interest, only the HW days within the 
+		period of interest are counted. For HW’s that extend beyond the period 
+		of interest, a maximum of 14 days beyond the period of interest is 
+		counted. </p>
+		</li>
+		<li>
+		<p class=auto-style7>HW Duration (HWD): Length in days of the longest 
+		heatwave defined by HWN. </p>
+		</li>
+		<li>
+		<p class=auto-style7>HW Magnitude (HWM): The mean of the mean HW days of 
+		each HW defined by HWN. </p>
+		</li>
+		<li>
+		<p class=auto-style7>HW AMplitude (HWA): The peak daily value in the 
+		hottest HW (defined as the HW with the highest HWM). </p>
+		</li>
+	</ol>
+
+<p class=auto-style7>&nbsp;</p>
+	<p class=auto-style8><span class="auto-style2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	</span><span class="auto-style1">D.2 Notes regarding calculations</span></p>
+	<ul>
+		<li>
+		<p class=auto-style7>When calculating HWs, leap days are ignored and 
+	deleted from data. </p>
+		</li>
+		<li>
+		<p class=auto-style7>The year of a HW season refers to the year 
+	it commences in. e.g. the summer season of 2009 for Sydney, Australia, 
+		begins in November 2009.</p>
+		</li>
+		<li>
+		<p class=auto-style7>If there are no HWs in a given year, then HWN 
+	and HWF = 0. All other HW aspects = NA. </p>
+		</li>
+		<li>
+		<p class=auto-style7>For netCDF data, values calculated over ocean grid 
+	cells should be ignored.</p>
+		</li>
+	</ul>
+	<p class=auto-style7>&nbsp;</p>
+	<p class=auto-style8><span class="auto-style2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	</span><span class="auto-style1">D.3 Excess Heat Factor</span></p>
+	<p class=auto-style7>The EHF is a combination of two excess heat indices (EHI) 
+	representing the <em>acclimitisation</em> to heat and the climatological <em>
+	significance</em>;</p>
+	<p class=auto-style7>&nbsp;</p>
+
+<p class=auto-style7>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; EHI(accl.) = [(TM<sub>i</sub> + TM<sub>i-1</sub> + TM<sub>i-2</sub>)/3] – [(TM<sub>i-3</sub> + … +
+TM<sub>i-32</sub>)/30]</p>
+
+<p class=auto-style7>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; EHI(sig.) = [(TM<sub>i</sub> + TM<sub>i-1</sub> + TM<sub>i-2</sub>)/3] – TM90</p>
+	<p class=auto-style7>&nbsp;</p>
+
+<p class=auto-style7>Where TM<sub>i</sub> represents the average daily temperature for day i
+and TM90 is the 90th percentile of TM which is also calculated within a
+user-specified base period, over the calendar year and using a 15 day running
+window. TM is calculated via TM = (TX + TN)/2. The EHF is defined from the above 
+two defintions:</p>
+	<p class=auto-style7>&nbsp;</p>
+	<p class=auto-style7>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; EHF = EHI(sig.) x 
+	max(1,EHI(accl.))</p>
+	<p class=auto-style7>&nbsp;</p>
+
+<p class=auto-style8><span class="auto-style2">The above definition of the EHF 
+differs to that in PA13 in several key areas. In PA13 the EHF was defined as in Nairn and Fawcett
+(2013), using the climatological 95th percentile of TM over the base period
+(i.e. one percentile for the entire base period, not a unique percentile for each 
+calendar
+day). In ClimPACT2, the EHF has been updated (Perkins personal comms 2015) and uses the 90th percentile of TM for each calendar day 
+using a 15 day running window. For users calculating the indices on netCDF data, 
+an option exists to change the definition of the EHF calculation to that of 
+Nairn and Fawcett (2013). To do this, simply change the &quot;EHF_DEF&quot; variable in
+</span><em><span class="auto-style2">climpact2.ncdf.wrapper.r</span></em><span class="auto-style2"> 
+to &quot;NF13&quot;, instead of the default &quot;PA13&quot;. In the GUI (see 
+Section 3) the EHF is calculated using the modified &quot;PA13&quot; method.</span></p>
+
+</div>
+
+<p class="auto-style7">&nbsp;</p>
+<p class="auto-style8"><span class="auto-style2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span class="auto-style1">D.4 Excess Cold Factor</span></p>
+<p class="auto-style7">Coldwaves (periods of uncharacteristically cold 
+temperatures) are calculated in ClimPACT2 via the ECF that was developed by 
+Nairn and Fawcett (2013) and is directly analagous to the EHF as defined by those 
+authors.</p>
+<p class=auto-style7>The ECF is a combination of two excess cold indices (ECI) 
+representing the <em>acclimitisation</em> to cold and the climatological <em>
+significance</em>;</p>
+<p class=auto-style7>&nbsp;</p>
+
+<p class=auto-style7>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ECI(accl.) = [(TM<sub>i</sub> + TM<sub>i-1</sub> + TM<sub>i-2</sub>)/3] – [(TM<sub>i-3</sub> + … +
+TM<sub>i-32</sub>)/30]</p>
+
+<p class=auto-style7>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ECI(sig.) = 
+[(TM<sub>i</sub> + TM<sub>i-1</sub> + TM<sub>i-2</sub>)/3] – TM05</p>
+<p class=auto-style7>&nbsp;</p>
+<p class=auto-style7>Where </p>
+<p class=auto-style7>&nbsp;</p>
+<p class=auto-style7>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ECF = -ECI(sig.) x 
+min(-1,ECI(accl.))</p>
+<p class=auto-style7>&nbsp;</p>
+
+<p class=auto-style7>Where TM<sub>i</sub> represents the average daily temperature for day i
+and TM05 is the 5th percentile of TM which is calculated within a
+user-specified base period. TM is calculated via TM = (TX + TN)/2. See Nairn and Fawcett (2013) for 
+more details.</p>
+<p class=auto-style7>&nbsp;</p>
+<p class=auto-style8><span class="auto-style2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span class="auto-style1">D.6 References</span></p>
+<p class=auto-style7>Nairn J R and Fawcett R G 2013 Defining heatwaves: heatwave 
+defined as a heat-impact event servicing all community and business sectors in 
+Australia (Centre for Australian Weather and Climate Research) </p>
+<p class=auto-style7>Perkins S E and Alexander L V 2013 On the Measurement of 
+heatwaves J. Clim. 26 4500–17 Online: 
+<a href="http://dx.doi.org/10.1175/JCLI-D-12-00383.1">http://dx.doi.org/10.1175/JCLI-D-12-00383.1</a> </p>
+<p class=auto-style7>&nbsp;</p>
+<p class=auto-style7>&nbsp;</p>
+
+</body>
+
+</html>

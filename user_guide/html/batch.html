@@ -1,0 +1,414 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta content="en-au" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>Batch process files</title>
+<style type="text/css">
+ p.MsoNormal
+	{margin-top:0cm;
+	margin-right:0cm;
+	margin-bottom:8.0pt;
+	margin-left:0cm;
+	line-height:106%;
+	font-size:12.0pt;
+	font-family:"Times New Roman",serif;}
+a:link
+	{color:#0563C1;
+	text-decoration:underline;}
+.auto-style1 {
+	margin-left: 40px;
+}
+.auto-style2 {
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
+	font-size: 14pt;
+}
+.auto-style3 {
+	border-top-style: solid;
+	border-top-width: 1px;
+	font-size: 14pt;
+}
+.auto-style4 {
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
+	margin-left: 40px;
+	font-size: 14pt;
+}
+.auto-style5 {
+	border-top-style: solid;
+	border-top-width: 1px;
+	margin-left: 40px;
+	font-size: 14pt;
+}
+.auto-style6 {
+	font-size: 14pt;
+}
+.auto-style7 {
+	margin-left: 40px;
+	font-size: 14pt;
+}
+.auto-style11 {
+	text-decoration: underline;
+}
+.auto-style16 {
+	font-size: 14pt;
+	line-height: 150%;
+	margin-top: 0;
+	margin-bottom: 0;
+	font-family: "Times New Roman", Times, serif;
+}
+.auto-style17 {
+	line-height: 100%;
+	margin-top: 0;
+	margin-bottom: 0;
+	font-family: "Times New Roman", Times, serif;
+}
+.auto-style18 {
+	line-height: 100%;
+	margin-top: 0;
+	margin-bottom: 0;
+}
+</style>
+</head>
+
+<body>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center'><b><i><span
+style='font-size:38.0pt;line-height:106%;color:#2F5597'>ClimPACT2</span></i></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center; font-size: 19pt;'>
+<strong>5. Batch processing multiple station files</strong></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:16.0pt;line-height:106%'>&lt; <a href="netcdf.htm">Prev.</a> | 
+<a href="../ClimPACT2_user_guide.htm">Home</a> | <a href="appendixA.htm">Next</a> &gt;</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>Occasionally users will have 
+numerous station text files for which they 
+would like to calculate the ClimPACT2 indices. For this purpose using the GUI 
+part of ClimPACT2 (<a href="GUI.htm">Section 3</a>) would be impractical. In this 
+case the data may be processed using the climpact2.batch.stations.r script. In 
+this case all station files must be in the same format as specified for the GUI 
+and is detailed in <a href="appendixB.htm">Appendix B</a>.</p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>
+&nbsp;</p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>
+&nbsp;&nbsp;&nbsp;&nbsp; <span class="auto-style11">5.1 Installing the required R 
+packages</span>&nbsp;</p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>
+Prior to calculating the indices on multiple station files several R packages 
+need to be installed. Follow these steps:</p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+1. Open a terminal window and cd to the climpact2-master directory created in <a href="getting_software.html">Section 2</a>.</p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+2. Open R, and type <em>source("installers/climpact2.batch.installer.r")</em>. This process can 
+take a couple of minutes but only needs to be completed once. During this 
+process you may be asked to select the geographical location of the closest 'mirror' to download these
+packages from. You may select any location, though the
+closest location will offer the fastest download speed. </p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>
+&nbsp;</p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>
+&nbsp;&nbsp;&nbsp;&nbsp; <span class="auto-style11">5.2 Calculating the indices on 
+multiple station files</span>&nbsp;</p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>
+The script that provides this functionality is climpact2.batch.stations.r. This script 
+requires command line arguments to be passed to it at run time. Execution of 
+this script takes the following form, from the Linux command line:</p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em> 
+Rscript climpact2.batch.stations.r /full/path/to/station/files/ 
+/full/path/to/metadata.txt base_period_begin base_period_end cores_to_use</em></p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>
+&nbsp;</p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>The 5 command line arguments above 
+are defined in the following table.</p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>
+&nbsp;</p>
+<table class="auto-style1" style="width: 71%">
+	<tr>
+		<td class="auto-style2" colspan="2">
+		<p class="auto-style17"><strong>Table 2. Command line 
+		arguments to pass to climpact2.batch.stations.r</strong></p>
+		</td>
+	</tr>
+	<tr>
+		<td class="auto-style3" style="width: 212px">
+		<p class="auto-style18"></p>
+		</td>
+		<td class="auto-style3">
+		<p class="auto-style18"></p>
+		</td>
+	</tr>
+	<tr>
+		<td style="width: 212px" class="auto-style6">
+		<p class="auto-style17">/full/path/to/station/files/</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Directory where individual station files are kept. An example can be 
+		found in sample_data/XXXX</p>
+		</td>
+	</tr>
+	<tr>
+		<td style="width: 212px" class="auto-style6">
+		<p class="auto-style17">/full/path/to/metadata.txt</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Text file that contains information about each station file to 
+		process.</p>
+		</td>
+	</tr>
+	<tr>
+		<td style="width: 212px" class="auto-style6">
+		<p class="auto-style17">base_period_begin</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Beginning year for the base period. To be used on all stations.</p>
+		</td>
+	</tr>
+	<tr>
+		<td style="width: 212px" class="auto-style6">
+		<p class="auto-style17">base_period_end</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Ending year for the base period. To be used on all stations.</p>
+		</td>
+	</tr>
+	<tr>
+		<td style="width: 212px" class="auto-style6">
+		<p class="auto-style17">cores_to_use</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Number of processor cores to use. When processing hundreds or 
+		thousands of files, this is useful.</p>
+		</td>
+	</tr>
+</table>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>
+&nbsp;</p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>An example of executing the 
+climpact2.batch.stations.r file would be:</p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<em>Rscript climpact2.batch.stations.r ./sample_data/Renovados_hasta_2010 
+./sample_data/climpact2.sample.batch.metadata.txt 1971 2000 4</em></p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>
+&nbsp;</p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>The metadata.txt file contains 12 
+columns defined in the following table. A sample metadata.txt file can be found 
+at ./sample_data/climpact2.sample.batch.metadata.txt in the ClimPACT2 directory.</p>
+<p class=MsoNormal style='line-height:150%; font-size: 14pt; margin-bottom: 0; font-family: &#39;Times New Roman&#39;, Times, serif;'>
+&nbsp;</p>
+<table class="auto-style1" style="width: 71%">
+	<tr>
+		<td class="auto-style4" colspan="2">
+		<p class="auto-style17"><strong>Table 3. Column definitions 
+		for metadata.txt file. See 
+		./sample_data/climpact2.sample.batch.metadata.txt for an example.</strong></p>
+		</td>
+	</tr>
+	<tr>
+		<td class="auto-style5" style="width: 120px">
+		<p class="auto-style18"></p>
+		</td>
+		<td class="auto-style3">
+		<p class="auto-style18"></p>
+		</td>
+	</tr>
+	<tr>
+		<td class="auto-style7" style="width: 120px" valign="top">
+		<p class="auto-style17">station_file</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Station file name to process. This column lists all of the 
+		individual station text files that you wish to process and that are 
+		stored in the directory passed to climpact2.batch.stations.r (as 
+		argument 1 in table 2).</p>
+		</td>
+	</tr>
+	<tr>
+		<td class="auto-style7" style="width: 120px" valign="top">
+		<p class="auto-style17">latitude</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Latitude of station</p>
+		</td>
+	</tr>
+	<tr>
+		<td class="auto-style7" style="width: 120px" valign="top">
+		<p class="auto-style17">longitude</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Longitude of station</p>
+		</td>
+	</tr>
+	<tr>
+		<td class="auto-style7" style="width: 120px" valign="top">
+		<p class="auto-style17">wsdin</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Number of days to calculate WSDI on. See 
+		<a href="appendixA.htm">Appendix A</a>.</p>
+		</td>
+	</tr>
+	<tr>
+		<td class="auto-style7" style="width: 120px" valign="top">
+		<p class="auto-style17">csdin</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Number of days to calculate CSDI on. See 
+		<a href="appendixA.htm">Appendix A</a>.</p>
+		</td>
+	</tr>
+	<tr>
+		<td class="auto-style7" style="width: 120px" valign="top">
+		<p class="auto-style17">Tb_HDD</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Base temperature to use in the calculation of HDDHEAT. See 
+		<a href="appendixA.htm">Appendix A</a>.</p>
+		</td>
+	</tr>
+	<tr>
+		<td class="auto-style7" style="width: 120px" valign="top">
+		<p class="auto-style17">Tb_CDD</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Base temperature to use in the calculation of CDDCOLD. See 
+		<a href="appendixA.htm">Appendix A</a>.</p>
+		</td>
+	</tr>
+	<tr>
+		<td class="auto-style7" style="width: 120px" valign="top">
+		<p class="auto-style17">Tb_GDD</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Base temperature to use in the calculation of GDD. See 
+		<a href="appendixA.htm">Appendix A</a>.</p>
+		</td>
+	</tr>
+	<tr>
+		<td class="auto-style7" style="width: 120px; height: 23px" valign="top">
+		<p class="auto-style17">rxnday</p>
+		</td>
+		<td style="height: 23px" class="auto-style6">
+		<p class="auto-style17">Number of days across which to calculate 
+		Rxnday. See <a href="appendixA.htm">Appendix A</a>.</p>
+		</td>
+	</tr>
+	<tr>
+		<td class="auto-style7" style="width: 120px" valign="top">
+		<p class="auto-style17">rnnmm</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Precipitation threshold used to calculate Rnnmm. See 
+		<a href="appendixA.htm">Appendix A</a>.</p>
+		</td>
+	</tr>
+	<tr>
+		<td class="auto-style7" style="width: 120px" valign="top">
+		<p class="auto-style17">txtn</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Number of days across which to calculate both nTXnTN and nTXbnTNb. 
+		See <a href="appendixA.htm">Appendix A</a>.</p>
+		</td>
+	</tr>
+	<tr>
+		<td class="auto-style7" style="width: 120px" valign="top">
+		<p class="auto-style17">SPEI</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Custom time scale over which to calculate SPEI and SPI. 3, 6 and 12 
+		months are calculated by default. This could be set to 24 months, for example.</p>
+		</td>
+	</tr>
+</table>
+<p class="auto-style16">&nbsp;</p>
+<p class="auto-style16">As the climpact2.batch.stations.r is executed, 5 folders will appear in your 
+directory where your station text files are stored. These are indices/, plots/, 
+thres/, trend/ and qc/. Under each of these folders subdirectories will exist 
+for each station file that has been processed containing the files relevant to 
+each of the above 5 directories. The table below details the contents of each 
+sub directory. Additionally, if calculating the indices on numerous files, 
+errors are bound to occur (typically due to insufficient data to calculate the 
+indices on). When ClimPACT2 encounters an error with an input file 
+during batch processing the error will be recorded in a text file that has the 
+same name as the corresponding input file, with ".error.txt" appended. A summary 
+of all errors will be printed to screen when batch processing finishes.</p>
+<p class="auto-style16">&nbsp;</p>
+<table class="auto-style1" style="width: 71%">
+	<tr>
+		<td class="auto-style2" colspan="2">
+		<p class="auto-style17"><strong>Table 4. Sub directories 
+		created once climpact2.batch.stations.r has run.</strong></p>
+		</td>
+	</tr>
+	<tr>
+		<td class="auto-style3" colspan="2">
+		<p class="auto-style18"></p>
+		</td>
+	</tr>
+	<tr>
+		<td style="width: 122px" valign="top" class="auto-style6">
+		<p class="auto-style17">indices/</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Contains separate .csv files containing the data for each index 
+		calculated.</p>
+		</td>
+	</tr>
+	<tr>
+		<td style="width: 122px" valign="top" class="auto-style6">
+		<p class="auto-style17">plots/</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Contains separate .jpg files containing plots for each index 
+		calculated.</p>
+		</td>
+	</tr>
+	<tr>
+		<td style="width: 122px" valign="top" class="auto-style6">
+		<p class="auto-style17">thres/</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Contains a .csv file containing threshold information used for 
+		calculating percentile based indices.</p>
+		</td>
+	</tr>
+	<tr>
+		<td style="width: 122px" valign="top" class="auto-style6">
+		<p class="auto-style17">trend/</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Contains a .csv file containing linear trend information for each 
+		index calculated.</p>
+		</td>
+	</tr>
+	<tr>
+		<td style="width: 122px" valign="top" class="auto-style6">
+		<p class="auto-style17">qc/</p>
+		</td>
+		<td class="auto-style6">
+		<p class="auto-style17">Contains quality control information for each station file 
+		processed. See Appendix C for information on how to interpret these 
+		files. Ensuring the quality of each station meets your satisfaction is 
+		critical prior to analysing the resulting indices. This may be an 
+		iterative process.</p>
+		</td>
+	</tr>
+</table>
+<p class="auto-style16">&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+</html>
