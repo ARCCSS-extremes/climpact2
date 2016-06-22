@@ -24,10 +24,10 @@ txn,°C,Annual coldest daily TX,ETCCDI,T,F
 txn,°C,Monthly coldest daily TX,ETCCDI,F,F
 dtr,°C,Mean annual difference between daily TX and daily TN,ETCCDI,T,F
 dtr,°C,Mean monthly difference between daily TX and daily TN,ETCCDI,F,F
-wsdi,days,Annual number of days with at least 6 consecutive days when TX > 90th percentile,ETCCDI,T,T
-wsdid,days,Annual number of days with at least d consecutive days when TX > 90th percentile,ETSCI,T,T
-csdi,days,Annual number of days with at least 6 consecutive days when TN < 10th percentile,ETCCDI,T,T
-csdid,days,Annual number of days with at least d consecutive days when TN < 10th percentile,ETSCI,T,T
+wsdi,days,Annual number of days contributing to events where 6 or more consecutive days experience TX > 90th percentile,ETCCDI,T,T
+wsdid,days,Annual number of days contributing to events where d or more consecutive days experience TX > 90th percentile,ETSCI,T,T
+csdi,days,Annual number of days contributing to events where 6 or more consecutive days experience TN < 10th percentile,ETCCDI,T,T
+csdid,days,Annual number of days contributing to events where d or more consecutive days experience TN < 10th percentile,ETSCI,T,T
 txgt50p,%,Annual percentage of days when TX > 50th percentile ,ETSCI,T,T
 txgt50p,%,Monthly percentage of days when TX > 50th percentile ,ETSCI,F,T
 tx10p,%,Annual percentage of days when TX < 10th percentile,ETCCDI,T,T
@@ -51,9 +51,9 @@ txge30,days,Monthly number of days when TX >= 30 °C,ETSCI,F,F
 txge35,days,Annual number of days when TX >= 35 °C,ETSCI,T,F
 txge35,days,Monthly number of days when TX >= 35 °C,ETSCI,F,F
 tx95t,°C,Value of 95th percentile of TX,ETSCI,NA,F
-hddheatn,°C,Annual sum of n - TM (where n is a user-defined location-specific base temperature and TM < n),ETSCI,T,F
-cddcoldn,°C,Annual sum of TM - n (where n is a user-defined location-specific base temperature and TM > n),ETSCI,T,F
-gddgrown,°C,Annual sum of TM - n (where n is a user-defined location-specific base temperature and TM > n),ETSCI,T,F
+hddheatn,degree-days,Annual sum of n - TM (where n is a user-defined location-specific base temperature and TM < n),ETSCI,T,F
+cddcoldn,degree-days,Annual sum of TM - n (where n is a user-defined location-specific base temperature and TM > n),ETSCI,T,F
+gddgrown,degree-days,Annual sum of TM - n (where n is a user-defined location-specific base temperature and TM > n),ETSCI,T,F
 cdd,days,Maximum annual number of consecutive dry days (when precipitation < 1.0 mm),ETCCDI,T,F
 cdd,days,Maximum monthly number of consecutive dry days (when precipitation < 1.0 mm),ETCCDI,F,F
 cwd,days,Maximum annual number of consecutive wet days (when precipitation >= 1.0 mm),ETCCDI,T,F

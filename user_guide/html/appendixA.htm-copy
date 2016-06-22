@@ -588,13 +588,13 @@ Updated index names and definitions May 2016). Bold indicates also ETCCDI index.
 			<td class="auto-style1" style="width: 208pt; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
 			<p>
 			<span style="mso-bidi-font-size: 14.0pt; mso-fareast-font-family: &quot;Times New Roman&quot;; mso-bidi-font-family: &quot;Times New Roman&quot;; mso-fareast-language: EN-AU">
-			Annual number of days contributing to events where 6 or more consecutive days experience TX &gt; 
+			Annual number of days with at least 6 consecutive days when TX &gt; 
 			90th percentile<o:p></o:p></span></p>
 			</td>
 			<td class="auto-style1" style="width: 180pt; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
 			<p>
 			<span style="mso-bidi-font-size: 14.0pt; mso-fareast-font-family: &quot;Times New Roman&quot;; mso-bidi-font-family: &quot;Times New Roman&quot;; mso-fareast-language: EN-AU">
-			Number of days contributing to a warm period (where the period has to be at least 6 
+			Longest unusually warm period (where the period has to be at least 6 
 			days long)<o:p></o:p></span></p>
 			</td>
 			<td class="auto-style1" style="width: 2.6cm; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
@@ -626,14 +626,14 @@ Updated index names and definitions May 2016). Bold indicates also ETCCDI index.
 			</td>
 			<td class="auto-style1" style="width: 208pt; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
 			<p class="auto-style6" style="mso-bidi-font-size: 14.0pt; mso-fareast-font-family: &quot;Times New Roman&quot;; mso-bidi-font-family: &quot;Times New Roman&quot;; mso-fareast-language: EN-AU">
-			Annual number of days contributing to events where 
+			Annual number of days with at least
 			<i style="mso-bidi-font-style:
-  normal">d</i> or more consecutive days experience TX &gt; 90th percentile<o:p></o:p></p>
+  normal">d</i> consecutive days when TX &gt; 90th percentile<o:p></o:p></p>
 			</td>
 			<td class="auto-style1" style="width: 180pt; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
 			<p>
 			<span style="mso-bidi-font-size: 14.0pt; mso-fareast-font-family: &quot;Times New Roman&quot;; mso-bidi-font-family: &quot;Times New Roman&quot;; mso-fareast-language: EN-AU">
-			Number of days contributing to a warm period (where the minimum length is 
+			Longest unusually warm period (where the minimum length is 
 			user-specified )<o:p></o:p></span></p>
 			</td>
 			<td class="auto-style1" style="width: 2.6cm; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
@@ -669,13 +669,13 @@ Updated index names and definitions May 2016). Bold indicates also ETCCDI index.
 			<td class="auto-style1" style="width: 208pt; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
 			<p>
 			<span style="mso-bidi-font-size: 14.0pt; mso-fareast-font-family: &quot;Times New Roman&quot;; mso-bidi-font-family: &quot;Times New Roman&quot;; mso-fareast-language: EN-AU">
-			Annual number of days contributing to events where 6 or more consecutive days experience TN &lt; 
+			Annual number of days with at least 6 consecutive days when TN &lt; 
 			10th percentile<o:p></o:p></span></p>
 			</td>
 			<td class="auto-style1" style="width: 180pt; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
 			<p>
 			<span style="mso-bidi-font-size: 14.0pt; mso-fareast-font-family: &quot;Times New Roman&quot;; mso-bidi-font-family: &quot;Times New Roman&quot;; mso-fareast-language: EN-AU">
-			Number of days contributing to a cold period (where the period has to be at least 6 
+			Longest unusually cold period (where the period has to be at least 6 
 			days long)<o:p></o:p></span></p>
 			</td>
 			<td class="auto-style1" style="width: 2.6cm; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
@@ -707,14 +707,14 @@ Updated index names and definitions May 2016). Bold indicates also ETCCDI index.
 			</td>
 			<td class="auto-style1" style="width: 208pt; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
 			<p class="auto-style6" style="mso-bidi-font-size: 14.0pt; mso-fareast-font-family: &quot;Times New Roman&quot;; mso-bidi-font-family: &quot;Times New Roman&quot;; mso-fareast-language: EN-AU">
-			Annual number of days contributing to events where
+			Annual number of days with at least
 			<i style="mso-bidi-font-style:
-  normal">d</i> or more consecutive days experience TN &lt; 10th percentile<o:p></o:p></p>
+  normal">d</i> consecutive days when TN &lt; 10th percentile<o:p></o:p></p>
 			</td>
 			<td class="auto-style1" style="width: 180pt; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
 			<p>
 			<span style="mso-bidi-font-size: 14.0pt; mso-fareast-font-family: &quot;Times New Roman&quot;; mso-bidi-font-family: &quot;Times New Roman&quot;; mso-fareast-language: EN-AU">
-			Number of days contributing to a cold period (where the minimum length is 
+			Longest unusually cold period (where the minimum length is 
 			user-specified )<o:p></o:p></span></p>
 			</td>
 			<td class="auto-style1" style="width: 2.6cm; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
@@ -1102,7 +1102,7 @@ Updated index names and definitions May 2016). Bold indicates also ETCCDI index.
 			</td>
 			<td class="auto-style1" style="width: 2.6cm; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
 			<p>
-			degree-days</p>
+			unitless</p>
 			</td>
 			<td class="auto-style1" style="width: 74pt; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
 			<p>
@@ -1137,7 +1137,7 @@ Updated index names and definitions May 2016). Bold indicates also ETCCDI index.
 			</td>
 			<td class="auto-style1" style="width: 2.6cm; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
 			<p>
-			degree-days</p>
+			unitless</p>
 			</td>
 			<td class="auto-style1" style="width: 74pt; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
 			<p>
@@ -1179,7 +1179,7 @@ Updated index names and definitions May 2016). Bold indicates also ETCCDI index.
 			</td>
 			<td class="auto-style1" style="width: 2.6cm; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
 			<p>
-			degree-days</p>
+			unitless</p>
 			</td>
 			<td class="auto-style1" style="width: 74pt; mso-border-top-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;" valign="top">
 			<p>
