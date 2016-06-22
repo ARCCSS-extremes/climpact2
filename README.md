@@ -48,12 +48,6 @@
     Video tutorial on how to install R in Windows
     -> https://www.youtube.com/watch?v=Nb-yt3gSnQw
 
-    Video tutorial on how to run ClimPACT2 in Windows
-    -> https://www.youtube.com/watch?v=eD8FqXdGNCs
-
-    Video tutorial on how to run ClimPACT2 in Linux/MacOS
-    -> https://www.youtube.com/watch?v=1sSCqsRMCZI
-
 
   How do I calculate the indices on netCDF datasets? (Linux/MacOS only)
   ---------------------------------------------------------------------
