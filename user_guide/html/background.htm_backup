@@ -110,26 +110,30 @@ style='font-size:16.0pt;line-height:106%'>&lt; <a href="acknowledgements.htm">Pr
 	<p class=MsoNormal align=center style='text-align:center'>&nbsp;</p>
 
 <p class=auto-style15>This document was prepared on behalf of the World
-Meteorological Organization (<a href="http://public.wmo.int/en">WMO</a>) Commission for Climatology (<a href="http://www.wmo.int/pages/prog/wcp/ccl/index_en.php">CCl</a>) Expert Team
-on Sector-specific Climate Indices (<a href="http://www.wmo.int/pages/prog/wcp/ccl/opace/opace4/ET-SCI-4-1.php">ET-SCI</a>). It outlines the background and
+Meteorological Organization (WMO) Commission for Climatology (CCl) Expert Team
+on Sector-specific Climate Indices (ET-SCI). It outlines the background and
 goals of the ET-SCI and describes indices and software that were developed on
 their behalf.</p>
-<br/>
+
 <p class=auto-style11 style='line-height:150%'><span style='font-size:14.0pt;
 line-height:150%'><span class="auto-style13">The ET-SCI, formerly known as the Expert Team on Climate Risk
 and Sector-specific Indices (ET-CRSCI) was set up by the Fifteenth session of
 the WMO Technical Commission for Climatology (CCl-XV, Antalya, Turkey, February
 2010), with terms of reference established to support eventual implementation
-of the Global Framework for Climate Services (<a href="http://www.gfcs-climate.org/">GFCS</a>).
- 
+of the Global Framework for Climate Services (GFCS) (for background on GFCS see
+</span>
+<a href="http://www.wmo.int/hlt-gfcs/downloads/HLT_book_full.pdf">
+<span class="auto-style4">N</span><span class="auto-style3">EEDS UPDATED LINK</span></a><span class="auto-style13">). 
 Following the sixteenth World Meteorological Congress in May 2011 where a 
 decision was made by WMO members to implement the GFCS, the ET-SCI held their 
-first meeting in Tarragona, Spain (13-15 July, 2011). </span></span></p>
+first meeting in Tarragona, Spain (13-15 July, 2011). Click
+<a href="http://www.wmo.int/pages/prog/wcp/ccl/opace/opace4/expertteam.php">here</a> for details 
+on the ET-SCI.</span></span></p>
 	<p class=auto-style16 style='line-height:150%'>
 	&nbsp;</p>
 	<p class=auto-style18>
 	1.1 Role of ET-SCI in GFCS</p>
-<br/>
+
 <p class=auto-style15>The ET-SCI sits within CCl under the Open Panel of CCl Experts
 (OPACE) on Climate Information for Adaptation and Risk Management (OPACE-4).
 The objective of OPACE-4 is to improve decision-making for planning,
@@ -140,16 +144,16 @@ and use of actionable information and products, tailored to meet their needs.
 Activities primarily focus on the development of tailored climate information,
 products and services for user application in adaptation and risk management,
 and building interfaces with user groups to facilitate GFCS implementation.</p>
-<br/>
+
 <p class=auto-style15>The work of OPACE-4 is multidisciplinary, and requires close
 collaboration with experts from various socio-economic sectors. In keeping with
 the priorities agreed for initial implementation of the GFCS, the core priority
 sectors for consideration by the OPACE in this present intersessional period
 are agriculture/food security, water and health. This requires close
 collaboration with relevant experts in these sectors including seeking guidance
-and aid from the WMO Technical Commissions for Agricultural Meteorology (<a href="http://www.wmo.int/pages/prog/wcp/agm/cagm/cagm_en.php">CAgM</a>)
-and Hydrology (<a href="http://www.wmo.int/pages/prog/hwrp/index_en.php">CHy</a>) and with the World Health Organisation (<a href="http://www.who.int/en/">WHO</a>). </p>
-<br/>
+and aid from the WMO Technical Commissions for Agricultural Meteorology (CAgM)
+and Hydrology (CHy) and with the World Health Organisation (WHO). </p>
+
 <p class=auto-style15>The ET-SCI Terms of Reference (ToR) and expected deliverables
 are shown in Appendix A. The deliverables include the collection and analysis
 of existing sector-relevant climate indices in addition to developing the tools
@@ -164,24 +168,24 @@ indices and the ClimPACT2 software developed for their calculation. </p>
 	</span>
 	<span style='font-size:14.0pt;
 line-height:150%' class="auto-style7">1.2 The ‘value’ of climate indices</span></p>
-<br/>
+
 <p class=auto-style15>Monthly averages of climate data smooth over a lot of
 important information that is relevant for sectoral impacts. For this reason
 indices derived from daily data are an attempt to objectively extract
-information from daily weather observations to answer questions concerning
+information from daily weather observations that answers questions concerning
 aspects of the climate system that affect many human and natural systems with
 particular emphasis on extremes. Such indices might reflect the duration or
 amplitude of heat waves, extreme rainfall intensity and frequency or measures
 of extremely wet or dry/hot or cold periods that have socio-economic impacts.
 Climate indices provide valuable information contained in daily data, without
 the need to transmit the daily data itself. </p>
-<br/>
+
 <p class=auto-style15>Much progress has been made in recent decades through
 internationally agreed indices derived from daily temperature and precipitation
 that represent more extreme aspects of the climate, overseen by the
-CCl/WCRP/JCOMM Expert Team on Climate Change Detection and Indices (<a href="http://www.wcrp-climate.org/etccdi">ETCCDI</a>).
+CCl/WCRP/JCOMM Expert Team on Climate Change Detection and Indices (ETCCDI).
 Development and analyses of these indices has made a significant contribution
-to the Intergovernmental Panel on Climate Change (<a href="http://www.ipcc.ch/">IPCC</a>) Assessment Reports.</p>
+to the Intergovernmental Panel on Climate Change (IPCC) Assessment Reports.</p>
 
 <p class=auto-style15>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </p>
@@ -190,10 +194,10 @@ to the Intergovernmental Panel on Climate Change (<a href="http://www.ipcc.ch/">
 line-height:150%'><span class="auto-style13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	</span> 
 	<span class="auto-style7">1.3 Background to ETCCDI, Indices and Software</span></span></p>
-<br/>
+
 <p class=auto-style15>The ETCCDI started in 1999 and is co-sponsored by the World
-Climate Research Program (<a href="http://www.wcrp-climate.org/">WCRP</a>) and <a href="http://www.jcomm.info/">JCOMM</a>. They developed an internationally
-coordinated set of core climate indices consisting of <a href="http://etccdi.pacificclimate.org/list_27_indices.shtml">27 descriptive indices</a>
+Climate Research Program (WCRP) and JCOMM. They developed an internationally
+coordinated set of core climate indices consisting of 27 descriptive indices
 for moderate extremes (Alexander et al. 2006; Zhang et al. 2011). These indices
 were developed with the ‘detection and attribution’ research community in mind.
 In order to detect changes in climate extremes, it was important to develop a
@@ -202,8 +206,8 @@ climates, and had a high signal-to-noise ratio. In addition, internationally
 agreed indices derived from daily temperature and precipitation allowed results
 to be compared consistently across different countries and also had the
 advantage of overcoming most of the restrictions on the dissemination of daily
-data that apply in many countries. </p>
-<br/>
+data that are applied in many countries. </p>
+
 <p class=auto-style15>ETCCDI recognized that a two-pronged approach was needed to
 promote further work on the monitoring and analysis of daily climate records to
 identify trends in extreme climate events (Peterson and Manton, 2008). In
@@ -219,22 +223,22 @@ all of the workshop participants as authors (e.g. Peterson et al. 2002; Vincent
 et al. 2005; Zhang et al. 2005; Haylock et al. 2006; Klein Tank et al. 2006;
 New et al. 2006; Aguilar et al, 2006, Aguilar et al. 2009; Caesar et al. 2011;
 Vincent et al. 2011).</p>
-<br/>
+
 <p class=auto-style11 style='line-height:150%'><span style='font-size:14.0pt;
-line-height:150%'><span class="auto-style13">As part of the workshop development, software called <a href="http://etccdi.pacificclimate.org/software.shtml">RClimDEX</a>
+line-height:150%'><span class="auto-style13">As part of the workshop development, software called RClimDEX
 was also developed that could be used at the workshops (thus providing
 consistent definitions from each workshop and region). Environment Canada
 provides, maintains, and further develops the R-based software used for the
 workshops (freely available from <a href="http://etccdi.pacificclimate.org">http://etccdi.pacificclimate.org</a>). 
 </span> </span></p>
-<br/>
+
 <p class=auto-style16 style='line-height:150%'>
 &nbsp;</p>
 	<p class=auto-style11 style='line-height:150%'>
 	<span style='font-size:14.0pt;
 line-height:150%'><span class="auto-style13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	</span> <span class="auto-style7">1.4 Background to Development of ET-SCI Indices</span></span></p>
-<br/>
+
 <p class=auto-style15>Most ETCCDI indices focus on counts of days crossing a
 threshold; either absolute/fixed thresholds or percentile/variable thresholds
 relative to local climate. Others focus on absolute extreme values such as the
@@ -243,7 +247,7 @@ observations and models, globally as well as regionally, and can be coupled
 with simple trend analysis techniques, and standard detection and attribution
 methods in addition to complementing the analysis of more rare extremes using
 Extreme Value Theory (EVT). </p>
-<br/>
+
 <p class=auto-style15>One current disadvantage of the ETCCDI indices is that few of
 them are specifically sector-relevant. While some of these indices may be
 useful for sector applications (e.g. number of days with frost for agricultural
@@ -251,7 +255,7 @@ applications, heat waves for health applications) it was realised that it was
 important to get sectors involved in the development of the ET-SCI indices so
 that more application-relevant indices could be developed to better support
 adaptation.</p>
-<br/>
+
 <p class=auto-style15>The core set of indices agreed by the ET-SCI (as the
 ET-CRSCI) at their meeting in Tarragona, Spain in July 2011 were developed in
 part from the core set of indices that are developed and maintained by ETCCDI.
@@ -262,21 +266,40 @@ consider requirements for climate indices relevant to heat waves and droughts.
 A core set of 34 indices was agreed at that meeting (Table B1). In some cases
 these indices are already part of the core set defined by the ETCCDI. All
 indices calculated by ClimPACT2 are shown in Appendix B and are separated into
-core and non-core ET-SCI indices. In addition, there is some scope in the
+core and non-core ET-SCI indices. In addition, there is limited scope in the
 ClimPACT2 software for the user to create their own index based on absolute
 thresholds.</p>
-<br/>
+
 <p class=auto-style15>It should be noted that indices development is an ongoing
 activity as additional sector-needs arise and other sectors are considered within the Terms of Reference and deliverables of the ET-SCI. This
 should therefore be seen only as the initial step in the continuing work of the
 ET-SCI.</p>
-<br/>
+
 <p class=auto-style16 style='line-height:150%'>&nbsp;</p>
 	<p class=auto-style11 style='line-height:150%'>
 	<span style='font-size:14.0pt;
 line-height:150%'><span class="auto-style13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-	</span> <span class="auto-style7">1.5 Requirements for data quality when computing indices</span></span></p>
-<br/>
+	</span> <span class="auto-style7">1.5 Background to Development of ET-SCI Workshops</span></span></p>
+
+<p class=auto-style15>Given the success of the ETCCDI regional workshops (see
+Peterson and Manton 2008), ET-SCI aims to adapt and further develop this 
+regional workshop model with participants from both National Meteorological and 
+Hydrological Services (NMHSs) and sector groups. ET-SCI will work with 
+sector-based agencies and experts, including those of relevant WMO Technical 
+Commissions, particularly the Commission for Climatology for health, the 
+Commission for Hydrology (CHy) for water and the Commission for Agricultural 
+Meteorology (CAgM) for agriculture and food security, to facilitate the use of 
+climate information in users’ decision-support systems for climate risk 
+management and adaptation strategies. As part of this development, ET-SCI has 
+commissioned the development of software, ClimPACT2, with the aim of producing 
+an easy and consistent way of calculating indices for each user.&nbsp; </p>
+
+<p class=auto-style16 style='line-height:150%'>&nbsp;</p>
+	<p class=auto-style11 style='line-height:150%'>
+	<span style='font-size:14.0pt;
+line-height:150%'><span class="auto-style13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	</span> <span class="auto-style7">1.6 Requirements for data quality when computing indices</span></span></p>
+
 <p class=auto-style15>Before indices can be computed, it is important that any
 daily input data are checked for quality and homogeneity. Homogeneity implies
 consistency of a series through time and is an obvious requirement for the
@@ -291,7 +314,7 @@ which this could occur are where a station moves from an exposed coastal
 location to a location further inland, increasing maximum temperatures and
 decreasing minimum temperatures, or where the number of stations contributing
 to a composite series changes. </p>
-<br/>
+
 <p class=auto-style15>Homogeneity adjustment of daily data is difficult because of
 high variability in the daily data when compared with monthly or annual data,
 and also because an inhomogeneity due to a change in station location or
@@ -308,18 +331,18 @@ stations for the homogeneity analysis but PMF can be used as an absolute method
 comparison). In ClimPACT2, apart from basic quality control, there is currently
 no means to homogenise data. We therefore assume that the required level of
 homogeneity testing and/or adjustment has already been applied.  </p>
-<br/>
+
 <p class=auto-style15>*NB Daily adjustments, especially with absolute methods, must
 be applied with extreme care as – if incorrectly applied – they can damage the
 statistical distribution of the series. Therefore, data require careful
 post-workshop analysis in concert with metadata (where available) and as such
 ET-SCI recommend that any homogeneity software used at regional workshops is
 for demonstration purposes only.</p>
-<br/>
+
 <p class=auto-style16 style='line-height:150%'>&nbsp;</p>
 	<p class=auto-style18>
-	1.6 Future prospects for the Indices</p>
-<br/>
+	1.7 Future prospects for the Indices</p>
+
 <p class=auto-style15>At present the core set of indices are defined using only
 daily maximum temperature (TX), daily minimum temperature (TN) and daily
 precipitation (PR). It is acknowledged that for sector applications, these variables
@@ -338,7 +361,7 @@ statistics’ such as days with thunderstorms, hail, tornados, number of
 consecutive days with snowfall, etc., for expanded studies of hazards could be
 considered. The ET-SCI will consider (at a later date) whether to add these new
 variables to the dataset as a second level priority.</p>
-<br/>
+
 <p class=auto-style15>ET-SCI also feels that it is important to add several complex
 indices to this initial effort (for example heat waves), but recognized that
 more could be demanded by (or may be in current use by) sectors, once they are
@@ -356,7 +379,7 @@ recommending some new heat wave indices (see Appendix B; Perkins and Alexander,
 set in this initial phase of the software. This range of indices is defined for
 most climates and has a number of other desirable statistical properties, such
 as being approximately normally distributed in many climates.</p>
-<br/>
+
 <p class=auto-style15>Also drought indices have been included following ET-SCI
 recommendations. Since drought severity is difficult to quantify and is identified
 by its effects or impacts on different types of systems (e.g. agriculture,
@@ -373,25 +396,13 @@ Evapotranspiration Index (SPEI), proposed by Vicente-Serrano et al. (2010),
 which combines the sensitivity to changes in evaporative demand, caused by
 temperature fluctuations and trends, with the simplicity of calculation and the
 multi-temporal nature of the SPI.</p>
-<br/>
+
 <p class=auto-style15>In a subsequent phase, ET-SCI will investigate additional
 complex indices combining meteorological variables (e.g. temperature and
 humidity for physiological comfort), and could consider indices that combine
 meteorological/hydrological parameters with sector-based information including
-measures of vulnerability.</p>
-<br/>
-<p class=auto-style15>Much of the input for additional indices will come from regional workshops with participants from both National Meteorological and 
-Hydrological Services (NMHSs) and sector groups. ET-SCI will work with 
-sector-based agencies and experts, including those of relevant WMO Technical 
-Commissions, particularly the Commission for Climatology for health, the 
-Commission for Hydrology (CHy) for water and the Commission for Agricultural 
-Meteorology (CAgM) for agriculture and food security, to facilitate the use of 
-climate information in users’ decision-support systems for climate risk 
-management and adaptation strategies. As part of this development, ET-SCI 
-commissioned the development of ClimPACT2 with the aim of producing 
-an easy and consistent way of calculating indices for each user, with regional workshop users particularly in mind. To date workshops have been held in Ecuador, Fiji and Barbados. An example of an ET-SCI workshop can be found <a
-href="https://www.wmo.int/pages/prog/wcp/ccl/opace/opace4/meetings/ET-SCI-fiji2015.php">here</a>.</p>
-<br/>
+measures of vulnerability. </p>
+
 <p class=auto-style15>It is also acknowledged that updating indices is problematic
 for many regions and some regions would need specific indices to cope with
 their particular needs to provide climate services. As GFCS stresses the
@@ -409,7 +420,7 @@ indices. In the first iteration of the software we use the base period of
 not have records covering this period. The software has been written in such a
 way that the user can specify the climatological base period which is most suitable
 for their data.</p>
-<br/>
+
 <p class=auto-style15>Users are invited to view ClimPACT2 as ‘living software’ in
 that it can and will be amended as additional user needs arise. </p>
 
