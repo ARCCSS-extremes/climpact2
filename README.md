@@ -155,7 +155,7 @@
   -------
   
   Oversight: World Meteorological Organisation (WMO), the Expert Team on
-  Sector Climate Indices (ET-SCI).
+  Sector-specific Climate Indices (ET-SCI).
   
   Design and documentation: Lisa Alexander and Nicholas Herold.
   
