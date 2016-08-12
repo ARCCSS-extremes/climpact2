@@ -1039,13 +1039,6 @@ write.climdex.results <- function(climdex.results, chunk.subset, cdx.ncfile, dim
 			dat <- rep(dat, t.dim.len)
 	
 		dim(dat) <- c(xy.dims, t.dim.len)
-#print(chunk.subset)
-#print(names(chunk.subset))
-#print("***")
-#print(cdx.ncfile[[v]])
-#print("----")
-#print(cdx.varname[v])
-#print(ncdf4.helpers::nc.get.dim.axes(cdx.ncfile[[v]], cdx.varname[v]))
 		ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], cdx.varname[v], dat, chunk.subset)
     }
   }) 
