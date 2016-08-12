@@ -183,10 +183,10 @@ create.climdex.cmip5.filenames <- function(fn.split, vars.list) {
 get.climdex.variable.list <- function(source.data.present, time.resolution=c("all", "annual", "monthly"), climdex.vars.subset=NULL) {
   time.res <- match.arg(time.resolution)
   annual.only <- c("txdtnd_ETSCI","txbdtnbd_ETSCI","gsl_ETCCDI","wsdi_ETCCDI","wsdid_ETSCI","csdi_ETCCDI","csdid_ETSCI","hw_ETSCI",
-		"hddheatn_ETSCI","cddcoldn_ETSCI","gddgrown_ETSCI","sdii_ETCCDI","r95p_ETCCDI","r99p_ETCCDI","r95ptot_ETCCDI","r99ptot_ETCCDI")
+		"hddheatn_ETSCI","cddcoldn_ETSCI","gddgrown_ETSCI","sdii_ETCCDI","r95p_ETCCDI","r99p_ETCCDI","r95ptot_ETCCDI","r99ptot_ETCCDI","tx95t")
   monthly.only <- c("spei_ETSCI","spi_ETSCI")
 
-  vars.by.src.data.reqd <- list(tmax=c("su_ETCCDI", "id_ETCCDI", "txx_ETCCDI", "txn_ETCCDI", "tx10p_ETCCDI", "tx90p_ETCCDI", "wsdi_ETCCDI", "wsdid_ETSCI","txge30_ETSCI","txge35_ETSCI","txm_ETSCI","txgt50p_ETSCI"),
+  vars.by.src.data.reqd <- list(tmax=c("su_ETCCDI", "id_ETCCDI", "txx_ETCCDI", "txn_ETCCDI", "tx10p_ETCCDI", "tx90p_ETCCDI", "wsdi_ETCCDI", "wsdid_ETSCI","txge30_ETSCI","txge35_ETSCI","txm_ETSCI","txgt50p_ETSCI","tx95t_ETSCI"),
                                 tmin=c("fd_ETCCDI", "tr_ETCCDI", "tnx_ETCCDI", "tnn_ETCCDI", "tn10p_ETCCDI", "tn90p_ETCCDI", "csdi_ETCCDI", "tnlt2_ETSCI","tnltm2_ETSCI","tnltm20_ETSCI","csdid_ETSCI","tnm_ETSCI"),
                                 prec=c("rx1day_ETCCDI", "rx5day_ETCCDI", "sdii_ETCCDI", "r10mm_ETCCDI", "r20mm_ETCCDI", "cdd_ETCCDI", "cwd_ETCCDI", "r95p_ETCCDI", "r99p_ETCCDI", "prcptot_ETCCDI",
 					"rxdday_ETSCI","rnnmm_ETSCI","r95ptot_ETCCDI","r99ptot_ETCCDI","spei_ETSCI","spi_ETSCI"),
@@ -206,7 +206,7 @@ get.climdex.variable.list <- function(source.data.present, time.resolution=c("al
 
   freq.lists <- list(c("MON", "ANN"), c("ANN"))
   dat <- switch(time.res,
-                all=unlist(lapply(climdex.vars, function(x) { if(x %in% annual.only) { paste(x,"ANN",sep="_") } else if (x %in% monthly.only) { paste(x,"MON",sep="_") } else { paste(x,c("MON","ANN"),sep="_") } } )),	
+                all=unlist(lapply(climdex.vars, function(x) { if(x=="tx95t_ETSCI") { paste(x,"DAY",sep="_") } else { if(x %in% annual.only) { paste(x,"ANN",sep="_") } else if (x %in% monthly.only) { paste(x,"MON",sep="_") } else { paste(x,c("MON","ANN"),sep="_") } } } )),	
 					#{ paste(x, freq.lists[[(x %in% annual.only) + 1]], sep="_") })),
                 annual=paste(climdex.vars, "ANN", sep="_"),
                 monthly=paste(climdex.vars[!(climdex.vars %in% annual.only)], "MON", sep="_"))
@@ -263,23 +263,23 @@ get.climdex.functions <- function(vars.list, fclimdex.compatible=TRUE,rxnday_n=7
 
   options <- vector("list",length(index.data$Annual.flag))
   for (i in 1:length(index.data$Annual.flag)) {
-	if(index.data$Annual.flag[i]==TRUE) { options[[i]] = af } else { options[[i]] = mf } }
+	if(is.na(index.data$Annual.flag[i])) options[[i]] = el else { if(index.data$Annual.flag[i]==TRUE) { options[[i]] = af } else { options[[i]] = mf } } }
 
   options = lapply(1:length(options), function(x) {
-        if(index.data$ID[x]=="hw") options[[x]] = hw.opts
+	if(index.data$ID[x]=="hw") options[[x]] = hw.opts
 	if(index.data$ID[x]=="spei") options[[x]] = spei.opts
 	if(index.data$ID[x]=="rxdday") options[[x]] = c(options[[x]],rxnday.opts)
 	if(index.data$ID[x]=="rnnmm") options[[x]] = c(options[[x]],rnnmm.opts)
-        if(index.data$ID[x]=="txdtnd") options[[x]] = ntxntn.opts
-        if(index.data$ID[x]=="txbdtnbd") options[[x]] = ntxbntnb.opts
+	if(index.data$ID[x]=="txdtnd") options[[x]] = ntxntn.opts
+	if(index.data$ID[x]=="txbdtnbd") options[[x]] = ntxbntnb.opts
 
-        if(index.data$ID[x]=="csdi") options[[x]] = wcsdi.opts
-        if(index.data$ID[x]=="wsdi") options[[x]] = wcsdi.opts
-        if(index.data$ID[x]=="csdid") options[[x]] = csdin.opts
-        if(index.data$ID[x]=="wsdid") options[[x]] = wsdin.opts
-        if(index.data$ID[x]=="cwd") options[[x]] = c(options[[x]],cwdd.opts)
-        if(index.data$ID[x]=="cdd") options[[x]] = c(options[[x]],cwdd.opts)
-        if(index.data$ID[x]=="rx5day") options[[x]] = c(options[[x]],rx5day.opts)
+	if(index.data$ID[x]=="csdi") options[[x]] = wcsdi.opts
+	if(index.data$ID[x]=="wsdi") options[[x]] = wcsdi.opts
+	if(index.data$ID[x]=="csdid") options[[x]] = csdin.opts
+	if(index.data$ID[x]=="wsdid") options[[x]] = wsdin.opts
+	if(index.data$ID[x]=="cwd") options[[x]] = c(options[[x]],cwdd.opts)
+	if(index.data$ID[x]=="cdd") options[[x]] = c(options[[x]],cwdd.opts)
+	if(index.data$ID[x]=="rx5day") options[[x]] = c(options[[x]],rx5day.opts)
 
 	return(options[[x]])
   })
@@ -330,7 +330,11 @@ get.climdex.variable.metadata <- function(vars.list, template.filename) {
 # read index information from .csv file
   index.input.file = "ancillary/climate.indices.csv"
   index.data <- read.csv(index.input.file,header=TRUE,sep=",",stringsAsFactors=FALSE)
-  time_suffix = ifelse(index.data$Annual.flag==TRUE,"ANN","MON")
+  
+#  time_suffix = ifelse(index.data$Annual.flag==TRUE,"ANN","MON")
+  time_suffix = index.data$Annual.flag
+  for (i in 1:length(index.data$Annual.flag)) { if(is.na(index.data$Annual.flag[i])) time_suffix[i]="DAY" else { if(index.data$Annual.flag[i]==TRUE) time_suffix[i]="ANN" else if (index.data$Annual.flag[i]==FALSE) time_suffix[i]="MON" } }
+
   assign("index.data",index.data,envir=.GlobalEnv)
   assign("time_suffix",time_suffix,envir=.GlobalEnv)
 
@@ -426,8 +430,12 @@ create.ncdf.output.files <- function(cdx.dat, f, v.f.idx, variable.name.map, ts,
 
     ## Establish variables, create file
     if(cdx.dat$var.name[x]=="spi_ETSCI" || cdx.dat$var.name[x]=="spei_ETSCI") {
-        scale_dim <- ncdim_def("scale","3,6,12 months",1:3)
-        nc.var.list <- c(vars.ncvars, list(time.for.file$time.bnds.var, ncdf4::ncvar_def(name=cdx.dat$var.name[x], units=cdx.dat$units[x], dim=c(f.example$var[[v.example]]$dim[1:2], list(time.for.file$time.dim),list(scale_dim)),
+        scale.dim <- ncdim_def("scale","3,6,12 months",1:3)
+        nc.var.list <- c(vars.ncvars, list(time.for.file$time.bnds.var, ncdf4::ncvar_def(name=cdx.dat$var.name[x], units=cdx.dat$units[x], dim=c(f.example$var[[v.example]]$dim[1:2], list(time.for.file$time.dim),list(scale.dim)),
+			missval=1e20, longname=cdx.dat$long.name[x])))
+    } else if (cdx.dat$var.name[x]=="tx95t_ETSCI") {
+		day.dim <- ncdim_def("time","calendar day",1:365,calendar="365_day")
+		nc.var.list <- c(vars.ncvars, list(ncdf4::ncvar_def(name=cdx.dat$var.name[x], units=cdx.dat$units[x], dim=c(f.example$var[[v.example]]$dim[1:2],list(day.dim)),
 			missval=1e20, longname=cdx.dat$long.name[x])))
     } else if (cdx.dat$var.name[x]=="hw_ETSCI") {
 		missingval=1e20
@@ -465,6 +473,7 @@ create.ncdf.output.files <- function(cdx.dat, f, v.f.idx, variable.name.map, ts,
     } else {
         nc.var.list <- c(vars.ncvars, list(time.for.file$time.bnds.var, ncdf4::ncvar_def(name=cdx.dat$var.name[x], units=cdx.dat$units[x], dim=c(f.example$var[[v.example]]$dim[1:2], list(time.for.file$time.dim)), missval=1e20, longname=cdx.dat$long.name[x])))
     }
+
     new.file <- ncdf4::nc_create(paste(out.dir, cdx.dat$filename[x], sep="/"), nc.var.list, force_v4=TRUE)
 
 	# add heat wave EHF definition as global attribute
@@ -493,8 +502,8 @@ create.ncdf.output.files <- function(cdx.dat, f, v.f.idx, variable.name.map, ts,
     put.ETCCDI.atts(new.file, c("mon", "yr")[1 + annual], ncdf4::ncatt_get(f.example, 0, "title")$value, author.data, definemode=TRUE,base.range)
     ncdf4::nc_enddef(new.file)
 
-    ## Copy data from vars.to.copy and put time bounds.
-    ncdf4::ncvar_put(new.file, time.bnds.name, time.for.file$time.bnds.data)
+    ## Copy data from vars.to.copy and put time bounds (no time bounds for variables calculated on calendar days)
+    if (!cdx.dat$var.name[x]=="tx95t_ETSCI") ncdf4::ncvar_put(new.file, time.bnds.name, time.for.file$time.bnds.data)
     for(v in vars.to.copy)
       if(!is.null(vars.data[[v]]))
          ncdf4::ncvar_put(new.file, v, vars.data[[v]])
@@ -712,28 +721,28 @@ get.quantiles.object <- function(thresholds, idx) {
     return(NULL)
   
   thresh.path.2d <- list(tx05thresh=c("tmax", "outbase", "q5"),
-			 tx10thresh=c("tmax", "outbase", "q10"),
-                         tx50thresh=c("tmax", "outbase", "q50"),
-                         tx90thresh=c("tmax", "outbase", "q90"),
-                         tx95thresh=c("tmax", "outbase", "q95"),
-                         tn05thresh=c("tmin", "outbase", "q5"),
-                         tn10thresh=c("tmin", "outbase", "q10"),
-                         tn50thresh=c("tmin", "outbase", "q50"),
-                         tn90thresh=c("tmin", "outbase", "q90"),
-                         tn95thresh=c("tmin", "outbase", "q95"),
+			tx10thresh=c("tmax", "outbase", "q10"),
+			tx50thresh=c("tmax", "outbase", "q50"),
+			tx90thresh=c("tmax", "outbase", "q90"),
+			tx95thresh=c("tmax", "outbase", "q95"),
+			tn05thresh=c("tmin", "outbase", "q5"),
+			tn10thresh=c("tmin", "outbase", "q10"),
+			tn50thresh=c("tmin", "outbase", "q50"),
+			tn90thresh=c("tmin", "outbase", "q90"),
+			tn95thresh=c("tmin", "outbase", "q95"),
 
-			 tx90thresh_15days=c("tmax","outbase","q90_15days"),
-                         tn90thresh_15days=c("tmin","outbase","q90_15days"),
-                         tavg90thresh_15days=c("tavg","outbase","q90_15days"),
+			tx90thresh_15days=c("tmax","outbase","q90_15days"),
+			tn90thresh_15days=c("tmin","outbase","q90_15days"),
+			tavg90thresh_15days=c("tavg","outbase","q90_15days"),
 
-			 txraw=c("raw","tmax"),
-			 tnraw=c("raw","tmin"),
-			 precraw=c("raw","prec"))
+			txraw=c("raw","tmax"),
+			tnraw=c("raw","tmin"),
+			precraw=c("raw","prec"))
 
   thresh.path.1d <- list(tavg05thresh=c("tavg","q5"),
-			 tavg95thresh=c("tavg","q95"),
-			 r95thresh=c("prec", "q95"),
-                         r99thresh=c("prec", "q99"))
+			tavg95thresh=c("tavg","q95"),
+			r95thresh=c("prec", "q95"),
+            r99thresh=c("prec", "q99"))
   result <- list()
 
   recursive.append <- function(x, l, data) {
@@ -1261,7 +1270,7 @@ create.thresholds.file <- function(thresholds.file, f, ts, v.f.idx, variable.nam
     ncdf4.helpers::nc.copy.atts(exemplar.file, v, thresholds.netcdf, v, definemode=TRUE)
   }
 
-  put.ETCCDI.atts(thresholds.netcdf, "monClim", ncdf4::ncatt_get(exemplar.file, 0, "title")$value, author.data, definemode=TRUE)
+  put.ETCCDI.atts(thresholds.netcdf, "days", ncdf4::ncatt_get(exemplar.file, 0, "title")$value, author.data, definemode=TRUE,base.range)
 
   ## Attach history data to threshold data.
   lapply(out.vars, function(v) {
@@ -1362,7 +1371,7 @@ create.file.metadata <- function(f, variable.name.map) {
 #' @export
 get.thresholds.metadata <- function(var.names) {
   threshold.dat <- list(tx05thresh=list(units="degrees_C", longname="05th_percentile_running_baseline_tasmax", has.time=TRUE, q.path=c("tmax", "outbase", "q5")),
-			tx10thresh=list(units="degrees_C", longname="10th_percentile_running_baseline_tasmax", has.time=TRUE, q.path=c("tmax", "outbase", "q10")),
+						tx10thresh=list(units="degrees_C", longname="10th_percentile_running_baseline_tasmax", has.time=TRUE, q.path=c("tmax", "outbase", "q10")),
                         tx50thresh=list(units="degrees_C", longname="50th_percentile_running_baseline_tasmax", has.time=TRUE, q.path=c("tmax", "outbase", "q50")),
                         tx90thresh=list(units="degrees_C", longname="90th_percentile_running_baseline_tasmax", has.time=TRUE, q.path=c("tmax", "outbase", "q90")),
                         tx95thresh=list(units="degrees_C", longname="95th_percentile_running_baseline_tasmax", has.time=TRUE, q.path=c("tmax", "outbase", "q95")),
@@ -1381,7 +1390,7 @@ get.thresholds.metadata <- function(var.names) {
                         r95thresh=list(units="kg m-2 d-1", longname="95th_percentile_baseline_wet_day_pr", has.time=FALSE, q.path=c("prec", "q95")),
                         r99thresh=list(units="kg m-2 d-1", longname="99th_percentile_baseline_wet_day_pr", has.time=FALSE, q.path=c("prec", "q99")),
 
-			txraw=list(units="degrees_C",longname="tasmax_baseline",has.time=FALSE,q.path=c("raw","tmax")),
+						txraw=list(units="degrees_C",longname="tasmax_baseline",has.time=FALSE,q.path=c("raw","tmax")),
                         tnraw=list(units="degrees_C",longname="tasmin_baseline",has.time=FALSE,q.path=c("raw","tmin")),
                         precraw=list(units="kg m-2 d-1",longname="prec_baseline",has.time=FALSE,q.path=c("raw","prec")))
 
@@ -1440,6 +1449,10 @@ create.thresholds.from.file <- function(input.files, output.file, author.data, v
   ## Define what the threshold indices will look like...
   threshold.dat <- get.thresholds.metadata(names(f.meta$v.f.idx))
 
+  # source climpact2.etsci-functions.r to retrieve current ClimPACT2 version
+  source("ancillary/climpact2.etsci-functions.r")
+  assign("software_id",software_id,envir = .GlobalEnv)
+  
   ## Create the output file
   thresholds.netcdf <- create.thresholds.file(output.file, f, f.meta$ts, f.meta$v.f.idx, variable.name.map, base.range, f.meta$dim.size, f.meta$dim.axes, threshold.dat, author.data)
 
@@ -1476,6 +1489,7 @@ create.thresholds.from.file <- function(input.files, output.file, author.data, v
     snow::stopCluster(cluster)
   } else {
     ##try(getFromNamespace('nc_set_chunk_cache', 'ncdf4')(1024 * 2048, 1009), silent=TRUE)
+    
     lapply(subsets, function(x) { write.thresholds.data(get.quantiles.for.stripe(x, f.meta$ts, base.range, f.meta$dim.axes, f.meta$v.f.idx, variable.name.map, f.meta$src.units, f.meta$dest.units, f), x) })
 
     lapply(f, ncdf4::nc_close)
@@ -1635,16 +1649,10 @@ create.indices.from.files <- function(input.files, out.dir, output.filename.temp
   climdex.time.resolution <- match.arg(climdex.time.resolution)
   climdex.var.list <- get.climdex.variable.list(names(f.meta$v.f.idx), climdex.time.resolution, climdex.vars.subset)
 
-  #print("VAR LIST")
-  #print(climdex.var.list)
-
   cdx.meta <- get.climdex.variable.metadata(climdex.var.list, output.filename.template)
 
   # change index variable names for custom indices (e.g. rxnday, rnnmm) to use their actual custom integers (e.g. rx7day, r30mm)
   for (i in 1:length(cdx.meta$var.name)) {
-  #print(str(cdx.meta))
-  #print(typeof(cdx.meta$Annual.flag[i]))
- # print(cdx.meta$Annual.flag[i])
 	freq.tmp <- c("monthly", "annual")[1 + cdx.meta$annual[i]]
 	if(cdx.meta$var.name[i]=="rxdday_ETSCI") { 
 		cdx.meta$var.name[i] = paste("rx",rxnday_n,"day","_ETSCI",sep="") 

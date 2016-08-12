@@ -679,6 +679,7 @@ get.northern.hemisphere.booleans <- function(subset, f, v, projection) {
     x.subset.vals <- rep(x.dim$vals[if(is.null(subset$X)) 1:x.dim$len else subset$X],
                          (if(is.null(subset$Y)) y.dim$len else length(subset$Y)))
     dat <- proj4::project(list(x=x.subset.vals, y=y.subset.vals), projection, inverse=TRUE, ellps.default=NA)
+    assign("y.subset.vals",dat$y,envir=.GlobalEnv)
     return(dat$y >= 0)
   } else
     assign("y.subset.vals",y.subset.vals,envir=.GlobalEnv)
@@ -946,6 +947,14 @@ write.climdex.results <- function(climdex.results, chunk.subset, cdx.ncfile, dim
         t.dim.len <- ncdf4.helpers::nc.get.dim.for.axis(cdx.ncfile[[v]], cdx.varname[v], "T")$len
         tmp=array(NA,c(xy.dims[1],length(chunk.subset[[1]]),t.dim.len,3))
         ind=which(names(climdex.results[[1]])=="spi_ETSCI_MON")
+
+	# Find special cases of an entire slab missing values... repeat such that we have full data.
+	for(i in 1:length(climdex.results)) {
+		if(length(climdex.results[[i]][[ind]])!=(3*t.dim.len)) {
+			climdex.results[[i]][[ind]] = array(NA,c(3,t.dim.len))
+		}
+	}
+
         for (scale in 1:3) {    # loop over the three month-scales SPI is calculated at.
                 dat <- t(do.call(cbind, lapply(climdex.results, function(cr) { cr[[ind]][scale,] })))
                 dim(dat) <- c(c(xy.dims[1],length(chunk.subset[[1]])),t.dim.len)        #c(c(londim$len,latdim$len),t.dim.len)
@@ -956,6 +965,14 @@ write.climdex.results <- function(climdex.results, chunk.subset, cdx.ncfile, dim
         t.dim.len <- ncdf4.helpers::nc.get.dim.for.axis(cdx.ncfile[[v]], cdx.varname[v], "T")$len
         tmp=array(NA,c(xy.dims[1],length(chunk.subset[[1]]),t.dim.len,3))
         ind=which(names(climdex.results[[1]])=="spei_ETSCI_MON")
+
+        # Find special cases of an entire slab missing values... repeat such that we have full data.
+        for(i in 1:length(climdex.results)) {
+                if(length(climdex.results[[i]][[ind]])!=(3*t.dim.len)) {
+                        climdex.results[[i]][[ind]] = array(NA,c(3,t.dim.len))
+                }
+        }
+
         for (scale in 1:3) {    # loop over the three month-scales SPEI is calculated at.
                 dat <- t(do.call(cbind, lapply(climdex.results, function(cr) { cr[[ind]][scale,] })))
                 dim(dat) <- c(c(xy.dims[1],length(chunk.subset[[1]])),t.dim.len)        #c(c(londim$len,latdim$len),t.dim.len)
@@ -969,6 +986,13 @@ write.climdex.results <- function(climdex.results, chunk.subset, cdx.ncfile, dim
 
         # find element that contains HW indices
         ind=which(names(climdex.results[[1]])=="hw_ETSCI_ANN")
+
+        # Find special cases of an entire slab missing values... repeat such that we have full data.
+        for(i in 1:length(climdex.results)) {
+                if(length(climdex.results[[i]][[ind]])!=(4*5*t.dim.len)) {
+                        climdex.results[[i]][[ind]] = array(NA,c(4,5,t.dim.len))
+                }
+        }
 
         # Fill the empty array according to the conventions of climdex.pcic.ncdf
         for (asp in 1:5) {
@@ -1015,6 +1039,13 @@ write.climdex.results <- function(climdex.results, chunk.subset, cdx.ncfile, dim
 			dat <- rep(dat, t.dim.len)
 	
 		dim(dat) <- c(xy.dims, t.dim.len)
+#print(chunk.subset)
+#print(names(chunk.subset))
+#print("***")
+#print(cdx.ncfile[[v]])
+#print("----")
+#print(cdx.varname[v])
+#print(ncdf4.helpers::nc.get.dim.axes(cdx.ncfile[[v]], cdx.varname[v]))
 		ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], cdx.varname[v], dat, chunk.subset)
     }
   }) 
