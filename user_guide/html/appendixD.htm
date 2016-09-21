@@ -193,12 +193,13 @@ window.</p>
 <p class=auto-style7>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; EHI(accl.) = [(TM<sub>i</sub> + TM<sub>i-1</sub> + TM<sub>i-2</sub>)/3] – [(TM<sub>i-3</sub> + … +
 TM<sub>i-32</sub>)/30]</p>
 
-<p class=auto-style7>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; EHI(sig.) = [(TM<sub>i</sub> + TM<sub>i-1</sub> + TM<sub>i-2</sub>)/3] – TM90</p>
+<p class=auto-style7>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; EHI(sig.) = [(TM<sub>i</sub> + TM<sub>i-1</sub> + TM<sub>i-2</sub>)/3] – TM90<sub>i</sub></p>
 	<p class=auto-style7>&nbsp;</p>
 
 <p class=auto-style7>Where TM<sub>i</sub> represents the average daily temperature for day i
-and TM90 is the 90th percentile of TM which is also calculated within a
-user-specified base period, over the calendar year and using a 15 day running
+and TM90<sub>i</sub> is the 90th percentile of TM over all calendar day i within 
+the
+user-specified base period, using a 15 day running
 window. TM is calculated via TM = (TX + TN)/2. The EHF is defined from the above 
 two defintions:</p>
 	<p class=auto-style7>&nbsp;</p>
