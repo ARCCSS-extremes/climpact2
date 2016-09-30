@@ -1159,7 +1159,7 @@ index.calc<-function(metadata,graphics=TRUE){
 			index.stored <- number.days.op.threshold(var.choice2, cio@date.factors[[match.arg(frequency,choices=c("annual","monthly"))]], constant.choice, op.choice) * mask.choice
 			write.index.csv(index.stored,index.name=paste(var.choice,op.choice2,constant.choice,sep=""),freq=frequency) ; 
 			plot.call(index.stored,index.name=paste(var.choice,op.choice2,constant.choice,sep=""),index.units="days",x.label="Years",sub=paste("Number of days where ",var.choice," ",op.choice," ",constant.choice,sep=""),freq=frequency)
-			cat(file=trend_file,paste(metadata$lat,metadata$lon,paste(var.choice,op.choice2,constant.choice,sep=""),metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
+			cat(file=trend_file,paste(paste(var.choice,op.choice2,constant.choice,sep=""),metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
 		}
 	}
 
@@ -1566,7 +1566,7 @@ plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,met
 
 			fit1<-suppressWarnings(lsfit((date.years),index[def,asp,]))
 			out1<<-ls.print(fit1,print.it=F)
-			cat(file=trend_file,paste(latitude,longitude,paste(definitions[def],aspects[asp],sep="."),metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
+			cat(file=trend_file,paste(paste(definitions[def],aspects[asp],sep="."),metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
 		}
 	}
 }
@@ -1624,7 +1624,7 @@ plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=N
 
             fit1<-suppressWarnings(lsfit(1:length(unique(spifactor)),index[time,]))
             out1<<-ls.print(fit1,print.it=F)
-            cat(file=trend_file,paste(latitude,longitude,paste(index.name,times[time],"month",sep="."),metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
+            cat(file=trend_file,paste(paste(index.name,times[time],"month",sep="."),metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
         }
 }
 
