@@ -1,13 +1,12 @@
 # ------------------------------------------------
 # ClimPACT2 GUI
 # University of New South Wales
-# nherold, May 2016.
+# nherold, November 2016.
+# This package is available on github https://github.com/ARCCSS-extremes/climpact2.
 # ------------------------------------------------
 #    
 # This file constitutes the graphical user interface for ClimPACT2. It also contains code that plots graphs, writes out data
 # and calculates SPEI/SPI indices.
-#
-# This package is available on github https://github.com/ARCCSS-extremes/climpact2. See this site for specific version history.
 #
 # BUGS
 #   - Currently SPEI/SPI are calculated via the old ClimPACT code. This is because the CRAN package for SPEI/SPI does not
@@ -147,9 +146,10 @@ fourboxes <- function(station, output, save = 0, outrange)
 
 		# write precip outliers
 		write.table("Prec up",sep=",", file = filena, append = TRUE, row.names = FALSE, col.names = FALSE)
-		for (a in length(respc$names)) #unique(prec$month))	#1:12)
+		for (a in as.numeric(respc$names)) #1:12)
 		{
-			prov <- subset(datos,datos$month == as.numeric(respc$names[a]) & datos$pc > respc$stats[5, a])#a])
+			ind.of.month = match(respc$names[a],respc$names)
+			prov <- subset(datos,datos$month == as.numeric(respc$names[a]) & datos$pc > respc$stats[5, ind.of.month])#a])
 			date.tmp = paste(prov$year,prov$month,prov$day,sep="-")
 			write.table(cbind(date.tmp,prov$pc,prov$tx,prov$tn,prov$tr), sep=",",file = filena, append = TRUE, quote = FALSE, row.names = FALSE, col.names = FALSE)
 		}
@@ -1066,13 +1066,13 @@ draw.step2.interface <- function() {
 
 	tkgrid(tklabel(tt1,text="",bg='white',font=font_small))
 	tkgrid(tklabel(tt1,text="Refer to Section 3.5 of ClimPACT2 user guide for help",bg='white',font=font_small_bold))
-	tkgrid(tklabel(tt1,text="User defined WSDIn Days",bg='white',font=font_small),textEntryWidget13) # 13 wsdi
-	tkgrid(tklabel(tt1,text="User defined CSDIn Days",bg='white',font=font_small),textEntryWidget14) # 14 csdi
-	tkgrid(tklabel(tt1,text="User defined RxnDay Days",bg='white',font=font_small),textEntryWidget15) # 15 rxday
-	tkgrid(tklabel(tt1,text="User defined n for nTXnTN and nTXbnTNb",bg='white',font=font_small),textEntryWidget16) # txtn
-	tkgrid(tklabel(tt1,text="User defined base temperature for HDDheat",bg='white',font=font_small),textEntryWidget20) # Tb for HDDheat
-	tkgrid(tklabel(tt1,text="User defined base temperature for CDDcold",bg='white',font=font_small),textEntryWidget21) # Tb for CDDcold
-	tkgrid(tklabel(tt1,text="User defined base temperature for GDDgrow",bg='white',font=font_small),textEntryWidget22) # Tb for GDDgrow
+	tkgrid(tklabel(tt1,text="User defined WSDId Days",bg='white',font=font_small),textEntryWidget13) # 13 wsdi
+	tkgrid(tklabel(tt1,text="User defined CSDId Days",bg='white',font=font_small),textEntryWidget14) # 14 csdi
+	tkgrid(tklabel(tt1,text="User defined Rxdday Days",bg='white',font=font_small),textEntryWidget15) # 15 rxday
+	tkgrid(tklabel(tt1,text="User defined n for TXdTNd and TXbdTNbd",bg='white',font=font_small),textEntryWidget16) # txtn
+	tkgrid(tklabel(tt1,text="User defined base temperature for HDDheatn",bg='white',font=font_small),textEntryWidget20) # Tb for HDDheat
+	tkgrid(tklabel(tt1,text="User defined base temperature for CDDcoldn",bg='white',font=font_small),textEntryWidget21) # Tb for CDDcold
+	tkgrid(tklabel(tt1,text="User defined base temperature for GDDgrown",bg='white',font=font_small),textEntryWidget22) # Tb for GDDgrow
 	tkgrid(tklabel(tt1,text="Count the number of days where precipitation >= nn (Rnnmm)",bg='white',font=font_small),textEntryWidget17)
 	tkgrid(tklabel(tt1,text="Calculate SPEI/SPI over custom months (3,6,12 done automatically)",bg='white',font=font_small),textEntryWidget23)
 
@@ -1170,8 +1170,8 @@ index.calc<-function(metadata,graphics=TRUE){
 
 			index.stored <- climdex.hw(cio) #,tavg90p=tavg90p,tn90p=tn90p,tx90p=tx90p)
 
-			write.hw.csv(index.stored,index.name=as.character(index.list$ID[i]),header="Heatwave definitions and aspects")
-			plot.hw(index.stored,index.name=as.character(index.list$ID[i]),index.units=as.character(index.list$Units[i]),x.label="Years",metadata=metadata)
+			write.hw.csv(index.stored,index.name=as.character(index.list$Short.name[i]),header="Heatwave definitions and aspects")
+			plot.hw(index.stored,index.name=as.character(index.list$Short.name[i]),index.units=as.character(index.list$Units[i]),x.label="Years",metadata=metadata)
 	}
 
 	calculate.spei <- function() {
@@ -1264,8 +1264,8 @@ index.calc<-function(metadata,graphics=TRUE){
                 index.store[4,1:(custom_SPEI-1)] <- NA
                 spifactor <- spifactor[(length(spifactor)-length((cio@date.factors$monthly))+1):length(spifactor)]
 	        }
-		write.precindex.csv(index.store,index.name=index.list$ID[82],spifactor,header="Standardised Precipitation-Evapotranspiration Index")
-		plot.precindex(index.store,index.name=index.list$ID[82],index.units=index.list$Units[81],x.label="Years",spifactor,sub=as.character(index.list$Definition[82]),times=c(3,6,12,custom_SPEI),metadata=metadata) } 
+		write.precindex.csv(index.store,index.name=index.list$Short.name[82],spifactor,header="Standardised Precipitation-Evapotranspiration Index")
+		plot.precindex(index.store,index.name=index.list$Short.name[82],index.units=index.list$Units[81],x.label="Years",spifactor,sub=as.character(index.list$Definition[82]),times=c(3,6,12,custom_SPEI),metadata=metadata) } 
 	}
 		
 	calculate.spi <- function() {
@@ -1330,8 +1330,8 @@ index.calc<-function(metadata,graphics=TRUE){
 							index.store[4,1:(custom_SPEI-1)] <- NA
                         spifactor <- spifactor[(length(spifactor)-length((cio@date.factors$monthly))+1):length(spifactor)]
                 }
-		write.precindex.csv(index.store,index.name=index.list$ID[83],spifactor,header="Standardised Precipitation Index")
-		plot.precindex(index.store,index.name=index.list$ID[83],index.units=index.list$Units[82],x.label="Years",spifactor,sub=as.character(index.list$Definition[83]),times=c(3,6,12,custom_SPEI),metadata=metadata) } 
+		write.precindex.csv(index.store,index.name=index.list$Short.name[83],spifactor,header="Standardised Precipitation Index")
+		plot.precindex(index.store,index.name=index.list$Short.name[83],index.units=index.list$Units[82],x.label="Years",spifactor,sub=as.character(index.list$Definition[83]),times=c(3,6,12,custom_SPEI),metadata=metadata) } 
 	}
 
 	# pdf file for all plots
@@ -1352,7 +1352,7 @@ index.calc<-function(metadata,graphics=TRUE){
 	assign('index_not_calculated',index_not_calculated,envir=.GlobalEnv)
 
 	# Read in index .csv file
-	index.list <- read.csv("ancillary/climate.indices.csv",header=T,sep=',')
+	index.list <- read.csv("ancillary/climate.indices.csv",header=T,sep='\t')
 
 	# create a list of indices that do not require a 'frequency' parameter
 	no.freq.list = c("r95ptot","r99ptot","sdii","hddheat","cddcold","gddgrow","r95p","r99p","gsl","spi","spei","hw","wsdi","wsdin","csdi","csdin","ntxntn","ntxbntnb")
@@ -1362,9 +1362,9 @@ index.calc<-function(metadata,graphics=TRUE){
 	# Loop through and calculate and plot each index
 	if(graphics) pb <- tkProgressBar("Index calculation progress", "Calculation complete %",0, 100, 10)
 
-	for (i in 1:length(index.list$ID)) {
-		print(paste("calculating",index.list$ID[i]),quote=FALSE)
-		tmp.index.name = as.character(index.list$ID[i])
+	for (i in 1:length(index.list$Short.name)) {
+		print(paste("calculating",index.list$Short.name[i]),quote=FALSE)
+		tmp.index.name = as.character(index.list$Short.name[i])
 		tmp.index.def = as.character(index.list$Definition[i])
 		# Set frequency if relevant to current index
 		if(is.na(index.list$Annual.flag[i])) frequency = NA
@@ -1373,57 +1373,57 @@ index.calc<-function(metadata,graphics=TRUE){
 			else frequency = "monthly"
 		}
 		
-		if(!as.character(index.list$ID[i]) %in% no.freq.list) index.parameter = paste("cio,freq=\"",frequency,"\"",sep="")
+		if(!as.character(index.list$Short.name[i]) %in% no.freq.list) index.parameter = paste("cio,freq=\"",frequency,"\"",sep="")
 		else index.parameter = paste("cio",sep="")
 		
-		if(index.list$ID[i]=="hw") { calculate.hw() ; next }
-		else if (index.list$ID[i]=="spei") { calculate.spei() ; next }
-		else if (index.list$ID[i]=="spi") { calculate.spi() ; next }
-		else if (index.list$ID[i]=="rnnmm") {
+		if(index.list$Short.name[i]=="hw") { calculate.hw() ; next }
+		else if (index.list$Short.name[i]=="spei") { calculate.spei() ; next }
+		else if (index.list$Short.name[i]=="spi") { calculate.spi() ; next }
+		else if (index.list$Short.name[i]=="rnnmm") {
 			tmp.index.name = paste("r",rnnmm_ud,"mm",sep="")
 			index.parameter = paste(index.parameter,rnnmm_ud,sep=",")
 			tmp.index.def = paste("Number of days when precipitation >= ",rnnmm_ud,sep="") }
-		else if (index.list$ID[i]=="wsdid") {
+		else if (index.list$Short.name[i]=="wsdid") {
 			tmp.index.name = paste("wsdi",wsdi_ud,sep="")
 			index.parameter = paste("cio,n=",wsdi_ud,sep="")
 			tmp.index.def = paste("Annual number of days with at least ",rnnmm_ud," consecutive days when TX > 90th percentile",sep="") }
-		else if (index.list$ID[i]=="csdid") {
+		else if (index.list$Short.name[i]=="csdid") {
 			tmp.index.name = paste("csdi",csdi_ud,sep="")
 			index.parameter = paste("cio,n=",csdi_ud,sep="")
 			tmp.index.def = paste("Annual number of days with at least ",csdi_ud," consecutive days when TN < 10th percentile",sep="") }
-		else if (index.list$ID[i]=="txdtnd") {
+		else if (index.list$Short.name[i]=="txdtnd") {
 			tmp.index.name = paste("tx",txtn_ud,"tn",txtn_ud,sep="")
 			index.parameter = paste("cio,n=",txtn_ud,sep="")
 			tmp.index.def = paste("Number of ",txtn_ud," consecutive days where both TX > 95th percentile and TN > 95th percentile",sep="") }
-		else if (index.list$ID[i]=="txbdtnbd") {
+		else if (index.list$Short.name[i]=="txbdtnbd") {
 			tmp.index.name = paste("txb",txtn_ud,"tnb",txtn_ud,sep="")
 			index.parameter = paste("cio,n=",txtn_ud,sep="")
 			tmp.index.def = paste("Number of ",txtn_ud," consecutive days where both TX < 5th percentile and TN < 5th percentile",sep="") }
-		else if (index.list$ID[i]=="rxdday") {
+		else if (index.list$Short.name[i]=="rxdday") {
 			tmp.index.name = paste("rx",rx_ud,"day",sep="")
 			index.parameter = paste(index.parameter,",n=",rx_ud,sep="")
 			tmp.index.def = paste("Maximum ",rx_ud,"-day precipitation total",sep="") }
-		else if (index.list$ID[i]=="hddheatn") {
+		else if (index.list$Short.name[i]=="hddheatn") {
 			tmp.index.name = paste("hddheat",Tb_HDD,sep="")
 			index.parameter = paste("cio,Tb=",Tb_HDD,sep="")
 			tmp.index.def = paste("Annual sum of ",Tb_HDD," - TM",sep="") }
-		else if (index.list$ID[i]=="cddcoldn") {
+		else if (index.list$Short.name[i]=="cddcoldn") {
 			tmp.index.name = paste("cddcold",Tb_CDD,sep="")
 			index.parameter = paste("cio,Tb=",Tb_CDD,sep="")
 			tmp.index.def = paste("Annual sum of TM - ",Tb_CDD,sep="") }
-		else if (index.list$ID[i]=="gddgrown") {
+		else if (index.list$Short.name[i]=="gddgrown") {
 			tmp.index.name = paste("gddgrow",Tb_GDD,sep="")
 			index.parameter = paste("cio,Tb=",Tb_GDD,sep="")
 			tmp.index.def = paste("Annual sum of TM - ",Tb_GDD,sep="") }
 			
-		index.stored <- eval(parse(text=paste("climdex.",as.character(index.list$ID[i]),"(",index.parameter,")",sep=""))) #index.function(cio)
+		index.stored <- eval(parse(text=paste("climdex.",as.character(index.list$Short.name[i]),"(",index.parameter,")",sep=""))) #index.function(cio)
 		write.index.csv(index.stored,index.name=tmp.index.name,freq=frequency,header=tmp.index.def)
 		plot.call(index.stored,index.name=tmp.index.name,index.units=as.character(index.list$Units[i]),x.label="Years",sub=tmp.index.def,freq=frequency)
 		cat(file=trend_file,paste(tmp.index.name,metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
 		remove(index.parameter)
 
 		if(graphics) {
-			progress = round(as.numeric(i/length(index.list$ID))*100,0)
+			progress = round(as.numeric(i/length(index.list$Short.name))*100,0)
 			setTkProgressBar(pb,progress,title=paste(progress,"%",sep=""))
 		}
 	}
@@ -1501,25 +1501,25 @@ write.hw.csv <- function(index=NULL,index.name=NULL,header="") {
 		aspect.names.ECF <- list("time","CWM","CWA","CWN","CWD","CWF")
 
 		# write Tx90 heatwave data
-        nam1 <- paste(outinddir, paste(ofilename, "_Tx90_heatwave_ANN.csv", sep = ""), sep = "/")
+        nam1 <- paste(outinddir, paste(ofilename, "_tx90_heatwave_ANN.csv", sep = ""), sep = "/")
 		write_header(nam1,header)
 		write.table(aspect.names, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
         write.table(cbind((date.years),aperm(index[1,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 
         # write Tn90 heatwave data
-        nam1 <- paste(outinddir, paste(ofilename, "_Tn90_heatwave_ANN.csv", sep = ""), sep = "/")
+        nam1 <- paste(outinddir, paste(ofilename, "_tn90_heatwave_ANN.csv", sep = ""), sep = "/")
         write_header(nam1,header)
         write.table(aspect.names, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
         write.table(cbind((date.years),aperm(index[2,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 
         # write EHF heatwave data
-        nam1 <- paste(outinddir, paste(ofilename, "_EHF_heatwave_ANN.csv", sep = ""), sep = "/")
+        nam1 <- paste(outinddir, paste(ofilename, "_ehf_heatwave_ANN.csv", sep = ""), sep = "/")
         write_header(nam1,header)
         write.table(aspect.names, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
         write.table(cbind((date.years),aperm(index[3,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
 
         # write ECF coldwave data
-        nam1 <- paste(outinddir, paste(ofilename, "_ECF_heatwave_ANN.csv", sep = ""), sep = "/")
+        nam1 <- paste(outinddir, paste(ofilename, "_ecf_heatwave_ANN.csv", sep = ""), sep = "/")
         write_header(nam1,header)
         write.table(aspect.names.ECF, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
         write.table(cbind((date.years),aperm(index[4,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
@@ -1539,8 +1539,8 @@ plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,met
 			if(all(is.na(index[def,asp,]))) { warning(paste("All NA values detected, not plotting ",aspects[asp],", ",definitions[def],".",sep="")) ; next }
 
 			plot.title <- paste("Station: ",title.station,sep="")
-			if(definitions[def]=="ECF") { namp <- paste(outjpgdir, paste(ofilename, "_", gsub("H","C",aspects[asp]),"_",definitions[def], "_ANN.jpg", sep = ""), sep = "/") }
-			else { namp <- paste(outjpgdir, paste(ofilename, "_",aspects[asp],"_",definitions[def], "_ANN.jpg", sep = ""), sep = "/") }
+			if(definitions[def]=="ECF") { namp <- paste(outjpgdir, paste(ofilename, "_", tolower(gsub("H","C",aspects[asp])),"_",tolower(definitions[def]), "_ANN.jpg", sep = ""), sep = "/") }
+			else { namp <- paste(outjpgdir, paste(ofilename, "_",tolower(aspects[asp]),"_",tolower(definitions[def]), "_ANN.jpg", sep = ""), sep = "/") }
 			jpeg(file = namp, width = 1024, height = 768)
 			dev0 = dev.cur()
 
@@ -1705,20 +1705,29 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 	                
 			subx = as.numeric(substr(x,1,4))
 			xind = which(subx%%5==0)
-			xtmp.int = (subx[xind])
+			xind = xind[seq(1,length(xind),12)]
+			xtmp.int = unique(subx[xind]) 
 			axis(1,at=xind,labels=c(xtmp.int))
 
             box()
 			xy <- cbind(bp,y)
 		} else {
-			plot(1:length(x), unname(y), main = main, cex.main = 2,ylim = range(unname(y), na.rm = TRUE),xaxt="n", xlab = "", ylab = ylab,type = "b", cex.lab = 1.5, cex.axis = 1.5,col="black")
+			op <- par(mar=c(5, 4, 5, 2) + 0.1)
+			plot(1:length(x), unname(y), cex.main = 2,ylim = range(unname(y), na.rm = TRUE),xaxt="n", xlab = "", ylab = ylab,type = "b", cex.lab = 1.5, cex.axis = 1.5,col="black")
+			par(op)
+			title(main,line=2.5,cex.main = 2)
 
 			subx = as.numeric(substr(x,1,4))
 			xind = which(subx%%5==0)
-			xtmp.int = (subx[xind])
+			if(nchar(x[1])==7) { 
+				xind = xind[seq(1,length(xind),12)]
+				xtmp.int = unique(subx[xind]) 
+			} else { 
+				xtmp.int = subx[xind] 
+			}
 			axis(1,at=xind,labels=c(xtmp.int))
 
-			mtext(sub,cex=1)
+			mtext(paste(strwrap(sub,width=100),collapse="\n"),cex=1)
 
 	        # NA points
 	        na.x <- x

@@ -182,16 +182,16 @@ create.climdex.cmip5.filenames <- function(fn.split, vars.list) {
 #' @export
 get.climdex.variable.list <- function(source.data.present, time.resolution=c("all", "annual", "monthly"), climdex.vars.subset=NULL) {
   time.res <- match.arg(time.resolution)
-  annual.only <- c("txdtnd_ETSCI","txbdtnbd_ETSCI","gsl_ETCCDI","wsdi_ETCCDI","wsdid_ETSCI","csdi_ETCCDI","csdid_ETSCI","hw_ETSCI",
-		"hddheatn_ETSCI","cddcoldn_ETSCI","gddgrown_ETSCI","sdii_ETCCDI","r95p_ETCCDI","r99p_ETCCDI","r95ptot_ETCCDI","r99ptot_ETCCDI","tx95t")
-  monthly.only <- c("spei_ETSCI","spi_ETSCI")
+  annual.only <- c("txdtnd","txbdtnbd","gsl","wsdi","wsdid","csdi","csdid","hw",
+		"hddheatn","cddcoldn","gddgrown","sdii","r95p","r99p","r95ptot","r99ptot","tx95t")
+  monthly.only <- c("spei","spi")
 
-  vars.by.src.data.reqd <- list(tmax=c("su_ETCCDI", "id_ETCCDI", "txx_ETCCDI", "txn_ETCCDI", "tx10p_ETCCDI", "tx90p_ETCCDI", "wsdi_ETCCDI", "wsdid_ETSCI","txge30_ETSCI","txge35_ETSCI","txm_ETSCI","txgt50p_ETSCI","tx95t_ETSCI"),
-                                tmin=c("fd_ETCCDI", "tr_ETCCDI", "tnx_ETCCDI", "tnn_ETCCDI", "tn10p_ETCCDI", "tn90p_ETCCDI", "csdi_ETCCDI", "tnlt2_ETSCI","tnltm2_ETSCI","tnltm20_ETSCI","csdid_ETSCI","tnm_ETSCI"),
-                                prec=c("rx1day_ETCCDI", "rx5day_ETCCDI", "sdii_ETCCDI", "r10mm_ETCCDI", "r20mm_ETCCDI", "cdd_ETCCDI", "cwd_ETCCDI", "r95p_ETCCDI", "r99p_ETCCDI", "prcptot_ETCCDI",
-					"rxdday_ETSCI","rnnmm_ETSCI","r95ptot_ETCCDI","r99ptot_ETCCDI","spei_ETSCI","spi_ETSCI"),
-                                tavg=c("gsl_ETCCDI", "dtr_ETCCDI","tmge5_ETSCI","tmlt5_ETSCI","tmge10_ETSCI","tmlt10_ETSCI","hddheatn_ETSCI","cddcoldn_ETSCI","gddgrown_ETSCI","txbdtnbd_ETSCI","txdtnd_ETSCI","tmm_ETSCI",
-					"hw_ETSCI") )
+  vars.by.src.data.reqd <- list(tmax=c("su", "id", "txx", "txn", "tx10p", "tx90p", "wsdi", "wsdid","txge30","txge35","txm","txgt50p","tx95t"),
+                                tmin=c("fd", "tr", "tnx", "tnn", "tn10p", "tn90p", "csdi", "tnlt2","tnltm2","tnltm20","csdid","tnm"),
+                                prec=c("rx1day", "rx5day", "sdii", "r10mm", "r20mm", "cdd", "cwd", "r95p", "r99p", "prcptot",
+					"rxdday","rnnmm","r95ptot","r99ptot","spei","spi"),
+                                tavg=c("gsl", "dtr","tmge5","tmlt5","tmge10","tmlt10","hddheatn","cddcoldn","gddgrown","txbdtnbd","txdtnd","tmm",
+					"hw") )
 
   if(any(!(source.data.present %in% c("tmin", "tmax", "tavg", "prec"))))
     stop("Invalid variable listed in source.data.present.")
@@ -202,20 +202,19 @@ get.climdex.variable.list <- function(source.data.present, time.resolution=c("al
   climdex.vars <- unlist(vars.by.src.data.reqd[source.data.present])
 
   if(!is.null(climdex.vars.subset))
-    climdex.vars <- climdex.vars[climdex.vars %in% c(paste(climdex.vars.subset, "ETCCDI", sep="_"),paste(climdex.vars.subset, "ETSCI", sep="_"))]
+    climdex.vars <- climdex.vars[climdex.vars %in% climdex.vars.subset]
 
   freq.lists <- list(c("MON", "ANN"), c("ANN"))
   dat <- switch(time.res,
-                all=unlist(lapply(climdex.vars, function(x) { if(x=="tx95t_ETSCI") { paste(x,"DAY",sep="_") } else { if(x %in% annual.only) { paste(x,"ANN",sep="_") } else if (x %in% monthly.only) { paste(x,"MON",sep="_") } else { paste(x,c("MON","ANN"),sep="_") } } } )),	
+                all=unlist(lapply(climdex.vars, function(x) { if(x=="tx95t") { paste(x,"DAY",sep="_") } else { if(x %in% annual.only) { paste(x,"ANN",sep="_") } else if (x %in% monthly.only) { paste(x,"MON",sep="_") } else { paste(x,c("MON","ANN"),sep="_") } } } )),	
 					#{ paste(x, freq.lists[[(x %in% annual.only) + 1]], sep="_") })),
                 annual=paste(climdex.vars, "ANN", sep="_"),
                 monthly=paste(climdex.vars[!(climdex.vars %in% annual.only)], "MON", sep="_"))
 
 # caveat to remove SPEI if prec and tmax and tmin are not present, nherold
-  if(!all(c("tmin", "tmax","prec") %in% source.data.present) && ("spei_ETSCI_MON" %in% dat)) dat = dat[-which(dat=="spei_ETSCI_MON")]
+  if(!all(c("tmin", "tmax","prec") %in% source.data.present) && ("spei_MON" %in% dat)) dat = dat[-which(dat=="spei_MON")]
 
   names(dat) <- NULL
-  
   return(dat)
 }
 
@@ -236,7 +235,7 @@ get.climdex.variable.list <- function(source.data.present, time.resolution=c("al
 #'
 #' @export
 get.climdex.functions <- function(vars.list, fclimdex.compatible=TRUE,rxnday_n=7,rnnmm_n=30,ntxntn_n=3,ntxbntnb_n=3,ehfdef="PA13",wsdin_n=7,csdin_n=7) {
-  func.names <- paste("climdex",index.data$ID,sep=".")
+  func.names <- paste("climdex",index.data$Short.name,sep=".")
   el <- list()
   af <- list(freq="annual")
   mf <- list(freq="monthly")
@@ -266,27 +265,27 @@ get.climdex.functions <- function(vars.list, fclimdex.compatible=TRUE,rxnday_n=7
 	if(is.na(index.data$Annual.flag[i])) options[[i]] = el else { if(index.data$Annual.flag[i]==TRUE) { options[[i]] = af } else { options[[i]] = mf } } }
 
   options = lapply(1:length(options), function(x) {
-	if(index.data$ID[x]=="hw") options[[x]] = hw.opts
-	if(index.data$ID[x]=="spei") options[[x]] = spei.opts
-	if(index.data$ID[x]=="rxdday") options[[x]] = c(options[[x]],rxnday.opts)
-	if(index.data$ID[x]=="rnnmm") options[[x]] = c(options[[x]],rnnmm.opts)
-	if(index.data$ID[x]=="txdtnd") options[[x]] = ntxntn.opts
-	if(index.data$ID[x]=="txbdtnbd") options[[x]] = ntxbntnb.opts
+	if(index.data$Short.name[x]=="hw") options[[x]] = hw.opts
+	if(index.data$Short.name[x]=="spei") options[[x]] = spei.opts
+	if(index.data$Short.name[x]=="rxdday") options[[x]] = c(options[[x]],rxnday.opts)
+	if(index.data$Short.name[x]=="rnnmm") options[[x]] = c(options[[x]],rnnmm.opts)
+	if(index.data$Short.name[x]=="txdtnd") options[[x]] = ntxntn.opts
+	if(index.data$Short.name[x]=="txbdtnbd") options[[x]] = ntxbntnb.opts
 
-	if(index.data$ID[x]=="csdi") options[[x]] = wcsdi.opts
-	if(index.data$ID[x]=="wsdi") options[[x]] = wcsdi.opts
-	if(index.data$ID[x]=="csdid") options[[x]] = csdin.opts
-	if(index.data$ID[x]=="wsdid") options[[x]] = wsdin.opts
-	if(index.data$ID[x]=="cwd") options[[x]] = c(options[[x]],cwdd.opts)
-	if(index.data$ID[x]=="cdd") options[[x]] = c(options[[x]],cwdd.opts)
-	if(index.data$ID[x]=="rx5day") options[[x]] = c(options[[x]],rx5day.opts)
+	if(index.data$Short.name[x]=="csdi") options[[x]] = wcsdi.opts
+	if(index.data$Short.name[x]=="wsdi") options[[x]] = wcsdi.opts
+	if(index.data$Short.name[x]=="csdid") options[[x]] = csdin.opts
+	if(index.data$Short.name[x]=="wsdid") options[[x]] = wsdin.opts
+	if(index.data$Short.name[x]=="cwd") options[[x]] = c(options[[x]],cwdd.opts)
+	if(index.data$Short.name[x]=="cdd") options[[x]] = c(options[[x]],cwdd.opts)
+	if(index.data$Short.name[x]=="rx5day") options[[x]] = c(options[[x]],rx5day.opts)
 
 	return(options[[x]])
   })
 
 # list indices which cannot accept a frequency flag and don't have custom options specified above, nherold.
   el_list = c("r95ptot","r99ptot","sdii","hddheatn","cddcoldn","gddgrown","r95p","r99p","gsl","spi")
-  options[which(index.data$ID %in% el_list)] = array(el,length(el_list))
+  options[which(index.data$Short.name %in% el_list)] = array(el,length(el_list))
 
 # source file containing ET-SCI functions - best place for this? nherold.
   source("ancillary/climpact2.etsci-functions.r")
@@ -295,7 +294,7 @@ get.climdex.functions <- function(vars.list, fclimdex.compatible=TRUE,rxnday_n=7
   func <- lapply(1:length(func.names), function(n) do.call(functional::Curry, c(list(eval(parse(text=func.names[n]))), options[[n]])))
 
 #print(str(all.data)) # why is there no row.names in all.data anymore?
-  names.func <- paste(index.data$ID,index.data$Expert.team,time_suffix,sep="_")	#all.data$row.names #paste(index.data$ID,index.data$Expert.team,
+  names.func <- paste(index.data$Short.name,time_suffix,sep="_")	#all.data$row.names #paste(index.data$Short.name,index.data$Expert.team,
   names(func) <- names.func
   return(func[vars.list])
 }
@@ -327,28 +326,29 @@ get.climdex.functions <- function(vars.list, fclimdex.compatible=TRUE,rxnday_n=7
 #'
 #' @export
 get.climdex.variable.metadata <- function(vars.list, template.filename) {
-# read index information from .csv file
+# read index information from tab-delimitted .csv file
   index.input.file = "ancillary/climate.indices.csv"
-  index.data <- read.csv(index.input.file,header=TRUE,sep=",",stringsAsFactors=FALSE)
+  index.data <- read.csv(index.input.file,header=TRUE,sep="\t",stringsAsFactors=FALSE)
   
-#  time_suffix = ifelse(index.data$Annual.flag==TRUE,"ANN","MON")
+# Assign each index as DAY, MON or ANN
   time_suffix = index.data$Annual.flag
   for (i in 1:length(index.data$Annual.flag)) { if(is.na(index.data$Annual.flag[i])) time_suffix[i]="DAY" else { if(index.data$Annual.flag[i]==TRUE) time_suffix[i]="ANN" else if (index.data$Annual.flag[i]==FALSE) time_suffix[i]="MON" } }
 
   assign("index.data",index.data,envir=.GlobalEnv)
   assign("time_suffix",time_suffix,envir=.GlobalEnv)
 
-  all.data <- data.frame(long.name=index.data$Definition,
-			var.name=paste(index.data$ID,index.data$Expert.team,sep="_"),
+  all.data <- data.frame(long.name=index.data$Long.name,
+			var.name=index.data$Short.name,
+			definition=index.data$Definition,
+			expert.team=index.data$Expert.team,
 			units=index.data$Units,
 			annual=index.data$Annual.flag,
 			base.period.attr=index.data$Base.period.flag,
-			row.names=paste(index.data$ID,index.data$Expert.team,time_suffix,sep="_"),
+			row.names=paste(index.data$Short.name,time_suffix,sep="_"),
 			stringsAsFactors=FALSE)
 
   all.data$filename <- create.climdex.cmip5.filenames(ncdf4.helpers::get.split.filename.cmip5(template.filename), rownames(all.data))
   assign("all.data",all.data,envir=.GlobalEnv)
-
   return(all.data[vars.list,])
 }
 
@@ -429,41 +429,41 @@ create.ncdf.output.files <- function(cdx.dat, f, v.f.idx, variable.name.map, ts,
     time.for.file <- time.dat[[c("monthly", "annual")[1 + annual]]]
 
     ## Establish variables, create file
-    if(cdx.dat$var.name[x]=="spi_ETSCI" || cdx.dat$var.name[x]=="spei_ETSCI") {
+    if(cdx.dat$var.name[x]=="spi" || cdx.dat$var.name[x]=="spei") {
         scale.dim <- ncdim_def("scale","3,6,12 months",1:3)
         nc.var.list <- c(vars.ncvars, list(time.for.file$time.bnds.var, ncdf4::ncvar_def(name=cdx.dat$var.name[x], units=cdx.dat$units[x], dim=c(f.example$var[[v.example]]$dim[1:2], list(time.for.file$time.dim),list(scale.dim)),
 			missval=1e20, longname=cdx.dat$long.name[x])))
-    } else if (cdx.dat$var.name[x]=="tx95t_ETSCI") {
+    } else if (cdx.dat$var.name[x]=="tx95t") {
 		day.dim <- ncdim_def("time","calendar day",1:365,calendar="365_day")
 		nc.var.list <- c(vars.ncvars, list(ncdf4::ncvar_def(name=cdx.dat$var.name[x], units=cdx.dat$units[x], dim=c(f.example$var[[v.example]]$dim[1:2],list(day.dim)),
 			missval=1e20, longname=cdx.dat$long.name[x])))
-    } else if (cdx.dat$var.name[x]=="hw_ETSCI") {
+    } else if (cdx.dat$var.name[x]=="hw") {
 		missingval=1e20
 		lonlatdim=f.example$var[[v.example]]$dim[1:2]
-        hwmcdf_tx90 <- ncvar_def("HWM_Tx90","degC",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave magnitude for Tx90 heatwaves, see user guide for definition.",prec="float")
-        hwmcdf_tn90 <- ncvar_def("HWM_Tn90","degC",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave magnitude for Tn90 heatwaves, see user guide for definition.",prec="float")
-        hwmcdf_EHF <- ncvar_def("HWM_EHF","degC^2",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave magnitude for EHF heatwaves, see user guide for definition.",prec="float")
-        hwmcdf_ECF <- ncvar_def("CWM_ECF","degC^2",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Coldwave magnitude for ECF coldwaves, see user guide for definition.",prec="float")
+        hwmcdf_tx90 <- ncvar_def("hwm_tx90","degC",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave magnitude for Tx90 heatwaves, see user guide for definition.",prec="float")
+        hwmcdf_tn90 <- ncvar_def("hwm_tn90","degC",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave magnitude for Tn90 heatwaves, see user guide for definition.",prec="float")
+        hwmcdf_EHF <- ncvar_def("hwm_ehf","degC^2",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave magnitude for EHF heatwaves, see user guide for definition.",prec="float")
+        hwmcdf_ECF <- ncvar_def("cwm_ecf","degC^2",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Coldwave magnitude for ECF coldwaves, see user guide for definition.",prec="float")
 
-        hwacdf_tx90 <- ncvar_def("HWA_Tx90","degC",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave amplitude for Tx90 heatwaves, see user guide for definition.",prec="float")
-        hwacdf_tn90 <- ncvar_def("HWA_Tn90","degC",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave amplitude for Tn90 heatwaves, see user guide for definition.",prec="float")
-        hwacdf_EHF <- ncvar_def("HWA_EHF","degC^2",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave amplitude for EHF heatwaves, see user guide for definition.",prec="float")
-        hwacdf_ECF <- ncvar_def("CWA_ECF","degC^2",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Coldwave amplitude for ECF coldwaves, see user guide for definition.",prec="float")
+        hwacdf_tx90 <- ncvar_def("hwa_tx90","degC",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave amplitude for Tx90 heatwaves, see user guide for definition.",prec="float")
+        hwacdf_tn90 <- ncvar_def("hwa_tn90","degC",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave amplitude for Tn90 heatwaves, see user guide for definition.",prec="float")
+        hwacdf_EHF <- ncvar_def("hwa_ehf","degC^2",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave amplitude for EHF heatwaves, see user guide for definition.",prec="float")
+        hwacdf_ECF <- ncvar_def("cwa_ecf","degC^2",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Coldwave amplitude for ECF coldwaves, see user guide for definition.",prec="float")
 
-        hwncdf_tx90 <- ncvar_def("HWN_Tx90","heatwaves",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave number for Tx90 heatwaves, see user guide for definition.",prec="float")
-        hwncdf_tn90 <- ncvar_def("HWN_Tn90","heatwaves",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave number for Tn90 heatwaves, see user guide for definition.",prec="float")
-        hwncdf_EHF <- ncvar_def("HWN_EHF","heatwaves",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave number for EHF heatwaves, see user guide for definition.",prec="float")
-        hwncdf_ECF <- ncvar_def("CWN_ECF","heatwaves",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Coldwave number for ECF coldwaves, see user guide for definition.",prec="float")
+        hwncdf_tx90 <- ncvar_def("hwn_tx90","heatwaves",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave number for Tx90 heatwaves, see user guide for definition.",prec="float")
+        hwncdf_tn90 <- ncvar_def("hwn_tn90","heatwaves",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave number for Tn90 heatwaves, see user guide for definition.",prec="float")
+        hwncdf_EHF <- ncvar_def("hwn_ehf","heatwaves",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave number for EHF heatwaves, see user guide for definition.",prec="float")
+        hwncdf_ECF <- ncvar_def("cwn_ecf","heatwaves",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Coldwave number for ECF coldwaves, see user guide for definition.",prec="float")
 
-        hwdcdf_tx90 <- ncvar_def("HWD_Tx90","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave duration for Tx90 heatwaves, see user guide for definition.",prec="float")
-        hwdcdf_tn90 <- ncvar_def("HWD_Tn90","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave duration for Tn90 heatwaves, see user guide for definition.",prec="float")
-        hwdcdf_EHF <- ncvar_def("HWD_EHF","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave duration for EHF heatwaves, see user guide for definition.",prec="float")
-        hwdcdf_ECF <- ncvar_def("CWD_ECF","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Coldwave duration for ECF coldwaves, see user guide for definition.",prec="float")
+        hwdcdf_tx90 <- ncvar_def("hwd_tx90","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave duration for Tx90 heatwaves, see user guide for definition.",prec="float")
+        hwdcdf_tn90 <- ncvar_def("hwd_tn90","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave duration for Tn90 heatwaves, see user guide for definition.",prec="float")
+        hwdcdf_EHF <- ncvar_def("hwd_ehf","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave duration for EHF heatwaves, see user guide for definition.",prec="float")
+        hwdcdf_ECF <- ncvar_def("cwd_ecf","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Coldwave duration for ECF coldwaves, see user guide for definition.",prec="float")
 
-        hwfcdf_tx90 <- ncvar_def("HWF_Tx90","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave frequency for Tx90 heatwaves, see user guide for definition.",prec="float")
-        hwfcdf_tn90 <- ncvar_def("HWF_Tn90","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave frequency for Tn90 heatwaves, see user guide for definition.",prec="float")
-        hwfcdf_EHF <- ncvar_def("HWF_EHF","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave frequency for EHF heatwaves, see user guide for definition.",prec="float")
-        hwfcdf_ECF <- ncvar_def("CWF_ECF","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Coldwave frequency for ECF coldwaves, see user guide for definition.",prec="float")
+        hwfcdf_tx90 <- ncvar_def("hwf_tx90","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave frequency for Tx90 heatwaves, see user guide for definition.",prec="float")
+        hwfcdf_tn90 <- ncvar_def("hwf_tn90","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave frequency for Tn90 heatwaves, see user guide for definition.",prec="float")
+        hwfcdf_EHF <- ncvar_def("hwf_ehf","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Heatwave frequency for EHF heatwaves, see user guide for definition.",prec="float")
+        hwfcdf_ECF <- ncvar_def("cwf_ecf","days",list(lonlatdim[[1]],lonlatdim[[2]],time.for.file$time.dim),missingval,longname="Coldwave frequency for ECF coldwaves, see user guide for definition.",prec="float")
 
         nc.var.list <- c(vars.ncvars, list(time.for.file$time.bnds.var,hwmcdf_tx90,hwmcdf_tn90,hwmcdf_EHF,hwmcdf_ECF,
 									hwacdf_tx90,hwacdf_tn90,hwacdf_EHF,hwacdf_ECF,
@@ -477,7 +477,7 @@ create.ncdf.output.files <- function(cdx.dat, f, v.f.idx, variable.name.map, ts,
     new.file <- ncdf4::nc_create(paste(out.dir, cdx.dat$filename[x], sep="/"), nc.var.list, force_v4=TRUE)
 
 	# add heat wave EHF definition as global attribute
-	if (cdx.dat$var.name[x]=="hw_ETSCI") { ncdf4::ncatt_put(new.file, 0, "EHF_definition", ehfdef, definemode=TRUE) }
+	if (cdx.dat$var.name[x]=="hw") { ncdf4::ncatt_put(new.file, 0, "EHF_definition", ehfdef, definemode=TRUE) }
 
     ## Copy attributes for all variables plus global attributes
     att.rename <- c("frequency"="input_frequency", "creation_date"="input_creation_date", "title"="input_title", "tracking_id"="input_tracking_id")
@@ -490,11 +490,20 @@ create.ncdf.output.files <- function(cdx.dat, f, v.f.idx, variable.name.map, ts,
     
     ## Copy attributes with renaming and exclusions.
     ncdf4.helpers::nc.copy.atts(f.example, 0, new.file, 0, definemode=TRUE, rename.mapping=att.rename)
-    if(!cdx.dat$var.name[x]=="hw_ETSCI") ncdf4.helpers::nc.copy.atts(f.example, v.example, new.file, cdx.dat$var.name[x], definemode=TRUE, exception.list=c("units", "long_name", "standard_name", "base_period", "missing_value", "_FillValue", "add_", "valid_min", "valid_max", "valid_range", "scale_factor", "add_offset", "signedness", "history"))
+    if(!cdx.dat$var.name[x]=="hw") ncdf4.helpers::nc.copy.atts(f.example, v.example, new.file, cdx.dat$var.name[x], definemode=TRUE, exception.list=c("units", "long_name", "standard_name", "base_period", "missing_value", "_FillValue", "add_", "valid_min", "valid_max", "valid_range", "scale_factor", "add_offset", "signedness", "history"))
     for(v in vars.to.clone.atts.for) {
       ncdf4.helpers::nc.copy.atts(f.example, v, new.file, v, definemode=TRUE)
     }
     ncdf4::ncatt_put(new.file, time.dim.name, "units", time.units, definemode=TRUE)
+	if(!cdx.dat$var.name[x]=="hw") { 
+		ncdf4::ncatt_put(new.file, cdx.dat$var.name[x],"definition",cdx.dat$definition[x],definemode=TRUE)
+		ncdf4::ncatt_put(new.file, cdx.dat$var.name[x],"expert_team",cdx.dat$expert.team[x],definemode=TRUE)
+	} else {
+		for(i in list(hwmcdf_tx90,hwmcdf_tn90,hwmcdf_EHF,hwmcdf_ECF,hwacdf_tx90,hwacdf_tn90,hwacdf_EHF,hwacdf_ECF,hwncdf_tx90,hwncdf_tn90,hwncdf_EHF,hwncdf_ECF,
+									hwdcdf_tx90,hwdcdf_tn90,hwdcdf_EHF,hwdcdf_ECF,hwfcdf_tx90,hwfcdf_tn90,hwfcdf_EHF,hwfcdf_ECF)) {
+			ncdf4::ncatt_put(new.file, i,"expert_team","ETSCI",definemode=TRUE)
+		}
+	}
 
     ## Put additional attributes.
 # Don't add history att since some variables are climdex.pcic and some aren't, nherold.
@@ -503,7 +512,7 @@ create.ncdf.output.files <- function(cdx.dat, f, v.f.idx, variable.name.map, ts,
     ncdf4::nc_enddef(new.file)
 
     ## Copy data from vars.to.copy and put time bounds (no time bounds for variables calculated on calendar days)
-    if (!cdx.dat$var.name[x]=="tx95t_ETSCI") ncdf4::ncvar_put(new.file, time.bnds.name, time.for.file$time.bnds.data)
+    if (!cdx.dat$var.name[x]=="tx95t") ncdf4::ncvar_put(new.file, time.bnds.name, time.for.file$time.bnds.data)
     for(v in vars.to.copy)
       if(!is.null(vars.data[[v]]))
          ncdf4::ncvar_put(new.file, v, vars.data[[v]])
@@ -575,9 +584,9 @@ compute.climdex.indices <- function(in.dat, cdx.funcs, ts, base.range, fclimdex.
 
 # If SPEI is to be calculated, adjust the parameters sent to climdex.spei to include the latitude of the current grid cell 
 # (couldn't find a more appropriate place to inject latitude into the function call).
-  if(any(names(cdx.funcs)=="spei_ETSCI_MON")) {
+  if(any(names(cdx.funcs)=="spei_MON")) {
   	spei.opts$lat = in.dat$lat
-  	cdx.funcs[[which(names(cdx.funcs)=="spei_ETSCI_MON")]] <- do.call(functional::Curry, c(list(eval(parse(text="climdex.spei"))), spei.opts))
+  	cdx.funcs[[which(names(cdx.funcs)=="spei_MON")]] <- do.call(functional::Curry, c(list(eval(parse(text="climdex.spei"))), spei.opts))
   }
 
   ## NOTE: Names must be stripped here because it increases memory usage on the head by a factor of 8-9x (!)
@@ -872,12 +881,12 @@ get.thresholds.chunk <- function(subset, cdx.funcs, thresholds.netcdf, t.f.idx, 
 #          indices would be loaded. However, if more data was passed to climdexInput.raw than the requested index needed (e.g. tmax, tmin and prec, when only 
 #          tmin is needed) then the 'check.quantile.validity' would force an error. Thus to prevent this pull in all quantiles all the time. May be a 
 #          performance hit but not deal-breakingly so.
-var.thresh.map <- list(tx05thresh=index.data$ID,tx10thresh=index.data$ID,tx50thresh=index.data$ID,tx90thresh=index.data$ID,tx95thresh=index.data$ID,
-			tn05thresh=index.data$ID,tn10thresh=index.data$ID,tn90thresh=index.data$ID,tn95thresh=index.data$ID,
-			tavg05thresh=index.data$ID,tavg95thresh=index.data$ID,
-			tx90thresh_15days=index.data$ID,tn90thresh_15days=index.data$ID,tavg90thresh_15days=index.data$ID,
-			txraw=index.data$ID,tnraw=index.data$ID,precraw=index.data$ID,
-			r95thresh=index.data$ID,r99thresh=index.data$ID)
+var.thresh.map <- list(tx05thresh=index.data$Short.name,tx10thresh=index.data$Short.name,tx50thresh=index.data$Short.name,tx90thresh=index.data$Short.name,tx95thresh=index.data$Short.name,
+			tn05thresh=index.data$Short.name,tn10thresh=index.data$Short.name,tn90thresh=index.data$Short.name,tn95thresh=index.data$Short.name,
+			tavg05thresh=index.data$Short.name,tavg95thresh=index.data$Short.name,
+			tx90thresh_15days=index.data$Short.name,tn90thresh_15days=index.data$Short.name,tavg90thresh_15days=index.data$Short.name,
+			txraw=index.data$Short.name,tnraw=index.data$Short.name,precraw=index.data$Short.name,
+			r95thresh=index.data$Short.name,r99thresh=index.data$Short.name)
   
   cdx.names <- names(cdx.funcs)
   thresh.var.needed <- names(var.thresh.map)[sapply(var.thresh.map, function(x) { any(unlist(lapply(x, function(substr) { any(grepl(substr, cdx.names)) }))) })]
@@ -942,11 +951,11 @@ write.climdex.results <- function(climdex.results, chunk.subset, cdx.ncfile, dim
 
   ## Write out results, variable by variable. Do something different in the case of SPI, SPEI and heat waves.
   lapply(1:length(cdx.ncfile), function(v) {
-    if(cdx.varname[v] == "spi_ETSCI") {
+    if(cdx.varname[v] == "spi") {
         # Fill the empty array according to the conventions of climdex.pcic.ncdf
         t.dim.len <- ncdf4.helpers::nc.get.dim.for.axis(cdx.ncfile[[v]], cdx.varname[v], "T")$len
         tmp=array(NA,c(xy.dims[1],length(chunk.subset[[1]]),t.dim.len,3))
-        ind=which(names(climdex.results[[1]])=="spi_ETSCI_MON")
+        ind=which(names(climdex.results[[1]])=="spi_MON")
 
 	# Find special cases of an entire slab missing values... repeat such that we have full data.
 	for(i in 1:length(climdex.results)) {
@@ -960,11 +969,11 @@ write.climdex.results <- function(climdex.results, chunk.subset, cdx.ncfile, dim
                 dim(dat) <- c(c(xy.dims[1],length(chunk.subset[[1]])),t.dim.len)        #c(c(londim$len,latdim$len),t.dim.len)
                 tmp[,,,scale] = dat }
 	ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], cdx.varname[v], tmp, chunk.subset)
-    } else if(cdx.varname[v] == "spei_ETSCI") {
+    } else if(cdx.varname[v] == "spei") {
         # Fill the empty array according to the conventions of climdex.pcic.ncdf
         t.dim.len <- ncdf4.helpers::nc.get.dim.for.axis(cdx.ncfile[[v]], cdx.varname[v], "T")$len
         tmp=array(NA,c(xy.dims[1],length(chunk.subset[[1]]),t.dim.len,3))
-        ind=which(names(climdex.results[[1]])=="spei_ETSCI_MON")
+        ind=which(names(climdex.results[[1]])=="spei_MON")
 
         # Find special cases of an entire slab missing values... repeat such that we have full data.
         for(i in 1:length(climdex.results)) {
@@ -978,14 +987,14 @@ write.climdex.results <- function(climdex.results, chunk.subset, cdx.ncfile, dim
                 dim(dat) <- c(c(xy.dims[1],length(chunk.subset[[1]])),t.dim.len)        #c(c(londim$len,latdim$len),t.dim.len)
                 tmp[,,,scale] = dat }
         ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], cdx.varname[v], tmp, chunk.subset)
-    } else if(cdx.varname[v] == "hw_ETSCI") {
-        t.dim.len <- ncdf4.helpers::nc.get.dim.for.axis(cdx.ncfile[[v]], "HWD_Tn90", "T")$len	# choose a heat wave variable to get the time dimension, identical across all heat wave variables
+    } else if(cdx.varname[v] == "hw") {
+        t.dim.len <- ncdf4.helpers::nc.get.dim.for.axis(cdx.ncfile[[v]], "hwd_tn90", "T")$len	# choose a heat wave variable to get the time dimension, identical across all heat wave variables
 
         # Make an empty array to fill according to the conventions of climdex.pcic.ncdf
         tmp=array(NA,c(xy.dims[1],length(chunk.subset[[1]]),4,5,t.dim.len))
 
         # find element that contains HW indices
-        ind=which(names(climdex.results[[1]])=="hw_ETSCI_ANN")
+        ind=which(names(climdex.results[[1]])=="hw_ANN")
 
         # Find special cases of an entire slab missing values... repeat such that we have full data.
         for(i in 1:length(climdex.results)) {
@@ -1003,30 +1012,30 @@ write.climdex.results <- function(climdex.results, chunk.subset, cdx.ncfile, dim
                 }
         }
 
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "HWM_Tx90", tmp[,,1,1,], chunk.subset)
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "HWM_Tn90", tmp[,,2,1,], chunk.subset)
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "HWM_EHF", tmp[,,3,1,], chunk.subset)
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "CWM_ECF", tmp[,,4,1,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("HWM_Tx90"), tmp[,,1,1,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("HWM_Tn90"), tmp[,,2,1,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("HWM_EHF"), tmp[,,3,1,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("CWM_ECF"), tmp[,,4,1,], chunk.subset)
 
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "HWA_Tx90", tmp[,,1,2,], chunk.subset)
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "HWA_Tn90", tmp[,,2,2,], chunk.subset)
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "HWA_EHF", tmp[,,3,2,], chunk.subset)
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "CWA_ECF", tmp[,,4,2,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("HWA_Tx90"), tmp[,,1,2,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("HWA_Tn90"), tmp[,,2,2,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("HWA_EHF"), tmp[,,3,2,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("CWA_ECF"), tmp[,,4,2,], chunk.subset)
 
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "HWN_Tx90", tmp[,,1,3,], chunk.subset)
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "HWN_Tn90", tmp[,,2,3,], chunk.subset)
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "HWN_EHF", tmp[,,3,3,], chunk.subset)
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "CWN_ECF", tmp[,,4,3,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("HWN_Tx90"), tmp[,,1,3,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("HWN_Tn90"), tmp[,,2,3,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("HWN_EHF"), tmp[,,3,3,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("CWN_ECF"), tmp[,,4,3,], chunk.subset)
 
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "HWD_Tx90", tmp[,,1,4,], chunk.subset)
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "HWD_Tn90", tmp[,,2,4,], chunk.subset)
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "HWD_EHF", tmp[,,3,4,], chunk.subset)
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "CWD_ECF", tmp[,,4,4,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("HWD_Tx90"), tmp[,,1,4,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("HWD_Tn90"), tmp[,,2,4,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("HWD_EHF"), tmp[,,3,4,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("CWD_ECF"), tmp[,,4,4,], chunk.subset)
 
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "HWF_Tx90", tmp[,,1,5,], chunk.subset)
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "HWF_Tn90", tmp[,,2,5,], chunk.subset)
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "HWF_EHF", tmp[,,3,5,], chunk.subset)
-        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], "CWF_ECF", tmp[,,4,5,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("HWF_Tx90"), tmp[,,1,5,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("HWF_Tn90"), tmp[,,2,5,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("HWF_EHF"), tmp[,,3,5,], chunk.subset)
+        ncdf4.helpers::nc.put.var.subset.by.axes(cdx.ncfile[[v]], tolower("CWF_ECF"), tmp[,,4,5,], chunk.subset)
     } else {
 		dat <- t(do.call(cbind, lapply(climdex.results, function(cr) { cr[[v]] })))
 		t.dim.len <- ncdf4.helpers::nc.get.dim.for.axis(cdx.ncfile[[v]], cdx.varname[v], "T")$len
@@ -1678,48 +1687,48 @@ create.indices.from.files <- function(input.files, out.dir, output.filename.temp
   # change index variable names for custom indices (e.g. rxnday, rnnmm) to use their actual custom integers (e.g. rx7day, r30mm)
   for (i in 1:length(cdx.meta$var.name)) {
 	freq.tmp <- c("monthly", "annual")[1 + cdx.meta$annual[i]]
-	if(cdx.meta$var.name[i]=="rxdday_ETSCI") { 
-		cdx.meta$var.name[i] = paste("rx",rxnday_n,"day","_ETSCI",sep="") 
+	if(cdx.meta$var.name[i]=="rxdday") { 
+		cdx.meta$var.name[i] = paste("rx",rxnday_n,"day","",sep="") 
 		cdx.meta$filename[i] = gsub("rxdday",paste("rx",rxnday_n,"day",sep=""),cdx.meta$filename[i]) 
-		cdx.meta$long.name[i] = paste("Maximum ",freq.tmp," ",rxnday_n,"-day precipitation total",sep="")
-	} else if(cdx.meta$var.name[i]=="rnnmm_ETSCI") { 
-		cdx.meta$var.name[i] = paste("r",rnnmm_n,"mm","_ETSCI",sep="")
+		cdx.meta$definition[i] = paste("Maximum ",freq.tmp," ",rxnday_n,"-day precipitation total",sep="")
+	} else if(cdx.meta$var.name[i]=="rnnmm") { 
+		cdx.meta$var.name[i] = paste("r",rnnmm_n,"mm","",sep="")
 		cdx.meta$filename[i] = gsub("rnnmm",paste("r",rnnmm_n,"mm",sep=""),cdx.meta$filename[i])
-		cdx.meta$long.name[i] = paste(freq.tmp," number of days when precipitation >= ",rnnmm_n," mm",sep="")
-	} else if(cdx.meta$var.name[i]=="txdtnd_ETSCI") { 
-		cdx.meta$var.name[i] = paste("tx",ntxntn_n,"tn",ntxntn_n,"_ETSCI",sep="")
+		cdx.meta$definition[i] = paste(freq.tmp," number of days when precipitation >= ",rnnmm_n," mm",sep="")
+	} else if(cdx.meta$var.name[i]=="txdtnd") { 
+		cdx.meta$var.name[i] = paste("tx",ntxntn_n,"tn",ntxntn_n,"",sep="")
 		cdx.meta$filename[i] = gsub("txdtnd",paste("tx",ntxntn_n,"tn",ntxntn_n,sep=""),cdx.meta$filename[i]) 
-		cdx.meta$long.name[i] = paste(freq.tmp," number of ",ntxntn_n," consecutive days where both TX > 95th percentile and TN > 95th percentile",sep="")
+		cdx.meta$definition[i] = paste(freq.tmp," number of ",ntxntn_n," consecutive days where both TX > 95th percentile and TN > 95th percentile",sep="")
 	}
-	if(cdx.meta$var.name[i]=="txbdtnbd_ETSCI") {
-		cdx.meta$var.name[i] = paste("txb",ntxbntnb_n,"tnb",ntxbntnb_n,"_ETSCI",sep="")
+	if(cdx.meta$var.name[i]=="txbdtnbd") {
+		cdx.meta$var.name[i] = paste("txb",ntxbntnb_n,"tnb",ntxbntnb_n,"",sep="")
 		cdx.meta$filename[i] = gsub("txbdtnbd",paste("txb",ntxbntnb_n,"tnb",ntxbntnb_n,sep=""),cdx.meta$filename[i])
-		cdx.meta$long.name[i] = paste(freq.tmp," number of ",ntxbntnb_n," consecutive days where both TX < 5th percentile and TN < 5th percentile",sep="")
+		cdx.meta$definition[i] = paste(freq.tmp," number of ",ntxbntnb_n," consecutive days where both TX < 5th percentile and TN < 5th percentile",sep="")
 	}
-	if(cdx.meta$var.name[i]=="wsdid_ETSCI") { 
-		cdx.meta$var.name[i] = paste("wsdi",wsdin_n,"_ETSCI",sep="") 
+	if(cdx.meta$var.name[i]=="wsdid") { 
+		cdx.meta$var.name[i] = paste("wsdi",wsdin_n,"",sep="") 
 		cdx.meta$filename[i] = gsub("wsdid",paste("wsdi",wsdin_n,sep=""),cdx.meta$filename[i])
-		cdx.meta$long.name[i] = paste(freq.tmp," number of days with at least ",wsdin_n," consecutive days when TX > 90th percentile",sep="")
+		cdx.meta$definition[i] = paste("Annual number of days contributing to events where ",wsdin_n," or more consecutive days experience TX > 90th percentile",sep="")
 	}
-	if(cdx.meta$var.name[i]=="csdid_ETSCI") {
-		cdx.meta$var.name[i] = paste("csdi",csdin_n,"_ETSCI",sep="") 
+	if(cdx.meta$var.name[i]=="csdid") {
+		cdx.meta$var.name[i] = paste("csdi",csdin_n,"",sep="") 
 		cdx.meta$filename[i] = gsub("csdid",paste("csdi",csdin_n,sep=""),cdx.meta$filename[i]) 
-		cdx.meta$long.name[i] = paste(freq.tmp," number of days with at least ",csdin_n," consecutive days when TN < 10th percentile",sep="")
+		cdx.meta$definition[i] = paste("Annual number of days contributing to events where ",csdin_n," or more consecutive days experience TN < 10th percentile",sep="")
 	}
-	if(cdx.meta$var.name[i]=="hddheatn_ETSCI") {
-		cdx.meta$var.name[i] = paste("hddheat",hddheatn_n,"_ETSCI",sep="") 
+	if(cdx.meta$var.name[i]=="hddheatn") {
+		cdx.meta$var.name[i] = paste("hddheat",hddheatn_n,"",sep="") 
 		cdx.meta$filename[i] = gsub("hddheatn",paste("hddheat",hddheatn_n,sep=""),cdx.meta$filename[i]) 
-		cdx.meta$long.name[i] = paste("Annual sum of ",hddheatn_n," - TM (where ",hddheatn_n," is a user-defined location-specific base temperature and TM < ",hddheatn_n,")",sep="")
+		cdx.meta$definition[i] = paste("Annual sum of ",hddheatn_n," - TM (where ",hddheatn_n," is a user-defined location-specific base temperature and TM < ",hddheatn_n,")",sep="")
 	}
-	if(cdx.meta$var.name[i]=="cddcoldn_ETSCI") {
-		cdx.meta$var.name[i] = paste("cddcold",cddcoldn_n,"_ETSCI",sep="") 
+	if(cdx.meta$var.name[i]=="cddcoldn") {
+		cdx.meta$var.name[i] = paste("cddcold",cddcoldn_n,"",sep="") 
 		cdx.meta$filename[i] = gsub("cddcoldn",paste("cddcold",cddcoldn_n,sep=""),cdx.meta$filename[i]) 
-		cdx.meta$long.name[i] = paste("Annual sum of TM - ",cddcoldn_n," (where ",cddcoldn_n," is a user-defined location-specific base temperature and TM > ",cddcoldn_n,")",sep="")
+		cdx.meta$definition[i] = paste("Annual sum of TM - ",cddcoldn_n," (where ",cddcoldn_n," is a user-defined location-specific base temperature and TM > ",cddcoldn_n,")",sep="")
 	}
-	if(cdx.meta$var.name[i]=="gddgrown_ETSCI") {
-		cdx.meta$var.name[i] = paste("gddgrow",gddgrown_n,"_ETSCI",sep="")
+	if(cdx.meta$var.name[i]=="gddgrown") {
+		cdx.meta$var.name[i] = paste("gddgrow",gddgrown_n,"",sep="")
 		cdx.meta$filename[i] = gsub("gddgrown",paste("gddgrow",gddgrown_n,sep=""),cdx.meta$filename[i])
-		cdx.meta$long.name[i] = paste("Annual sum of TM - ",gddgrown_n," (where ",gddgrown_n," is a user-defined location-specific base temperature and TM > ",gddgrown_n,")",sep="")
+		cdx.meta$definition[i] = paste("Annual sum of TM - ",gddgrown_n," (where ",gddgrown_n," is a user-defined location-specific base temperature and TM > ",gddgrown_n,")",sep="")
 	}
   }
   cdx.funcs <- get.climdex.functions(climdex.var.list,rxnday_n=rxnday_n,rnnmm_n=rnnmm_n,ntxntn_n=ntxntn_n,ntxbntnb_n=ntxbntnb_n,fclimdex.compatible=fclimdex.compatible,ehfdef=ehfdef,wsdin_n=wsdin_n,csdin_n=csdin_n)
