@@ -24,8 +24,8 @@
 #   that has taken place in ClimPACT2 is that the calculation of the indices is almost entirely taken care of by the R package
 #   climdex.pcic, with several exceptions such as the heatwave indices and SPEI/SPI. 
 #
-#   Several people contributed significantly to the development of the original ClimPACT software. For posterity and credit, below is a 
-#   list of the key names and dates.
+#   Several people contributed significantly to the development of the original ClimPACT software (which was originally derived
+#   from RClimdex). For posterity and credit, below is a list of the key names and dates.
 #
 #   Programmed by Yujun Ouyang,Mar,2004
 #   rewritten by Yang Feng, July 2004
