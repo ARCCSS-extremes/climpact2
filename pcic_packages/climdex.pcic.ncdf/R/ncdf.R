@@ -513,9 +513,10 @@ create.ncdf.output.files <- function(cdx.dat, f, v.f.idx, variable.name.map, ts,
 
     ## Copy data from vars.to.copy and put time bounds (no time bounds for variables calculated on calendar days)
     if (!cdx.dat$var.name[x]=="tx95t") ncdf4::ncvar_put(new.file, time.bnds.name, time.for.file$time.bnds.data)
-    for(v in vars.to.copy)
+    for(v in 1:length(vars.to.copy))
+#    for(v in vars.to.copy)
       if(!is.null(vars.data[[v]]))
-         ncdf4::ncvar_put(new.file, v, vars.data[[v]])
+         ncdf4::ncvar_put(new.file, vars.to.copy[[v]], vars.data[[v]])
     
     new.file
   }))
