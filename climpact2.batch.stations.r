@@ -101,6 +101,9 @@ batch <- function(input.directory,output.directory,base.start,base.end) {
 					skip <<- TRUE
 				})
 #		if(skip) { system(paste("rm ",file,".temporary",sep="")) }
+# RJHD - NH addition for pdf error 2-aug-17                  
+        graphics.off()
+		print(paste(file," done",sep=""))
 	}
 
 	print("",quote=FALSE)

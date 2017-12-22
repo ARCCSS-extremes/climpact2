@@ -1569,6 +1569,8 @@ plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,met
 			cat(file=trend_file,paste(paste(definitions[def],aspects[asp],sep="."),metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
 		}
 	}
+   # close all jpeg graphics devices  - RJHD 2017-12-19
+   graphics.off()
 }
 
 # write.precindex.csv
@@ -1626,6 +1628,8 @@ plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=N
             out1<<-ls.print(fit1,print.it=F)
             cat(file=trend_file,paste(paste(index.name,times[time],"month",sep="."),metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
         }
+        # close all jpeg graphics devices  - RJHD 2017-12-19
+        graphics.off()
 }
 
 # plot.index
@@ -1668,6 +1672,7 @@ plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,s
 	dev.copy()
 	dev.off(dev0)
 }
+graphics.off()
 
 # plotx
 # make plots, this is called twice to make jpg and pdf files. 
