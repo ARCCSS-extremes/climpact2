@@ -26,8 +26,8 @@
   ---------------------
 
     Software you will need before proceeding:
-        -R (for Windows, version 3.2.3 or later. For Linux/MacOS version 3.0.2 
-         or later). You will need administrator privileges on your computer
+        -R (version 3.3 or later) 
+         You will need administrator privileges on your computer
          or the ability to install R libraries.
 
 	1) Download and extract the following file to your computer:
@@ -53,7 +53,7 @@
   ---------------------------------------------------------------------
 
     Software you will need before proceeding:
-        -R (version 3.0.2 or later). You will need administrator privileges 
+        -R (version 3.3 or later). You will need administrator privileges 
 		 on your computer or the ability to install R libraries.
         -netCDF
         -PROJ4 development files (libproj-dev package on Ubuntu)
@@ -92,7 +92,7 @@
   -----------------------------------------------------
   
     Software you will need before proceeding:
-        -R (version 3.0.2 or later). You will need administrator privileges 
+        -R (version 3.3 or later). You will need administrator privileges 
 		 on your computer or the ability to install R libraries.
 	
 	1) Download and extract the following file to your computer:
