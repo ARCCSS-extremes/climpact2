@@ -134,6 +134,8 @@
 
      - If you experience trouble installing R packages in Windows, try to disable
        your antivirus software temporarily.
+       
+     - For interpolated data remove coordinates attribute from the variables via ncatted -O -a coordinates,,d,,<your_file>.nc
 
 
   Documentation
