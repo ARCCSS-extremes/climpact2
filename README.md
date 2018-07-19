@@ -37,6 +37,8 @@
     2) In Windows: open R and select "File->Change dir..." and select the 
        climpact2-master directory created in step 1. Then type 
        "source('climpact2.GUI.r')"
+       
+       NOTE: If nothing happens, try run the additional command "startss()".
 
        In Linux/MacOS: cd to the climpact2-master directory created in
        step 1, then open R in a terminal window and type 
