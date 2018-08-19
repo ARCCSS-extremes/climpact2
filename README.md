@@ -139,7 +139,7 @@
        
      - For interpolated data remove coordinates attribute from the variables via ncatted -O -a coordinates,,d,,<your_file>.nc
      
-     - To run the batch script in Windows see [this post](https://github.com/ARCCSS-extremes/climpact2/issues/56)
+     - To run the batch script in Windows see [this post](https://github.com/ARCCSS-extremes/climpact2/issues/56) 2
 
 
   Documentation
