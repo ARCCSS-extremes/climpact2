@@ -141,7 +141,7 @@
      
      - To run the batch script in Windows see [this post](https://github.com/ARCCSS-extremes/climpact2/issues/56) 2
 
-	[test](https://github.com/ARCCSS-extremes/climpact2/issues/56)
+	<a href="https://github.com/ARCCSS-extremes/climpact2/issues/56">test</a>
 
   Documentation
   -------------
