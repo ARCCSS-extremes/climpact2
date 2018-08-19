@@ -139,9 +139,8 @@ your antivirus software temporarily.
 
 * For interpolated data remove coordinates attribute from the variables via ncatted -O -a coordinates,,d,,<your_file>.nc
 
-* Guidance on batch script in Windows see this post: https://github.com/ARCCSS-extremes/climpact2/issues/56
+* Guidance on batch script in Windows see [this post](https://github.com/ARCCSS-extremes/climpact2/issues/56)
 
-	<a href="https://github.com/ARCCSS-extremes/climpact2/issues/56">test</a>
 
   Documentation
   -------------
