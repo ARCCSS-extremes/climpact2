@@ -1561,7 +1561,7 @@ plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,met
 
 			dev.set(which = pdf.dev)
 			plotx((date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label,index.name=index.name,sub=sub)
-			dev.copy()
+#			dev.copy()
 			dev.off(dev0)
 
 			fit1<-suppressWarnings(lsfit((date.years),index[def,asp,]))
@@ -1621,7 +1621,7 @@ plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=N
 
             dev.set(which = pdf.dev)
             plotx(unique(as.character(spifactor)), index[time,], main = paste(gsub('\\*', index.name, plot.title),sep=""),ylab = index.units,xlab = x.label,index.name=index.name,sub=subtmp)
-            dev.copy()
+#            dev.copy()
             dev.off(dev0)
 
             fit1<-suppressWarnings(lsfit(1:length(unique(spifactor)),index[time,]))
@@ -1669,7 +1669,7 @@ plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,s
 	dev.set(which = pdf.dev)
 	plotx(xdata, index, main = gsub('\\*', tmp.name, plot.title),
 	  ylab = index.units, xlab = x.label,index.name=index.name,sub=sub)
-	dev.copy()
+#	dev.copy()
 	dev.off(dev0)
 }
 graphics.off()

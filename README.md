@@ -1,7 +1,7 @@
 
 
 				ClimPACT2
-			Last updated: October 2016
+			Last updated: July 2018
 
 
   What is it?
@@ -37,6 +37,8 @@
     2) In Windows: open R and select "File->Change dir..." and select the 
        climpact2-master directory created in step 1. Then type 
        "source('climpact2.GUI.r')"
+       
+       NOTE: If nothing happens, try run the additional command "startss()".
 
        In Linux/MacOS: cd to the climpact2-master directory created in
        step 1, then open R in a terminal window and type 
@@ -117,25 +119,37 @@
   Common problems
   ---------------
 
-     - Running the GUI on MacOS. Users may need to install XQuartz, ensure
-       to restart your computer after installing. https://www.xquartz.org/
+* Running the GUI on MacOS. Users may need to install XQuartz, ensure
+to restart your computer after installing. https://www.xquartz.org/
 
-     - Running the GUI on Linux. If an error occurs citing "BWidget" then it is likely
-       that your operating system needs the "BWidget" package installed (this comes
-       pre-installed on some operating systems but not on all). This can be done
-       through your operating system's package manager.
-       
-     - Running the GUI on Linux. When trying to install packages R fails with 
-       "/bin/bash: g++: command not found"
-       You need to install g++ onto your operating system via your package manager.
-       In most Linux operating systems a command such as "sudo apt-get install g++" 
-       at the command line (i.e. not inside R) will suffice. Once installed, run 
-       ClimPACT2 again.
+* Running the GUI on Linux. If an error occurs citing "BWidget" then it is likely
+that your operating system needs the "BWidget" package installed (this comes
+pre-installed on some operating systems but not on all). This can be done
+through your operating system's package manager.
 
-     - If you experience trouble installing R packages in Windows, try to disable
-       your antivirus software temporarily.
-       
-     - For interpolated data remove coordinates attribute from the variables via ncatted -O -a coordinates,,d,,<your_file>.nc
+* Running the GUI on Linux. When trying to install packages R fails with 
+"/bin/bash: g++: command not found"
+You need to install g++ onto your operating system via your package manager.
+In most Linux operating systems a command such as "sudo apt-get install g++" 
+at the command line (i.e. not inside R) will suffice. Once installed, run 
+ClimPACT2 again.
+
+* If you experience trouble installing R packages in Windows, try to disable
+your antivirus software temporarily.
+
+* For interpolated data remove coordinates attribute from the variables via ncatted -O -a coordinates,,d,,<your_file>.nc
+
+* Guidance on running the batch script in Windows see [this post](https://github.com/ARCCSS-extremes/climpact2/issues/56)
+<a/>
+
+
+  Known issues
+  ------------
+
+* When using the GUI or batch script, the SPEI and SPI indices do not get printed into the aggregated PDF. Individual plots are still made.
+
+* Missing days in input text file do not throw a warning, see [here](https://github.com/ARCCSS-extremes/climpact2/issues/51)
+<a/>
 
 
   Documentation
