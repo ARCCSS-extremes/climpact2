@@ -146,7 +146,8 @@ your antivirus software temporarily.
 <a/>
 
 * Due to an error in the [CRAN SPEI package](https://cran.r-project.org/web/packages/SPEI/index.html) SPEI and SPI will not be
-    correct IF your data contain missing values (e.g. they are based on observations).
+    correct IF your data contain missing values (e.g. they are based on observations). This only applies to netCDF data, if using
+    the GUI then this is not an issue.
 
 
   Known issues
