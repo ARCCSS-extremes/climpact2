@@ -54,6 +54,9 @@
   How do I calculate the indices on netCDF datasets? (Linux/MacOS only)
   ---------------------------------------------------------------------
 
+    Warning: Due to an error in the netCDF SPEI and SPI package these indices will not be
+    correct IF your data contain missing values (e.g. they are based on observations).
+    
     Software you will need before proceeding:
         -R (version 3.3 or later). You will need administrator privileges 
 		 on your computer or the ability to install R libraries.
@@ -116,8 +119,8 @@
 	   Rscript climpact2.batch.stations.r ./sample_data/ ./sample_data/climpact2.sample.batch.metadata.txt 1971 2000 4
   
   
-  Common problems
-  ---------------
+  Common problems/issues log
+  --------------------------
 
 * Running the GUI on MacOS. Users may need to install XQuartz, ensure
 to restart your computer after installing. https://www.xquartz.org/
@@ -141,6 +144,9 @@ your antivirus software temporarily.
 
 * Guidance on running the batch script in Windows see [this post](https://github.com/ARCCSS-extremes/climpact2/issues/56)
 <a/>
+
+* Due to an error in the [CRAN SPEI package](https://cran.r-project.org/web/packages/SPEI/index.html) SPEI and SPI will not be
+    correct IF your data contain missing values (e.g. they are based on observations).
 
 
   Known issues
