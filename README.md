@@ -119,8 +119,8 @@
 	   Rscript climpact2.batch.stations.r ./sample_data/ ./sample_data/climpact2.sample.batch.metadata.txt 1971 2000 4
   
   
-  Common problems/issues log
-  --------------------------
+  Common problems
+  ---------------
 
 * Running the GUI on MacOS. Users may need to install XQuartz, ensure
 to restart your computer after installing. https://www.xquartz.org/
@@ -145,18 +145,18 @@ your antivirus software temporarily.
 * Guidance on running the batch script in Windows see [this post](https://github.com/ARCCSS-extremes/climpact2/issues/56)
 <a/>
 
-* Due to an error in the [CRAN SPEI package](https://cran.r-project.org/web/packages/SPEI/index.html) SPEI and SPI will not be
-    correct IF your data contain missing values (e.g. they are based on observations). This only applies to netCDF data, if using
-    the GUI then this is not an issue.
-
 
   Known issues
   ------------
 
-* When using the GUI or batch script, the SPEI and SPI indices do not get printed into the aggregated PDF. Individual plots are still made.
+* When using the GUI or batch script, plots of the SPEI and SPI indices do not get printed into the aggregated PDF. Individual plot files are still made.
 
 * Missing days in input text file do not throw a warning, see [here](https://github.com/ARCCSS-extremes/climpact2/issues/51)
 <a/>
+
+* Due to an error in the [CRAN SPEI package](https://cran.r-project.org/web/packages/SPEI/index.html) SPEI and SPI will not be
+    correct IF your data contain missing values (e.g. they are based on observations). This only applies to netCDF data, if using
+    the GUI then this is not an issue.
 
 
   Documentation
