@@ -434,9 +434,11 @@ create.ncdf.output.files <- function(cdx.dat, f, v.f.idx, variable.name.map, ts,
         nc.var.list <- c(vars.ncvars, list(time.for.file$time.bnds.var, ncdf4::ncvar_def(name=cdx.dat$var.name[x], units=cdx.dat$units[x], dim=c(f.example$var[[v.example]]$dim[1:2], list(time.for.file$time.dim),list(scale.dim)),
 			missval=1e20, longname=cdx.dat$long.name[x])))
     } else if (cdx.dat$var.name[x]=="tx95t") {
-		day.dim <- ncdim_def("time","calendar day",1:365,calendar="365_day")
-		nc.var.list <- c(vars.ncvars, list(ncdf4::ncvar_def(name=cdx.dat$var.name[x], units=cdx.dat$units[x], dim=c(f.example$var[[v.example]]$dim[1:2],list(day.dim)),
-			missval=1e20, longname=cdx.dat$long.name[x])))
+                if(attr(ts, "cal")=="360_day" || attr(ts, "cal")=="360") last_calday = 360
+                else last_calday = 365
+                day.dim <- ncdim_def("time","calendar day",1:last_calday,calendar="365_day")
+                nc.var.list <- c(vars.ncvars, list(ncdf4::ncvar_def(name=cdx.dat$var.name[x], units=cdx.dat$units[x], dim=c(f.example$var[[v.example]]$dim[1:2],list(day.dim)),
+                        missval=1e20, longname=cdx.dat$long.name[x])))
     } else if (cdx.dat$var.name[x]=="hw") {
 		missingval=1e20
 		lonlatdim=f.example$var[[v.example]]$dim[1:2]
@@ -513,10 +515,9 @@ create.ncdf.output.files <- function(cdx.dat, f, v.f.idx, variable.name.map, ts,
 
     ## Copy data from vars.to.copy and put time bounds (no time bounds for variables calculated on calendar days)
     if (!cdx.dat$var.name[x]=="tx95t") ncdf4::ncvar_put(new.file, time.bnds.name, time.for.file$time.bnds.data)
-    for(v in 1:length(vars.to.copy))
-#    for(v in vars.to.copy)
+    for(v in vars.to.copy)
       if(!is.null(vars.data[[v]]))
-         ncdf4::ncvar_put(new.file, vars.to.copy[[v]], vars.data[[v]])
+         ncdf4::ncvar_put(new.file, v, vars.data[[v]])
     
     new.file
   }))

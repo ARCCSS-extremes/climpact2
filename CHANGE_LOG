@@ -1,0 +1,11 @@
+1.2.4		23 January 2019
+* Empty .csv files are no longer written for indices that are not calculated.
+* Missing dates in input file (i.e. missing rows) are now checked for and reported in a text file (ending in "missing_dates"). The user cannot proceed without 
+  fixing missing dates, either by filling them in with data or missing values (-99.9).
+* Fixed trend information being printed in .csv file for indices that aren't calculated.
+* Added a 'Frequency' column to the output trend file to distinguish indices calculated on monthly and annual scales.
+* Slight improvement to the writing of error files when running in batch mode.
+* Fixed writing out of base period dates in SPEI/SPI thresholds file.
+* Minor code clean up.
+* Thanks to cicatrixx for feedback.
+* This CHANGE LOG was started.

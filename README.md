@@ -1,7 +1,6 @@
 
 
-				ClimPACT2
-			Last updated: July 2018
+# <p align="center">ClimPACT2</p>
 
 
   What is it?
@@ -54,6 +53,9 @@
   How do I calculate the indices on netCDF datasets? (Linux/MacOS only)
   ---------------------------------------------------------------------
 
+    Warning: Due to an error in the netCDF SPEI and SPI package these indices will not be
+    correct IF your data contain missing values (e.g. they are based on observations).
+    
     Software you will need before proceeding:
         -R (version 3.3 or later). You will need administrator privileges 
 		 on your computer or the ability to install R libraries.
@@ -146,9 +148,13 @@ your antivirus software temporarily.
   Known issues
   ------------
 
-* When using the GUI or batch script, the SPEI and SPI indices do not get printed into the aggregated PDF. Individual plots are still made.
+* When using the GUI or batch script, plots of the SPEI and SPI indices do not get printed into the aggregated PDF. Individual plot files are still made.
 
 * Missing days in input text file do not throw a warning, see [here](https://github.com/ARCCSS-extremes/climpact2/issues/51)
+
+* Due to an error in the [CRAN SPEI package](https://cran.r-project.org/web/packages/SPEI/index.html) SPEI and SPI will not be
+    correct IF your data contain missing values (e.g. they are based on observations). This only applies to netCDF data, if using
+    the GUI then this is not an issue.
 <a/>
 
 
