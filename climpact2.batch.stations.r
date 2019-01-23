@@ -88,6 +88,7 @@ batch <- function(input.directory,output.directory,base.start,base.end) {
 					fileConn<-file(paste(file,".error.txt",sep=""))
 					writeLines(toString(msg), fileConn)
 					close(fileConn)
+					rm(list=ls())
 					skip <<- TRUE
 				})
 #		if(skip) { system(paste("rm ",file,".temporary",sep="")) }
@@ -98,12 +99,15 @@ batch <- function(input.directory,output.directory,base.start,base.end) {
 					fileConn<-file(paste(file,".error.txt",sep=""))
 					writeLines(toString(msg), fileConn)
 					close(fileConn)
+					rm(list=ls())
 					skip <<- TRUE
 				})
+#        rm(list=ls())
 #		if(skip) { system(paste("rm ",file,".temporary",sep="")) }
 # RJHD - NH addition for pdf error 2-aug-17                  
         graphics.off()
 		print(paste(file," done",sep=""))
+        rm(list=ls())
 	}
 
 	print("",quote=FALSE)
