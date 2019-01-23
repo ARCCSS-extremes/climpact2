@@ -88,7 +88,6 @@ allqc <- function (master, output, outrange = 4)
 	# Output goes to series.name_tx_flatline.txt  and series.name_tx_flatline.txt
 	flatline_tx(master, output)
 	flatline_tn(master, output)
-	# tkmessageBox(message = "Extra Quality Control Routines finished!!!")
 }
 
 # A function that should be called before any .csv file is written. It appends some basic information that should be stored in each file for 
@@ -187,7 +186,7 @@ fourboxes <- function(station, output, save = 0, outrange)
 	if (any(!is.na(datos$tn)))
 	{
 		restn <- boxplot(datos$tn ~ datos$month, main = "TN", col = "cyan", range = outrange)
-		
+
 		# write tmin outliers
 		write.table("TN up",sep=",", file = filena, append = TRUE, row.names = FALSE, col.names = FALSE)
 		for (a in 1:12)
@@ -485,7 +484,7 @@ pplotts <- function(var = "prcp", type = "h", tit = NULL,cio,metadata)
 	{
 		ymax <- 100
 		ymin <- -100
-		warning(paste("Warnings have been generated because there is no available data for","one or more of tmax, tmin or precip. Check the plots in /qc to confirm this."))
+		warning(paste("Warnings have been generated because there is no available data for one or more of tmax, tmin or precip. Check the plots in the /qc folder to confirm this."))
 	}
 	
 	par(mfrow = c(4, 1))
@@ -579,19 +578,44 @@ create.climdex.input <- function(user.data,metadata) {
 #    - data: output of convert.user.file
 #    - graphics: boolean for whether running with graphics or not (determines whether progress bars, message windows etc. are shown).
 QC.wrapper <- function(metadata, user.data, user.file, graphics) {
+	print("TESTING DATA, PLEASE WAIT...",quote=FALSE)
 	if(graphics) { process.pb <<- tkProgressBar("%", "Checking latitude/longitude, base period...",0, 100, 10) }
 
-	##############################
-	# Check for valid lat/lons
-	if (is.na(metadata$lat)  == TRUE | is.na(metadata$lon) == TRUE | metadata$lat < -90 | metadata$lat > 90 | metadata$lon > 180 | metadata$lon < -180) {
-	  tkmessageBox(message = paste("Please enter a valid latitude (-90 to +90) and longitude (-180 to +180).",sep = ""))
-	  close(process.pb)
-	  return() }
+	#############################################
+	# BASIC CHECKS BEFORE climdex object creation
+	
+	# 1. Check for valid lat/lons
+	if (is.na(metadata$lat) == TRUE | is.na(metadata$lon) == TRUE | metadata$lat < -90 | metadata$lat > 90 | metadata$lon > 180 | metadata$lon < -180) {
+	  error.msg = paste("Please enter a valid latitude (-90 to +90) and longitude (-180 to +180).",sep = "")
+	  if(graphics) { close(process.pb) ; tkmessageBox(message = error.msg)  } else {	skip <<- TRUE ; stop(error.msg) }
+	  return()
+	}
 
-	# Check base period is valid when no thresholds loaded
+	# 2. Check base period is valid when no thresholds loaded
 	if(is.null(quantiles)) {
 	        if(metadata$base.start < format(metadata$dates[1],format="%Y") | metadata$base.end > format(metadata$dates[length(metadata$dates)],format="%Y") | metadata$base.start > metadata$base.end) {
-	                if(graphics) { close(process.pb) ; tkmessageBox(message = paste("Base period must be between ", format(metadata$dates[1],format="%Y")," and ",format(metadata$dates[length(metadata$dates)],format="%Y"),". Please correct.",sep="")) ; return() } }
+					error.msg = paste("Base period must be between ", format(metadata$dates[1],format="%Y")," and ",format(metadata$dates[length(metadata$dates)],format="%Y"),". Please correct.",sep="")
+					if(graphics) { close(process.pb) ; tkmessageBox(message = error.msg)  } else {	skip <<- TRUE ; stop(error.msg) }
+					return()
+			}
+	}
+	
+	# 3. Check there are no missing dates by constructing a time series based on the first and last date provided by user and see if its length
+	# is longer than the length of the user's data.
+	length.of.user.data=length(user.data$year)
+	first.date=as.Date(paste(user.data$year[1],user.data$month[1],user.data$day[1],sep="-"),"%Y-%m-%d")
+	last.date=as.Date(paste(user.data$year[length.of.user.data],user.data$month[length.of.user.data],user.data$day[length.of.user.data],sep="-"),"%Y-%m-%d")
+	date.series=seq(first.date,last.date,"day")
+	user.date.series=as.Date(paste(user.data$year,user.data$month,user.data$day,sep="-"))
+	missing.dates = date.series[!date.series %in% user.date.series]
+	# Write out the missing.dates to a text file. Report the filename to the user.
+	missing.dates.file = paste0(user.file,".missing_dates")
+	if(file_test("-f",missing.dates.file)) { file.remove(missing.dates.file) }
+	if(length(date.series[!date.series %in% user.date.series]) > 0) {
+		write.table(date.series[!date.series %in% user.date.series], sep=",", file = missing.dates.file, append = FALSE, row.names=FALSE,col.names = FALSE)
+		error.msg = paste0("You seem to have missing dates. See ",missing.dates.file," for a list of missing dates. Fill these with observations or missing values (-99.9) before continuing with quality control.")
+		if(graphics) { close(process.pb) ; tkmessageBox(message = error.msg)  } else {	skip <<- TRUE ; stop(error.msg) }
+		return()
 	}
 
 	# Check base period is valid when thresholds ARE loaded. 
@@ -604,12 +628,11 @@ QC.wrapper <- function(metadata, user.data, user.file, graphics) {
 #		return()
 #	}
 
-	# Check for ascending order of years
+	# 4. Check for ascending order of years
 	if(!all(user.data$year == cummax(user.data$year))) {
-				close(process.pb)
-                tkmessageBox(message = "Years are not in ascending order, please check your input file.",icon = "warning", title = "ClimPACT2 - warning")
-				if(exists("reading.pb")) { tkfocus(start1) }
-                return()
+				error.msg = "Years are not in ascending order, please check your input file."
+				if(graphics) { close(process.pb) ; tkmessageBox(message = error.msg)  } else {	skip <<- TRUE ; stop(error.msg) }
+				return()
 	}
 
     ##############################
@@ -645,7 +668,7 @@ QC.wrapper <- function(metadata, user.data, user.file, graphics) {
 	
     # write raw tmin, tmax and prec data for future SPEI/SPI calcs
 	yeardate2 <- format(cio@dates,format="%Y")
-	dates <-format(cio@dates[1:50],format="%Y-%m-%d")
+	dates <-format(cio@dates,format="%Y-%m-%d")
 	base.dates <- dates[which(yeardate2 >= metadata$base.start & yeardate2 <= metadata$base.end)]
 	thres2 <- list(dates=base.dates,tmin=cio@data$tmin[which(yeardate2 >= metadata$base.start & yeardate2 <= metadata$base.end)],tmax=cio@data$tmax[which(yeardate2 >= metadata$base.start & yeardate2 <= metadata$base.end)],
 	prec=cio@data$prec[which(yeardate2 >= metadata$base.start & yeardate2 <= metadata$base.end)])
@@ -660,7 +683,6 @@ QC.wrapper <- function(metadata, user.data, user.file, graphics) {
 	Encoding(lat_text) <- "UTF-8"
 	title.station <- paste(ofilename, " [", metadata$lat,lat_text, ", ", metadata$lon,lon_text, "]", sep = "")
 	assign("title.station", title.station, envir = .GlobalEnv)
-#	assign("ofilename", ofilename, envir = .GlobalEnv)
 
 	##############################
 	# output plots for tmin, tmax, prcp and dtr
@@ -700,7 +722,6 @@ QC.wrapper <- function(metadata, user.data, user.file, graphics) {
 
 	##############################
 	# Call the ExtraQC functions.
-	print("TESTING DATA, PLEASE WAIT...",quote=FALSE)
 	if(graphics) { 
 		setTkProgressBar(process.pb,80,label="									")
 		setTkProgressBar(process.pb,80,label="Calling quality control functions...") 
@@ -715,7 +736,7 @@ QC.wrapper <- function(metadata, user.data, user.file, graphics) {
 
 	##############################	
 	# Remove temporary file
-	system(paste("rm ",user.file,".temporary",sep=""))
+	if(file_test("-f",paste(user.file,".temporary",sep=""))) { file.remove(paste(user.file,".temporary",sep="")) }
 
 	##############################
 	# Draw 'QC complete' window
@@ -749,6 +770,38 @@ QC.wrapper <- function(metadata, user.data, user.file, graphics) {
 		tt3 <- tkframe(proc.complete,bg="white");frame.space <- tklabel(tt3, text = " ", font = font_small, bg = "white");tkgrid(frame.space);tkgrid(tt3)
 		loaded <<- TRUE
 	}
+	
+#	##############################	
+#	# Final check
+#	# -- This code performs a check that should not be included in climpact. It's kept here because the functionality might be useful for something else.
+#	# After QC work, final check is to see if sufficient amount of data exists for PR, TN and TX. If not, NA them. If all three variables have insufficient data, 
+#	# stop with an appropriate message.
+#	min.data.required = 0.7
+#	length.of.pr = length(cio@data$prec)
+#	missing.pr = sum(is.na(cio@data$prec))
+#	length.of.tn = length(cio@data$tmin)
+#	missing.tn = sum(is.na(cio@data$tmin))
+#	length.of.tx = length(cio@data$tmax)
+#	missing.tx = sum(is.na(cio@data$tmax))
+#	
+#	missing.str = ""
+#	if(missing.pr/length.of.pr > (1-min.data.required)) { cio@data$prec[] <<- NA ; cio@namasks$annual$prec[] <<- NA ; cio@namasks$monthly$prec[] <<- NA ; missing.str = paste0(missing.str,"PR, ") }
+#	if(missing.tn/length.of.tn > (1-min.data.required)) { cio@data$tmin[] <<- NA ; cio@data$tavg[] <<- NA ; cio@data$dtr[] <<- NA ; cio@namasks$annual$tmin[] <<- NA ; cio@namasks$monthly$tmin[] <<- NA ; cio@namasks$annual$tavg[] <<- NA ; cio@namasks$monthly$tavg[] <<- NA ; missing.str = paste0(missing.str,"TN, ") }
+#	if(missing.tx/length.of.tx > (1-min.data.required)) { cio@data$tmax[] <<- NA ; cio@data$tavg[] <<- NA ; cio@data$dtr[] <<- NA ; cio@namasks$annual$tmax[] <<- NA ; cio@namasks$monthly$tmax[] <<- NA ; cio@namasks$annual$tavg[] <<- NA ; cio@namasks$monthly$tavg[] <<- NA ; missing.str = paste0(missing.str,"TX, ") }
+#	print(paste0("Minimum fraction of data required: ",min.data.required))
+#	print(paste0("Fraction of missing PR data: ",missing.pr/length.of.pr))
+#	print(paste0("Fraction of missing TN data: ",missing.tn/length.of.tn))
+#	print(paste0("Fraction of missing TX data: ",missing.tx/length.of.tx))
+#
+#	if(all(all(is.na(cio@data$prec)),all(is.na(cio@data$tmin)),all(is.na(cio@data$tmax)))) { 
+#		error.msg=paste0("There is insufficient data to run ClimPACT2. At least ",min.data.required*100,"% of days in your input file must have valid data for one or more of PR, TX or TN.")
+#		if(graphics) { close(process.pb) ; tkmessageBox(message = error.msg)  } else {	skip <<- TRUE ; stop(error.msg) }
+#		return()
+#	} else if (any(all(is.na(cio@data$prec)),all(is.na(cio@data$tmin)),all(is.na(cio@data$tmax)))) {
+#		error.msg=paste0("The following variables have less than ",min.data.required*100,"% valid data and thus related indices will not be calculated: ",substr(missing.str,1,nchar(missing.str)-2),".")
+#		if(graphics) { close(process.pb) ; tkmessageBox(message = error.msg)  } else {	skip <<- FALSE ; stop(error.msg) }
+#		return()
+#	}
 } # end of QC.wrapper()
 
 write.NA.statistics <- function(cio) { 
@@ -929,11 +982,11 @@ read.user.file <- function(user.file,graphics=FALSE) {
 								close(process.pb)
 								#tkfocus(start1)
 								#load.data.qc()
-				} else { print(paste("INPUT FILE NOT FORMATTED CORRECTLY.\n\n",c$message,sep="")) }
+				} else { stop(paste("INPUT FILE NOT FORMATTED CORRECTLY.\n\n",c$message,sep="")) }
 				} )
 
 	# Replace -99.9 data with NA
-	if(!is.null(data)) { data$prcp[data$prcp==-99.9]=NA ; data[data$tmax==(-99.9),"tmax"]=NA ; data[data$tmin==(-99.9),"tmin"]=NA }
+	if(!is.null(data)) { data$prcp[data$prcp==-99.9]=NA ; data$tmax[data$tmax==-99.9]=NA ; data$tmin[data$tmin==-99.9]=NA }
 
 #	if(graphics) { close(process.pb) }
 	return(data)
@@ -1159,7 +1212,6 @@ index.calc<-function(metadata,graphics=TRUE){
 			index.stored <- number.days.op.threshold(var.choice2, cio@date.factors[[match.arg(frequency,choices=c("annual","monthly"))]], constant.choice, op.choice) * mask.choice
 			write.index.csv(index.stored,index.name=paste(var.choice,op.choice2,constant.choice,sep=""),freq=frequency) ; 
 			plot.call(index.stored,index.name=paste(var.choice,op.choice2,constant.choice,sep=""),index.units="days",x.label="Years",sub=paste("Number of days where ",var.choice," ",op.choice," ",constant.choice,sep=""),freq=frequency)
-			cat(file=trend_file,paste(paste(var.choice,op.choice2,constant.choice,sep=""),metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
 		}
 	}
 
@@ -1175,7 +1227,7 @@ index.calc<-function(metadata,graphics=TRUE){
 	}
 
 	calculate.spei <- function() {
-		if(all(is.na(cio@data$tmin)) | all(is.na(cio@data$tmax)) | all(is.na(cio@data$prec))) { warning("NOT PLOTTING SPEI: climdex.spei REQUIRES TMIN, TMAX AND PRECIP DATA.") } else {
+		if(all(is.na(cio@data$tmin)) | all(is.na(cio@data$tmax)) | all(is.na(cio@data$prec))) { print("NO DATA FOR SPEI.",quote=FALSE) ; return() } else {
 		# If SPEI/SPI thresholds have been read in by user then use these in SPEI/SPI calculations.
 		if(exists("speiprec")) { tnraw <- speitmin ; txraw <- speitmax ; praw <- speiprec ; btime <- speidates } else {
 			tnraw <- txraw <- praw <- btime <- NULL }
@@ -1269,7 +1321,7 @@ index.calc<-function(metadata,graphics=TRUE){
 	}
 		
 	calculate.spi <- function() {
-			if(all(is.na(cio@data$prec))) warning("NOT PLOTTING SPI: climdex.spi REQUIRES PRECIP DATA.") else {
+			if(all(is.na(cio@data$prec))) { print("NO DATA FOR SPI.",quote=FALSE) ; return() } else {
                 if(exists("speiprec")) { tnraw <- speitmin ; txraw <- speitmax ; praw <- speiprec ; btime <- speidates } else {
                         tnraw <- txraw <- praw <- btime <- NULL }
 
@@ -1331,7 +1383,8 @@ index.calc<-function(metadata,graphics=TRUE){
                         spifactor <- spifactor[(length(spifactor)-length((cio@date.factors$monthly))+1):length(spifactor)]
                 }
 		write.precindex.csv(index.store,index.name=index.list$Short.name[83],spifactor,header="Standardised Precipitation Index")
-		plot.precindex(index.store,index.name=index.list$Short.name[83],index.units=index.list$Units[82],x.label="Years",spifactor,sub=as.character(index.list$Definition[83]),times=c(3,6,12,custom_SPEI),metadata=metadata) } 
+		plot.precindex(index.store,index.name=index.list$Short.name[83],index.units=index.list$Units[82],x.label="Years",spifactor,sub=as.character(index.list$Definition[83]),times=c(3,6,12,custom_SPEI),metadata=metadata) 
+		} 
 	}
 
 	# pdf file for all plots
@@ -1342,17 +1395,17 @@ index.calc<-function(metadata,graphics=TRUE){
 	if(class(tmp)=="try-error") { tkmessageBox(message=paste("Error encountered, please check that the file ",pdfname," is not currently open, then select OK to try again.",sep=""),icon='warning'); return() }
 	pdf.dev=dev.cur()
 	assign('pdf.dev',pdf.dev,envir=.GlobalEnv)
-	
-	# trend file
-	trend_file<-paste(outtrddir,paste(ofilename,"_trend.csv",sep=""),sep="/") ; assign('trend_file',trend_file,envir=.GlobalEnv)
-	write_header(trend_file,"Linear trend statistics")
-	cat(file=trend_file,paste("Indices","StartYear","EndYear","Slope","STD_of_Slope","P_Value",sep=","),fill=180,append=T)
-
-	index_not_calculated=''   # contains index names that could not be calculated.
-	assign('index_not_calculated',index_not_calculated,envir=.GlobalEnv)
 
 	# Read in index .csv file
 	index.list <- read.csv("ancillary/climate.indices.csv",header=T,sep='\t')
+
+	# trend file
+	trend_file<-paste(outtrddir,paste(ofilename,"_trend.csv",sep=""),sep="/") ; assign('trend_file',trend_file,envir=.GlobalEnv)
+	write_header(trend_file,"Linear trend statistics")
+	cat(file=trend_file,paste("Index","Frequency","StartYear","EndYear","Slope","STD_of_Slope","P_Value",sep=","),fill=180,append=T)
+
+	index_not_calculated=''   # contains index names that could not be calculated.
+	assign('index_not_calculated',index_not_calculated,envir=.GlobalEnv)
 
 	# create a list of indices that do not require a 'frequency' parameter
 	no.freq.list = c("r95ptot","r99ptot","sdii","hddheat","cddcold","gddgrow","r95p","r99p","gsl","spi","spei","hw","wsdi","wsdin","csdi","csdin","ntxntn","ntxbntnb")
@@ -1415,11 +1468,11 @@ index.calc<-function(metadata,graphics=TRUE){
 			tmp.index.name = paste("gddgrow",Tb_GDD,sep="")
 			index.parameter = paste("cio,Tb=",Tb_GDD,sep="")
 			tmp.index.def = paste("Annual sum of TM - ",Tb_GDD,sep="") }
-			
+
 		index.stored <- eval(parse(text=paste("climdex.",as.character(index.list$Short.name[i]),"(",index.parameter,")",sep=""))) #index.function(cio)
+		index.stored[index.stored==-Inf] = NA	# Because climdex functions (called in above line) will still calculate even if all data are NA, resulting in -Inf values being inserted into index.stored. Climdex functions only check if cio data are NULL.
 		write.index.csv(index.stored,index.name=tmp.index.name,freq=frequency,header=tmp.index.def)
 		plot.call(index.stored,index.name=tmp.index.name,index.units=as.character(index.list$Units[i]),x.label="Years",sub=tmp.index.def,freq=frequency)
-		cat(file=trend_file,paste(tmp.index.name,metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
 		remove(index.parameter)
 
 		if(graphics) {
@@ -1460,7 +1513,7 @@ index.calc<-function(metadata,graphics=TRUE){
 # write.index.csv
 # takes a time series of a given index and writes to file
 write.index.csv <- function(index=NULL,index.name=NULL,freq="annual",header="") {
-	if(is.null(index.name) | is.null(index)) stop("Need index data and index.name in order to write CSV file.")
+	if(is.null(index) | all(is.na(index))) { print(paste0("NO DATA FOR ",index.name,". NOT WRITING .csv FILE."),quote=FALSE) ; return() }
 
 	if(index.name=="tx95t") { freq="DAY" } 
 	else {
@@ -1494,49 +1547,61 @@ write.index.csv <- function(index=NULL,index.name=NULL,freq="annual",header="") 
 # write.hw.csv
 # takes a time series of hw and writes to file
 write.hw.csv <- function(index=NULL,index.name=NULL,header="") {
-        if(is.null(index)) stop("Need heatwave data to write CSV file.")
+#		if(is.null(index) | all(is.na(index))) { print("No index data, not writing CSV file.") ; return() }
 
 		# print each definition in a separate .csv. Thus each .csv will have columns of time, HWA, HWM, HWF, HWD, HWN.
 		aspect.names <- list("time","HWM","HWA","HWN","HWD","HWF")
 		aspect.names.ECF <- list("time","CWM","CWA","CWN","CWD","CWF")
 
 		# write Tx90 heatwave data
+		if(!all(is.na(cio@data$tmax))) {
         nam1 <- paste(outinddir, paste(ofilename, "_tx90_heatwave_ANN.csv", sep = ""), sep = "/")
 		write_header(nam1,header)
-		write.table(aspect.names, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
-        write.table(cbind((date.years),aperm(index[1,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
-
+		write.table(aspect.names, file = nam1, append = TRUE, quote = FALSE, sep = ", ", row.names=FALSE,col.names = FALSE)
+        write.table(cbind((date.years),aperm(index[1,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", row.names=FALSE,col.names = FALSE)
+		}
+		
         # write Tn90 heatwave data
+        if(!all(is.na(cio@data$tmin))) {
         nam1 <- paste(outinddir, paste(ofilename, "_tn90_heatwave_ANN.csv", sep = ""), sep = "/")
         write_header(nam1,header)
-        write.table(aspect.names, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
-        write.table(cbind((date.years),aperm(index[2,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
+        write.table(aspect.names, file = nam1, append = TRUE, quote = FALSE, sep = ", ", row.names=FALSE,col.names = FALSE)
+        write.table(cbind((date.years),aperm(index[2,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", row.names=FALSE,col.names = FALSE)
+		}
 
         # write EHF heatwave data
+        if((!all(is.na(cio@data$tmax))) && (!all(is.na(cio@data$tmin)))) {
         nam1 <- paste(outinddir, paste(ofilename, "_ehf_heatwave_ANN.csv", sep = ""), sep = "/")
         write_header(nam1,header)
-        write.table(aspect.names, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
-        write.table(cbind((date.years),aperm(index[3,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
-
+        write.table(aspect.names, file = nam1, append = TRUE, quote = FALSE, sep = ", ", row.names=FALSE,col.names = FALSE)
+        write.table(cbind((date.years),aperm(index[3,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", row.names=FALSE,col.names = FALSE)
+		}
+		
         # write ECF coldwave data
+        if((!all(is.na(cio@data$tmax))) && (!all(is.na(cio@data$tmin)))) {
         nam1 <- paste(outinddir, paste(ofilename, "_ecf_heatwave_ANN.csv", sep = ""), sep = "/")
         write_header(nam1,header)
-        write.table(aspect.names.ECF, file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
-        write.table(cbind((date.years),aperm(index[4,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", na = "-99.9", row.names=FALSE,col.names = FALSE)
+        write.table(aspect.names.ECF, file = nam1, append = TRUE, quote = FALSE, sep = ", ", row.names=FALSE,col.names = FALSE)
+        write.table(cbind((date.years),aperm(index[4,,],c(2,1))), file = nam1, append = TRUE, quote = FALSE, sep = ", ", row.names=FALSE,col.names = FALSE)
+		}
 }
 
 # plot.hw
 plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,metadata) {
-        if(is.null(index)) stop("Need heatwave data to plot.")
+#        if(is.null(index)) stop("Need heatwave data to plot.")
 
 	definitions <- c("Tx90","Tn90","EHF","ECF")
 	aspects <- c("HWM","HWA","HWN","HWD","HWF")
 	units <- c("°C","°C","heatwaves","days","days")
 	Encoding(units) <- "UTF-8"
 
+	# mask out indices that should not have values due to no or insufficient input data from user
+	if(all(is.na(cio@data$tmax))) { index[c(1,3,4),,] = NA }
+	if(all(is.na(cio@data$tmin))) { index[c(2,3,4),,] = NA }
+
 	for (def in 1:length(definitions)) {
 		for (asp in 1:length(aspects)) {
-			if(all(is.na(index[def,asp,]))) { warning(paste("All NA values detected, not plotting ",aspects[asp],", ",definitions[def],".",sep="")) ; next }
+			if(all(is.na(index[def,asp,]))) { print(paste("NO DATA FOR HEATWAVE [",aspects[asp],", ",definitions[def],"].",sep="")) ; next }
 
 			plot.title <- paste("Station: ",title.station,sep="")
 			if(definitions[def]=="ECF") { namp <- paste(outjpgdir, paste(ofilename, "_", tolower(gsub("H","C",aspects[asp])),"_",tolower(definitions[def]), "_ANN.jpg", sep = ""), sep = "/") }
@@ -1560,13 +1625,11 @@ plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,met
 			plotx((date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label,index.name=index.name,sub=sub)
 
 			dev.set(which = pdf.dev)
-			plotx((date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label,index.name=index.name,sub=sub)
+			plotx((date.years), index[def,asp,], main = gsub('\\*', unit, plot.title),ylab = unit,xlab = x.label,index.name=paste(paste(definitions[def],aspects[asp],sep=".")),sub=sub)
 #			dev.copy()
 			dev.off(dev0)
 
-			fit1<-suppressWarnings(lsfit((date.years),index[def,asp,]))
-			out1<<-ls.print(fit1,print.it=F)
-			cat(file=trend_file,paste(paste(definitions[def],aspects[asp],sep="."),metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
+			cat(file=trend_file,paste(paste(definitions[def],aspects[asp],sep="."),"ANN",metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
 		}
 	}
    # close all jpeg graphics devices  - RJHD 2017-12-19
@@ -1575,7 +1638,7 @@ plot.hw <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,met
 
 # write.precindex.csv
 write.precindex.csv <- function(index=NULL,index.name=NULL,spifactor=NULL,header="") {
-        if(is.null(index)) stop("Need SPEI data to write CSV file.")
+#		if(is.null(index) | all(is.na(index))) { print("No index data, not writing CSV file.") ; return() }
 		colnames <- list("time",index.name)
 
         # write 3 month data
@@ -1606,11 +1669,11 @@ write.precindex.csv <- function(index=NULL,index.name=NULL,spifactor=NULL,header
 # plot.precindex
 # not sure how generic this process can be
 plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,spifactor=NULL,sub="",times="",metadata) {
-        if(is.null(index)) stop("Need precip data to plot.")
+#        if(is.null(index)) stop("Need precip data to plot.")
 		Encoding(sub) <- "UTF-8"
 
         for (time in 1:4) {
-			if(all(is.na(index[time,]))) { warning(paste("All NA values detected, not plotting ",times[time]," month ",index.name,".",sep="")) ; next }
+			if(all(is.na(index[time,]))) { print(paste("All NA values detected, not plotting ",times[time]," month ",index.name,".",sep="")) ; next }
 
 			subtmp=paste("Index: ",index.name," ",times[time]," month. ",sub,sep="")
 			namp <- paste(outjpgdir, paste(ofilename, "_",times[time],"month_",index.name,"_MON.jpg", sep = ""), sep = "/")
@@ -1624,9 +1687,7 @@ plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=N
 #            dev.copy()
             dev.off(dev0)
 
-            fit1<-suppressWarnings(lsfit(1:length(unique(spifactor)),index[time,]))
-            out1<<-ls.print(fit1,print.it=F)
-            cat(file=trend_file,paste(paste(index.name,times[time],"month",sep="."),metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
+            cat(file=trend_file,paste(paste(index.name,times[time],"month",sep="."),"MON",metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
         }
         # close all jpeg graphics devices  - RJHD 2017-12-19
         graphics.off()
@@ -1634,8 +1695,8 @@ plot.precindex <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=N
 
 # plot.index
 plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,sub="",freq="annual") {
-        if(is.null(index.name) | is.null(index) | is.null(index.units)) stop("Need index data, index.name, index units and an x label in order to plot data.")
-
+	if(all(is.na(index))) { print(paste0("NO DATA FOR ",index.name,". NOT PLOTTING."),quote=FALSE) ; return() }
+	
 		Encoding(sub) <- "UTF-8"
 		Encoding(index.units) <- "UTF-8"
 #	plot.title <- paste(title.station,index.name,sep=", ")
@@ -1669,6 +1730,9 @@ plot.call <- function(index=NULL,index.name=NULL,index.units=NULL,x.label=NULL,s
 	dev.set(which = pdf.dev)
 	plotx(xdata, index, main = gsub('\\*', tmp.name, plot.title),
 	  ylab = index.units, xlab = x.label,index.name=index.name,sub=sub)
+	  
+	cat(file=trend_file,paste(index.name,freq,metadata$year.start,metadata$year.end,round(as.numeric(out$coef.table[[1]][2, 1]), 3),round(as.numeric(out$coef.table[[1]][2, 2]), 3),round(as.numeric(out$summary[1, 6]),3),sep=","),fill=180,append=T)
+
 #	dev.copy()
 	dev.off(dev0)
 }
@@ -1678,7 +1742,6 @@ graphics.off()
 # make plots, this is called twice to make jpg and pdf files. 
 plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=NULL,sub="")
 {
-	if(all(is.na(y0))) { print("NO DATA TO PLOT",quote=FALSE) ; return() }
 	Encoding(main) <- "UTF-8"
 	Encoding(sub) <- "UTF-8"
 # take a copy of input, so we will not modify the input by mistake.
@@ -1774,7 +1837,7 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 		subtit <- "No linear trend due to insufficient valid data points (10)"
 	}
 	title(sub = subtit, cex.sub = 1.5)
-
+	
 	old.par = par()	# store par settings to plot legend outside figure margins
 	par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
 	plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")

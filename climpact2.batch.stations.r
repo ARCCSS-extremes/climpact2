@@ -37,20 +37,15 @@ read.file.list.metadata <- function(file.list.metadata)
 batch <- function(input.directory,output.directory,base.start,base.end) {
 	metadata <- read.file.list.metadata(file.list.metadata)
 
-	# store errors encountered in the loop
-	batch.error <- array(NA,1)
-
-#	capture.output(stdout <- foreach(file.number=1:length(metadata$station)) %dopar%
-#	for (file.number in 1:length(metadata$station))
-	foreach(file.number=1:length(metadata$station)) %dopar%
-	{
+	# foreach does not support 'next'. This code is removed from the dopar loop in order to provide 'next' like functionality, in the form of return(NA) calls.
+	func = function(file.number) {
 		file=paste(input.directory,"/",metadata$station[file.number],sep="")
 		print(file)
 		user.data <- read.user.file(file,graphics=FALSE)
 		user.data <- check.and.create.dates(user.data)
 		get.file.path(file)
 		create.dir(file)
-
+	
 		# define variables for indices
 		lat <- as.numeric(metadata$latitude[file.number])
 		lon <- as.numeric(metadata$longitude[file.number])
@@ -63,9 +58,10 @@ batch <- function(input.directory,output.directory,base.start,base.end) {
 		rnnmm_ud <<- metadata$rnnmm_ud[file.number]
 		txtn_ud <<- metadata$txtn_ud[file.number]
 		custom_SPEI <<- metadata$SPEI[file.number]
-
+	
 		# global variables needed for calling climpact2.GUI.r functionality
 		station.metadata <- create.metadata(lat,lon,base.start,base.end,user.data$dates,"ofile_filler")
+		assign("metadata",station.metadata,envir=.GlobalEnv)
 		version.climpact <<- software_id
 		quantiles <<- NULL
 		if(lat<0) lat_text = "°S" else lat_text = "°N"
@@ -81,29 +77,38 @@ batch <- function(input.directory,output.directory,base.start,base.end) {
 		prec.quantiles <<- c(0.05,0.1,0.5,0.9,0.95,0.99)
 		op.choice <<- NULL
 		skip <<- FALSE
-
+	
+		if(file_test("-f",paste(file,".error.txt",sep=""))) { file.remove(paste(file,".error.txt",sep="")) }
 		# run quality control and create climdex input object
 		catch1 <- tryCatch(QC.wrapper(station.metadata,user.data,file,graphics=FALSE),
 				error=function(msg) {
 					fileConn<-file(paste(file,".error.txt",sep=""))
 					writeLines(toString(msg), fileConn)
 					close(fileConn)
-					skip <<- TRUE
+					if(file_test("-f",paste0(file,".temporary"))) { file.remove(paste0(file,".temporary")) }
 				})
-#		if(skip) { system(paste("rm ",file,".temporary",sep="")) }
-
+		if(skip) { return(NA) }
+		
 		# calculate indices
 		catch2 <- tryCatch(index.calc(station.metadata,graphics=FALSE),
 				error=function(msg) {
 					fileConn<-file(paste(file,".error.txt",sep=""))
 					writeLines(toString(msg), fileConn)
 					close(fileConn)
-					skip <<- TRUE
+					if(file_test("-f",paste0(file,".temporary"))) { file.remove(paste0(file,".temporary")) }
 				})
-#		if(skip) { system(paste("rm ",file,".temporary",sep="")) }
-# RJHD - NH addition for pdf error 2-aug-17                  
-        graphics.off()
+		if(skip) { return(NA) }
+			
+	# RJHD - NH addition for pdf error 2-aug-17                  
+	        graphics.off()
 		print(paste(file," done",sep=""))
+	}
+
+#	capture.output(stdout <- foreach(file.number=1:length(metadata$station)) %dopar%
+#	for (file.number in 1:length(metadata$station))
+	foreach(file.number=1:length(metadata$station)) %dopar%
+	{
+		func(file.number)
 	}
 
 	print("",quote=FALSE)
@@ -119,14 +124,14 @@ batch <- function(input.directory,output.directory,base.start,base.end) {
 	print("",quote=FALSE)
 	print("",quote=FALSE)
 	print("",quote=FALSE)
-	print("Any errors encountered during processing are listed below by input file.",quote=FALSE)
+	print("Any errors encountered during processing are listed below by input file. Assess these files carefully and correct any errors.",quote=FALSE)
 	print("",quote=FALSE)
 	error.files <- suppressWarnings(list.files(path=input.directory,pattern=paste("*error.txt",sep="")))
 	if(length(error.files)==0) { print("... no errors detected in processing your files. That doesn't mean there aren't any!",quote=FALSE) } 
 	else {
 		for (i in 1:length(error.files)) { #system(paste("ls ",input.directory,"*error.txt | wc -l",sep=""))) {
 			print(error.files[i],quote=FALSE)
-			system(paste("cat ",error.files[i],sep=""))
+			#system(paste("cat ",input.directory,"/",error.files[i],sep=""))
 		} 
 	}
 }

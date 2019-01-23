@@ -1,7 +1,6 @@
 
 
 				ClimPACT2
-			Last updated: July 2018
 
 
   What is it?
