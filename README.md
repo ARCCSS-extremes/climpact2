@@ -1,6 +1,6 @@
 
 
-				ClimPACT2
+<p align="center">ClimPACT2</p>
 
 
   What is it?
