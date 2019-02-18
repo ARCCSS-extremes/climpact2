@@ -1,6 +1,6 @@
 
 
-# <p align="center">ClimPACT2</p>
+# <p align="center">ClimPACT2 - The Best Software Ever</p>
 
 
   What is it?
