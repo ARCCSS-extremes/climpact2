@@ -1827,8 +1827,6 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 	xy <- na.omit(xy)
 	tmp_seq = 1:length(x)
 
-	tmp_lowess=lowess(tmp_seq[!is.na(y)], y[!is.na(y)])   #xy[,2])
-	lines(tmp_lowess, lwd = 3, lty = 2, col = "red")  # add fitting curve
 	if (sum(is.na(y) == FALSE) >= min_trend)
 	{
 		subtit <- paste("Linear trend slope=", beta, "   Slope error=", betaerr, ",   p-value=", pval)             # least squares regression
@@ -1841,7 +1839,6 @@ plotx <- function (x0, y0, main = "", xlab = "", ylab = "", opt = 0,index.name=N
 	old.par = par()	# store par settings to plot legend outside figure margins
 	par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
 	plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
-	legend("bottomleft","locally weighted scatterplot smoothing",col = "red", lty = 2, lwd = 3, bty = "n")
 	legend("bottomright",paste("ClimPACT2 v ",version.climpact,sep=""),col = "white", lty = 2, lwd = 0, bty = "n")
 	suppressWarnings(par(old.par)) # restore previous par settings. Suppress warnings regarding parameters that cannot be set.
 }
