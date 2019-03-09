@@ -2255,7 +2255,8 @@ startss <- function() {
 
 # Call function to start the program.
 # This IF function is a hack to allow functionality in this file to be sourced without having to run the GUI itself.
-# A more elegant solution likely exists. This IF statement requires that for startss() NOT to be called, some command-line
-# parameters must have been specified (which is precisely what happens when calling the batch processing code).
+# A more elegant solution likely exists. This IF statement requires that for startss() NOT to be called, more than 2 command-line
+# parameters must have been specified (which is what happens when calling the batch processing code). "<=2" was chosen because
+# while Linux systems only pass 1 command line argument when invoking R, Windows systems seem to pass 2 command line arguments.
 #print(commandArgs())
-if(length(commandArgs())==1) startss()
+if(length(commandArgs())<=2) startss()
