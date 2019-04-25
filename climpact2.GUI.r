@@ -1200,9 +1200,9 @@ index.calc<-function(metadata,graphics=TRUE){
 			if(var.choice=="DTR") { var.choice2=cio@data$dtr ; mask.choice = cio@namasks[[match.arg(frequency,choices=c("annual","monthly"))]]$tmin * cio@namasks[[match.arg(frequency,choices=c("annual","monthly"))]]$tmax } 
 			else if (var.choice=="TX") { var.choice2=cio@data$tmax ; mask.choice = cio@namasks[[match.arg(frequency,choices=c("annual","monthly"))]]$tmax } 
 			else if (var.choice=="TN") { var.choice2=cio@data$tmin ; mask.choice = cio@namasks[[match.arg(frequency,choices=c("annual","monthly"))]]$tmin }
-			else if (var.choice=="TM") { var.choice2=cio@data$tmean ; mask.choice = cio@namasks[[match.arg(frequency,choices=c("annual","monthly"))]]$tmin }
+			else if (var.choice=="TM") { var.choice2=cio@data$tavg ; mask.choice = cio@namasks[[match.arg(frequency,choices=c("annual","monthly"))]]$tmin }
 			else if (var.choice=="PR") { var.choice2=cio@data$prec ; mask.choice = cio@namasks[[match.arg(frequency,choices=c("annual","monthly"))]]$prec }
-	
+
 			if(op.choice==">") { op.choice2="gt" }
 			else if(op.choice==">=") { op.choice2="ge" }
 			else if(op.choice=="<") { op.choice2="lt" }

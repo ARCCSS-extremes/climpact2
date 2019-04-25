@@ -1,3 +1,7 @@
+1.2.7		25 April 2019
+* Fixed batch script error where the parameters in the batch metadata file relating to rxnday, rnnmm and txdtnd were not being used in the index calculations.
+* Fixed error where custom indices specified in the GUI that utilised mean daily temperature (TM) were not being calculated.
+
 1.2.6       10 March 2019
 * Edited the command line argument test to fix the need to manually call "startss()" when starting the GUI on Windows systems.
 * Minor update of README.

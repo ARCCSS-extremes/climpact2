@@ -54,9 +54,9 @@ batch <- function(input.directory,output.directory,base.start,base.end) {
 		Tb_HDD <<- metadata$Tb_HDD[file.number]
 		Tb_CDD <<- metadata$Tb_CDD[file.number]
 		Tb_GDD <<- metadata$Tb_GDD[file.number]
-		rx_ud <<- metadata$rx_ud[file.number]
-		rnnmm_ud <<- metadata$rnnmm_ud[file.number]
-		txtn_ud <<- metadata$txtn_ud[file.number]
+		rx_ud <<- metadata$rxnday[file.number]
+		rnnmm_ud <<- metadata$rnnmm[file.number]
+		txtn_ud <<- metadata$txtn[file.number]
 		custom_SPEI <<- metadata$SPEI[file.number]
 	
 		# global variables needed for calling climpact2.GUI.r functionality
