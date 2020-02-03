@@ -183,7 +183,7 @@ create.climdex.cmip5.filenames <- function(fn.split, vars.list) {
 get.climdex.variable.list <- function(source.data.present, time.resolution=c("all", "annual", "monthly"), climdex.vars.subset=NULL) {
   time.res <- match.arg(time.resolution)
   annual.only <- c("txdtnd","txbdtnbd","gsl","wsdi","wsdid","csdi","csdid","hw",
-		"hddheatn","cddcoldn","gddgrown","sdii","r95p","r99p","r95ptot","r99ptot","tx95t")
+                "hddheatn","cddcoldn","gddgrown","sdii","r95p","r99p","r95ptot","r99ptot","tx95t")
   monthly.only <- c("spei","spi")
 
   vars.by.src.data.reqd <- list(tmax=c("su", "id", "txx", "txn", "tx10p", "tx90p", "wsdi", "wsdid","txge30","txge35","txm","txgt50p","tx95t"),
@@ -234,7 +234,7 @@ get.climdex.variable.list <- function(source.data.present, time.resolution=c("al
 #' cdx.funcs <- get.climdex.functions(get.climdex.variable.list(c("tmax", "tmin")))
 #'
 #' @export
-get.climdex.functions <- function(vars.list, fclimdex.compatible=TRUE,rxnday_n=7,rnnmm_n=30,ntxntn_n=3,ntxbntnb_n=3,ehfdef="PA13",wsdin_n=7,csdin_n=7) {
+get.climdex.functions <- function(vars.list, fclimdex.compatible=TRUE,rxnday_n=7,rnnmm_n=30,ntxntn_n=3,ntxbntnb_n=3,ehfdef="PA13",wsdin_n=7,csdin_n=7,hddheatn_n,cddcoldn_n) {
   func.names <- paste("climdex",index.data$Short.name,sep=".")
   el <- list()
   af <- list(freq="annual")
@@ -255,6 +255,8 @@ get.climdex.functions <- function(vars.list, fclimdex.compatible=TRUE,rxnday_n=7
   spei.opts <- list(lat=NULL)
   wsdin.opts <- list(spells.can.span.years=FALSE,n=wsdin_n)
   csdin.opts <- list(spells.can.span.years=FALSE,n=csdin_n)
+  cddcoldn.opts <- list(Tb=cddcoldn_n)
+  hddheatn.opts <- list(Tb=hddheatn_n)
 
 # Make spei.opts global so it can be manipulated down in another function before being sent to climdex.spei (I know I know... global variables, argh).
   assign("hw.opts",hw.opts,envir=.GlobalEnv)
@@ -279,12 +281,15 @@ get.climdex.functions <- function(vars.list, fclimdex.compatible=TRUE,rxnday_n=7
 	if(index.data$Short.name[x]=="cwd") options[[x]] = c(options[[x]],cwdd.opts)
 	if(index.data$Short.name[x]=="cdd") options[[x]] = c(options[[x]],cwdd.opts)
 	if(index.data$Short.name[x]=="rx5day") options[[x]] = c(options[[x]],rx5day.opts)
+        if(index.data$Short.name[x]=="cddcoldn") options[[x]] = cddcoldn.opts
+        if(index.data$Short.name[x]=="hddheatn") options[[x]] = hddheatn.opts
 
 	return(options[[x]])
   })
 
 # list indices which cannot accept a frequency flag and don't have custom options specified above, nherold.
-  el_list = c("r95ptot","r99ptot","sdii","hddheatn","cddcoldn","gddgrown","r95p","r99p","gsl","spi")
+#  el_list = c("r95ptot","r99ptot","sdii","hddheatn","cddcoldn","gddgrown","r95p","r99p","gsl","spi")
+  el_list = c("r95ptot","r99ptot","sdii","gddgrown","r95p","r99p","gsl","spi")
   options[which(index.data$Short.name %in% el_list)] = array(el,length(el_list))
 
 # source file containing ET-SCI functions - best place for this? nherold.
@@ -423,6 +428,7 @@ create.ncdf.output.files <- function(cdx.dat, f, v.f.idx, variable.name.map, ts,
   vars.to.clone.atts.for <- c(vars.to.copy, ncdf4.helpers::nc.get.dim.names(f.example, v.example))
   vars.ncvars <- sapply(vars.to.copy, function(x) { f.example$var[[x]] }, simplify=FALSE)
   vars.data <- lapply(vars.ncvars, function(ncvar) { if(length(ncvar$dim) == 0) NULL else ncdf4::ncvar_get(f.example, ncvar) })
+  names(vars.data) = vars.to.copy
   
   return(lapply(1:length(cdx.dat$var.name), function(x) {
     annual <- cdx.dat$annual[x]
@@ -1733,7 +1739,7 @@ create.indices.from.files <- function(input.files, out.dir, output.filename.temp
 		cdx.meta$definition[i] = paste("Annual sum of TM - ",gddgrown_n," (where ",gddgrown_n," is a user-defined location-specific base temperature and TM > ",gddgrown_n,")",sep="")
 	}
   }
-  cdx.funcs <- get.climdex.functions(climdex.var.list,rxnday_n=rxnday_n,rnnmm_n=rnnmm_n,ntxntn_n=ntxntn_n,ntxbntnb_n=ntxbntnb_n,fclimdex.compatible=fclimdex.compatible,ehfdef=ehfdef,wsdin_n=wsdin_n,csdin_n=csdin_n)
+  cdx.funcs <- get.climdex.functions(climdex.var.list,rxnday_n=rxnday_n,rnnmm_n=rnnmm_n,ntxntn_n=ntxntn_n,ntxbntnb_n=ntxbntnb_n,fclimdex.compatible=fclimdex.compatible,ehfdef=ehfdef,wsdin_n=wsdin_n,csdin_n=csdin_n,cddcoldn_n=cddcoldn_n,hddheatn_n=hddheatn_n)
   cdx.ncfile <- create.ncdf.output.files(cdx.meta, f, f.meta$v.f.idx, variable.name.map, f.meta$ts, get.time.origin(f, f.meta$dim.axes), base.range, out.dir, author.data,ehfdef) #,rxnday_n,rnnmm_n,ntxntn_n,ntxbntnb_n,ehfdef,wsdin_n,csdin_n)
 
   ## Compute indices, either single process or multi-process using 'parallel'
