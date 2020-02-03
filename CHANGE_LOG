@@ -1,3 +1,7 @@
+1.2.8		3 February 2020
+* Fixed 2D coordinate variables not always writing out correctly to netCDF.
+* Fixed cooling degree days and heating degree day base temperature flags being properly carried through from the wrapper script to the respective functions.
+
 1.2.7		25 April 2019
 * Fixed batch script error where the parameters in the batch metadata file relating to rxnday, rnnmm and txdtnd were not being used in the index calculations.
 * Fixed error where custom indices specified in the GUI that utilised mean daily temperature (TM) were not being calculated.
