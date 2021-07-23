@@ -1,3 +1,7 @@
+1.3.0   23 July 2021
+* MAINTENANCE FIX: Major issue where GSL and heatwave indices (except ECF and EHF_NF13) that were calculated for stations were always calculated assuming northern hemisphere.
+  Thus heatwave indices in southern hemisphere were being calculated for winter (i.e. reporting winter heatwave values). Gridded data unaffected.
+
 1.2.8		3 February 2020
 * Fixed 2D coordinate variables not always writing out correctly to netCDF.
 * Fixed cooling degree days and heating degree day base temperature flags being properly carried through from the wrapper script to the respective functions.
