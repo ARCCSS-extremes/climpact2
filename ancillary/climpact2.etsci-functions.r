@@ -8,7 +8,7 @@
 library(climdex.pcic)
 library(SPEI)
 
-software_id = "1.2.8"
+software_id = "1.3.0"
 
 # fd
 # Annual count when TN < 0ºC
